@@ -1,0 +1,11 @@
+{
+  "id": "floor_02",
+  "name": "Silent Apex",
+  "room_graph_id": "floor_02_rooms",
+  "starting_room_id": "floor_02_start",
+  "boss_room_id": "floor_02_boss",
+  "boss_encounter_id": "final_warden",
+  "next_floor_id": "",
+  "seed": 202,
+  "is_final_floor": true
+}

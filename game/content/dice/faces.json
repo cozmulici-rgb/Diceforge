@@ -1,0 +1,41 @@
+{
+  "id": "starter_faces",
+  "definitions": [
+    {
+      "id": "strike",
+      "name": "Strike",
+      "family": "attack",
+      "power_multiplier": 2
+    },
+    {
+      "id": "guard",
+      "name": "Guard",
+      "family": "defense",
+      "power_multiplier": 1
+    },
+    {
+      "id": "focus",
+      "name": "Focus",
+      "family": "utility",
+      "bonus_block": 1
+    },
+    {
+      "id": "surge",
+      "name": "Surge",
+      "family": "attack",
+      "power_multiplier": 1
+    },
+    {
+      "id": "heavy_strike",
+      "name": "Heavy Strike",
+      "family": "attack",
+      "power_multiplier": 3
+    },
+    {
+      "id": "bulwark",
+      "name": "Bulwark",
+      "family": "defense",
+      "power_multiplier": 2
+    }
+  ]
+}

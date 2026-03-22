@@ -1,0 +1,57 @@
+{
+  "id": "floor_02_rooms",
+  "name": "Silent Apex Graph",
+  "rooms": [
+    {
+      "id": "floor_02_start",
+      "name": "Apex Threshold",
+      "type": "start",
+      "description": "The second floor begins at a calm overlook beneath the final chamber.",
+      "position": [120, 220],
+      "encounter_id": ""
+    },
+    {
+      "id": "floor_02_event",
+      "name": "Still Shrine",
+      "type": "event",
+      "description": "A shrine branch offers a deterministic event reward source.",
+      "position": [320, 140],
+      "encounter_id": "",
+      "reward_source_id": "tutorial_shrine"
+    },
+    {
+      "id": "floor_02_fight",
+      "name": "Guardwalk",
+      "type": "encounter",
+      "description": "A last standard fight blocks the direct approach.",
+      "position": [320, 300],
+      "encounter_id": "tutorial_slime"
+    },
+    {
+      "id": "floor_02_boss",
+      "name": "Warden Core",
+      "type": "boss",
+      "description": "The final boss anchors the run's completion gate.",
+      "position": [520, 220],
+      "encounter_id": "final_warden"
+    }
+  ],
+  "links": [
+    {
+      "from": "floor_02_start",
+      "to": "floor_02_event"
+    },
+    {
+      "from": "floor_02_start",
+      "to": "floor_02_fight"
+    },
+    {
+      "from": "floor_02_event",
+      "to": "floor_02_boss"
+    },
+    {
+      "from": "floor_02_fight",
+      "to": "floor_02_boss"
+    }
+  ]
+}

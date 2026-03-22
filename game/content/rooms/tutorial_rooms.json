@@ -1,0 +1,28 @@
+{
+  "id": "tutorial_rooms",
+  "name": "Tutorial Room Graph",
+  "rooms": [
+    {
+      "id": "tutorial_entry",
+      "name": "Entry Antechamber",
+      "type": "start",
+      "description": "A stable chamber where the Facetwalker first regains control.",
+      "position": [160, 220],
+      "encounter_id": ""
+    },
+    {
+      "id": "tutorial_hall",
+      "name": "Shiver Hall",
+      "type": "encounter",
+      "description": "A narrow hall where the first hostile echo manifests.",
+      "position": [456, 220],
+      "encounter_id": "tutorial_slime"
+    }
+  ],
+  "links": [
+    {
+      "from": "tutorial_entry",
+      "to": "tutorial_hall"
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+{
+  "id": "tutorial_rewards",
+  "definitions": [
+    {
+      "id": "tutorial_slime_rewards",
+      "name": "Tutorial Slime Rewards",
+      "reward_type": "encounter",
+      "source_id": "tutorial_slime",
+      "can_enter_forge": true,
+      "options": [
+        {
+          "option_id": "claim_heavy_strike",
+          "grant_type": "face",
+          "content_id": "heavy_strike",
+          "quantity": 1
+        },
+        {
+          "option_id": "claim_forged_d8",
+          "grant_type": "body",
+          "content_id": "forged_d8",
+          "quantity": 1
+        },
+        {
+          "option_id": "claim_echo_shards",
+          "grant_type": "currency",
+          "content_id": "echo_shards",
+          "quantity": 12
+        }
+      ]
+    },
+    {
+      "id": "floor_01_boss_rewards",
+      "name": "Floor 01 Boss Rewards",
+      "reward_type": "encounter",
+      "source_id": "floor_01_overseer",
+      "can_enter_forge": true,
+      "options": [
+        {
+          "option_id": "claim_bulwark_face",
+          "grant_type": "face",
+          "content_id": "bulwark",
+          "quantity": 1
+        },
+        {
+          "option_id": "claim_boss_shards",
+          "grant_type": "currency",
+          "content_id": "echo_shards",
+          "quantity": 18
+        }
+      ]
+    },
+    {
+      "id": "final_boss_rewards",
+      "name": "Final Boss Rewards",
+      "reward_type": "encounter",
+      "source_id": "final_warden",
+      "can_enter_forge": false,
+      "options": [
+        {
+          "option_id": "claim_final_shards",
+          "grant_type": "currency",
+          "content_id": "echo_shards",
+          "quantity": 40
+        },
+        {
+          "option_id": "claim_final_modifier",
+          "grant_type": "modifier",
+          "content_id": "warden_breaker",
+          "quantity": 1
+        }
+      ]
+    }
+  ]
+}

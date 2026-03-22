@@ -1,0 +1,31 @@
+{
+  "id": "curse_catalog",
+  "definitions": [
+    {
+      "id": "void_pressure",
+      "name": "Void Pressure",
+      "modifier_type": "curse",
+      "application_scope": "combat",
+      "effect_tags": ["enemy_hp_up", "enemy_damage_up"],
+      "stack_mode": "unique",
+      "effects": {
+        "enemy_hp_delta": 6,
+        "enemy_damage_delta": 2,
+        "score_bonus": 25
+      }
+    },
+    {
+      "id": "glass_core",
+      "name": "Glass Core",
+      "modifier_type": "curse",
+      "application_scope": "run",
+      "effect_tags": ["player_hp_up", "enemy_damage_up"],
+      "stack_mode": "unique",
+      "effects": {
+        "player_hp_bonus": 3,
+        "enemy_damage_delta": 1,
+        "score_bonus": 15
+      }
+    }
+  ]
+}

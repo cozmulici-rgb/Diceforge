@@ -1,0 +1,19 @@
+{
+  "id": "boss_encounters",
+  "definitions": [
+    {
+      "id": "floor_01_overseer",
+      "name": "Shard Overseer",
+      "enemy_id": "shard_overseer",
+      "player_rolls": [4, 4, 4, 4, 4, 4],
+      "reward_table_id": "floor_01_boss_rewards"
+    },
+    {
+      "id": "final_warden",
+      "name": "Final Warden",
+      "enemy_id": "final_warden_core",
+      "player_rolls": [4, 4, 4, 4, 4, 4],
+      "reward_table_id": "final_boss_rewards"
+    }
+  ]
+}

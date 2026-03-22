@@ -1,0 +1,27 @@
+{
+  "id": "starter_bodies",
+  "definitions": [
+    {
+      "id": "standard_d6",
+      "name": "Standard D6",
+      "sides": 6,
+      "rune_slots": [
+        {
+          "slot_id": "core",
+          "allowed_families": ["neutral"]
+        }
+      ]
+    },
+    {
+      "id": "forged_d8",
+      "name": "Forged D8",
+      "sides": 8,
+      "rune_slots": [
+        {
+          "slot_id": "core",
+          "allowed_families": ["attack", "neutral"]
+        }
+      ]
+    }
+  ]
+}

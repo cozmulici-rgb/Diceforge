@@ -33,7 +33,7 @@ Create the initial Godot project structure so containerized validation has a rea
 
 ## Interface & Contract Changes
 
-Add the project layout contract from `docs/design/project-initiation/contracts.md`:
+Add the project layout contract from `docs/archive/design/project-initiation/contracts.md`:
 
 ```text
 game/
@@ -60,4 +60,3 @@ game/
 
 - Keep the scene minimal; this phase exists to validate the stack, not to implement gameplay.
 - Avoid introducing combat systems, data models, or save logic here.
-

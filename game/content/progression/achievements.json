@@ -1,0 +1,13 @@
+{
+  "id": "achievement_catalog",
+  "definitions": [
+    {
+      "id": "first_boss_clear",
+      "requirement": "defeat_any_boss"
+    },
+    {
+      "id": "first_run_victory",
+      "requirement": "win_run"
+    }
+  ]
+}

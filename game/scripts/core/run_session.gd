@@ -1,0 +1,80 @@
+class_name RunSession
+extends RefCounted
+
+const SCHEMA_VERSION := 2
+
+var session_id: String
+var archetype_id: String
+var floor_index: int
+var current_room_id: String
+var room_graph_id: String
+var player_state: Dictionary
+var active_dice: Array
+var inventory: Dictionary
+var modifiers: Array
+var mode_id: String
+var seed_id: String
+var numeric_seed: int
+var daily_void_config: Dictionary
+var score_summary: Dictionary
+var flags: Dictionary
+var room_states: Dictionary
+var action_slots: Array
+var last_encounter_result: Dictionary
+var reward_flow_state: Dictionary
+var floor_state: Dictionary
+var run_complete: bool
+var progression_result: Dictionary
+
+
+func _init(data: Dictionary = {}) -> void:
+	session_id = str(data.get("session_id", ""))
+	archetype_id = str(data.get("archetype_id", ""))
+	floor_index = int(data.get("floor_index", 1))
+	current_room_id = str(data.get("current_room_id", ""))
+	room_graph_id = str(data.get("room_graph_id", ""))
+	player_state = (data.get("player_state", {})).duplicate(true)
+	active_dice = (data.get("active_dice", [])).duplicate(true)
+	inventory = (data.get("inventory", {})).duplicate(true)
+	modifiers = (data.get("modifiers", [])).duplicate(true)
+	mode_id = str(data.get("mode_id", "standard"))
+	seed_id = str(data.get("seed_id", ""))
+	numeric_seed = int(data.get("numeric_seed", 0))
+	daily_void_config = (data.get("daily_void_config", {})).duplicate(true)
+	score_summary = (data.get("score_summary", {})).duplicate(true)
+	flags = (data.get("flags", {})).duplicate(true)
+	room_states = (data.get("room_states", {})).duplicate(true)
+	action_slots = (data.get("action_slots", [])).duplicate(true)
+	last_encounter_result = (data.get("last_encounter_result", {})).duplicate(true)
+	reward_flow_state = (data.get("reward_flow_state", {})).duplicate(true)
+	floor_state = (data.get("floor_state", {})).duplicate(true)
+	run_complete = bool(data.get("run_complete", false))
+	progression_result = (data.get("progression_result", {})).duplicate(true)
+
+
+func to_dictionary() -> Dictionary:
+	return {
+		"schema_version": SCHEMA_VERSION,
+		"session_id": session_id,
+		"archetype_id": archetype_id,
+		"floor_index": floor_index,
+		"current_room_id": current_room_id,
+		"room_graph_id": room_graph_id,
+		"player_state": player_state.duplicate(true),
+		"active_dice": active_dice.duplicate(true),
+		"inventory": inventory.duplicate(true),
+		"modifiers": modifiers.duplicate(true),
+		"mode_id": mode_id,
+		"seed_id": seed_id,
+		"numeric_seed": numeric_seed,
+		"daily_void_config": daily_void_config.duplicate(true),
+		"score_summary": score_summary.duplicate(true),
+		"flags": flags.duplicate(true),
+		"room_states": room_states.duplicate(true),
+		"action_slots": action_slots.duplicate(true),
+		"last_encounter_result": last_encounter_result.duplicate(true),
+		"reward_flow_state": reward_flow_state.duplicate(true),
+		"floor_state": floor_state.duplicate(true),
+		"run_complete": run_complete,
+		"progression_result": progression_result.duplicate(true),
+	}

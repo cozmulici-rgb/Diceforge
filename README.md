@@ -1,6 +1,6 @@
 # Facetbound
 
-Facetbound is a Godot 4 prototype for a 2D dice-driven roguelike. This repository currently contains the project bootstrap, a minimal Godot project skeleton, and a Docker-based local build flow for headless validation and Linux desktop export.
+Facetbound is a Godot 4 prototype for a 2D dice-driven roguelike. The repository now includes the phase-01 runtime scaffold, seeded gameplay content, and a Docker-based local build flow for headless validation, deterministic tests, and Linux desktop export.
 
 ## Stack
 
@@ -14,7 +14,7 @@ Facetbound is a Godot 4 prototype for a 2D dice-driven roguelike. This repositor
 ```text
 docker/         Container images for development and export
 dist/           Generated build artifacts
-docs/           Concept, research, design, plan, and setup docs
+docs/           Active concept and setup docs, plus archived planning material
 game/           Godot project files
 scripts/        Build and verification scripts
 ```
@@ -31,7 +31,9 @@ scripts/        Build and verification scripts
 - `make dev`
   Opens the interactive development container with the repository mounted at `/workspace`.
 - `make verify`
-  Runs headless Godot validation against the project in `game/`.
+  Runs headless Godot validation against the project in `game/`, including the deterministic gameplay test harness.
+- `make test`
+  Runs the deterministic Godot-native gameplay tests headlessly in the export container.
 - `make export`
   Re-runs verification and exports the Linux desktop build into `dist/`.
 
@@ -46,6 +48,7 @@ After a successful `make export`, the repository produces:
 
 - Generated Godot editor metadata under `game/.godot/` is ignored.
 - Generated build artifacts under `dist/` are ignored except for `dist/.gitkeep`.
-- The current Godot project is intentionally minimal and exists to validate the toolchain rather than gameplay.
+- Startup now routes through `res://scenes/app_root.tscn`, with `main.tscn` retained as a compatibility wrapper.
+- Seed gameplay content currently lives under `game/content/` and is validated before use by the runtime scaffold.
 
 More setup and troubleshooting detail is in [docs/setup.md](/Users/vcozmulici/workspace/mysites/df-sandbox/docs/setup.md).

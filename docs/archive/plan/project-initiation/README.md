@@ -1,8 +1,8 @@
 # Implementation Plan: Project Initiation
 
 **Based on:**
-- Research: `docs/research/project-initiation.md`
-- Design: `docs/design/project-initiation/`
+- Research: `docs/archive/research/project-initiation.md`
+- Design: `docs/archive/design/project-initiation/`
 
 **Phases:**
 | Phase | File | Objective | Dependencies |
@@ -27,4 +27,3 @@
 - [ ] Headless verification passes on the checked-in project
 - [ ] Linux export artifact is generated into `dist/`
 - [ ] Documentation explains local development and build commands
-

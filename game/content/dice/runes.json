@@ -1,0 +1,15 @@
+{
+  "id": "starter_runes",
+  "definitions": [
+    {
+      "id": "blank_rune",
+      "name": "Blank Rune",
+      "family": "neutral"
+    },
+    {
+      "id": "ember_rune",
+      "name": "Ember Rune",
+      "family": "attack"
+    }
+  ]
+}
