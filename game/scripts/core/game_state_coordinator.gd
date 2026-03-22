@@ -3,14 +3,21 @@ extends RefCounted
 
 const RunSessionScript = preload("res://scripts/core/run_session.gd")
 const CombatControllerScript = preload("res://scripts/combat/combat_controller.gd")
+const RewardControllerScript = preload("res://scripts/rewards/reward_controller.gd")
+const ForgeAssemblySystemScript = preload("res://scripts/rewards/forge_assembly_system.gd")
+const RunInventoryScript = preload("res://scripts/rewards/run_inventory.gd")
 
 var content_catalog
 var current_session = null
 var _session_sequence := 0
+var _reward_controller
+var _forge_assembly_system
 
 
 func _init(catalog) -> void:
 	content_catalog = catalog
+	_reward_controller = RewardControllerScript.new(catalog)
+	_forge_assembly_system = ForgeAssemblySystemScript.new(catalog)
 
 
 func create_run_session(archetype_id: String) -> Variant:
@@ -48,11 +55,13 @@ func create_run_session(archetype_id: String) -> Variant:
 			"starter_floor_id": str(archetype.get("starter_floor_id", "")),
 			"room_history": [starting_room_id],
 			"active_encounter": {},
+			"screen_state": "exploration",
 			"encounter_status": "Run started. Move into the tutorial hall to trigger the encounter stub.",
 		},
 		"room_states": _build_initial_room_states(room_graph, starting_room_id),
 		"action_slots": _build_default_action_slots(),
 		"last_encounter_result": {},
+		"reward_flow_state": {},
 	})
 
 	current_session = session
@@ -134,6 +143,7 @@ func begin_encounter(encounter_id: String) -> Dictionary:
 		"room_id": str(current_session.current_room_id),
 		"state": "combat_active",
 	}
+	current_session.flags["screen_state"] = "combat"
 	current_session.flags["encounter_status"] = "Combat started: %s" % encounter_id
 
 	return {
@@ -156,17 +166,107 @@ func apply_encounter_result(result: Dictionary) -> Variant:
 
 	if str(result.get("outcome", "")) == "victory":
 		_mark_room_completed(current_session.room_states, str(result.get("room_id", current_session.current_room_id)))
+		current_session.flags["screen_state"] = "reward"
+	else:
+		current_session.flags["screen_state"] = "exploration"
 
 	return current_session
 
 
 func open_reward_flow(source: Variant) -> Dictionary:
+	if current_session == null:
+		return {"ok": false, "error": "no_active_session"}
+	if not (source is Dictionary):
+		return {"ok": false, "error": "invalid_reward_source"}
+
+	var reward_flow = _reward_controller.open_reward_flow(source, current_session)
+	if not reward_flow.get("ok", false):
+		return reward_flow
+
+	current_session.reward_flow_state = reward_flow.duplicate(true)
+	current_session.flags["screen_state"] = "reward"
+	current_session.flags["encounter_status"] = "Reward selection active."
+	return reward_flow
+
+
+func apply_reward_selection(option_data: Dictionary) -> Dictionary:
+	if current_session == null:
+		return {"ok": false, "error": "no_active_session"}
+
+	var apply_result = _reward_controller.apply_reward_option(current_session, option_data)
+	if not apply_result.get("ok", false):
+		return apply_result
+
+	current_session.reward_flow_state["selected_option"] = option_data.duplicate(true)
+	current_session.reward_flow_state["inventory_snapshot"] = current_session.inventory.duplicate(true)
+	current_session.flags["screen_state"] = "reward"
 	return {
-		"ok": false,
-		"error": "not_implemented",
-		"operation": "open_reward_flow",
-		"source": source,
+		"ok": true,
+		"run_session": current_session,
+		"reward_flow_state": current_session.reward_flow_state.duplicate(true),
 	}
+
+
+func can_enter_forge() -> bool:
+	if current_session == null:
+		return false
+	var inventory := RunInventoryScript.new(current_session.inventory)
+	return bool(current_session.reward_flow_state.get("can_enter_forge", false)) and inventory.count_spare_parts() > 0
+
+
+func open_forge_flow() -> Dictionary:
+	if current_session == null:
+		return {"ok": false, "error": "no_active_session"}
+	if not can_enter_forge():
+		return {"ok": false, "error": "forge_unavailable"}
+
+	current_session.flags["screen_state"] = "forge"
+	current_session.flags["encounter_status"] = "Forge active."
+	return {
+		"ok": true,
+		"active_dice": current_session.active_dice.duplicate(true),
+		"inventory": current_session.inventory.duplicate(true),
+	}
+
+
+func preview_forge_mutation(mutation: Dictionary) -> Dictionary:
+	if current_session == null:
+		return {"ok": false, "error": "no_active_session"}
+	var die_index := _find_active_die_index(str(mutation.get("target_die_id", "")))
+	if die_index == -1:
+		return {"ok": false, "error": "missing_target_die", "target_die_id": str(mutation.get("target_die_id", ""))}
+	return _forge_assembly_system.preview_change(current_session.active_dice[die_index], mutation, current_session.inventory)
+
+
+func apply_forge_mutation(mutation: Dictionary) -> Dictionary:
+	if current_session == null:
+		return {"ok": false, "error": "no_active_session"}
+	var die_index := _find_active_die_index(str(mutation.get("target_die_id", "")))
+	if die_index == -1:
+		return {"ok": false, "error": "missing_target_die", "target_die_id": str(mutation.get("target_die_id", ""))}
+
+	var apply_result = _forge_assembly_system.apply_change(current_session.active_dice[die_index], mutation, current_session.inventory)
+	if not apply_result.get("ok", false):
+		return apply_result
+
+	current_session.active_dice[die_index] = (apply_result.get("die_build", {}) as Dictionary).duplicate(true)
+	current_session.inventory = (apply_result.get("inventory", {}) as Dictionary).duplicate(true)
+	current_session.reward_flow_state["inventory_snapshot"] = current_session.inventory.duplicate(true)
+	current_session.flags["encounter_status"] = "Forge mutation applied: %s" % str(mutation.get("operation", "unknown"))
+	return {
+		"ok": true,
+		"run_session": current_session,
+		"result": apply_result,
+	}
+
+
+func complete_reward_flow() -> Variant:
+	if current_session == null:
+		return {"ok": false, "error": "no_active_session"}
+	current_session.flags["screen_state"] = "exploration"
+	current_session.flags["encounter_status"] = "Exploration resumed."
+	current_session.reward_flow_state = {}
+	return current_session
 
 
 func finalize_run(result: Variant) -> Dictionary:
@@ -263,3 +363,11 @@ func _mark_room_completed(room_states: Dictionary, room_id: String) -> void:
 	room_state["completed"] = true
 	room_state["visit_count"] = max(int(room_state.get("visit_count", 1)), 1)
 	room_states[room_id] = room_state
+
+
+func _find_active_die_index(target_die_id: String) -> int:
+	for index in range(current_session.active_dice.size()):
+		var die_build: Dictionary = current_session.active_dice[index]
+		if str(die_build.get("id", "")) == target_die_id:
+			return index
+	return -1

@@ -159,6 +159,7 @@ func resolve_enemy_turn(state) -> Dictionary:
 
 
 func finish_encounter(state) -> Dictionary:
+	var encounter_definition = content_catalog.load_encounter(str(state.encounter_id))
 	var outcome: String = state.outcome
 	if outcome == "":
 		if int((state.enemy_state as Dictionary).get("hp", 0)) <= 0:
@@ -178,6 +179,10 @@ func finish_encounter(state) -> Dictionary:
 		"run_complete": outcome == "defeat",
 		"encounter_id": state.encounter_id,
 		"room_id": state.room_id,
+		"reward_source": {
+			"reward_type": "encounter",
+			"reward_source_id": str(encounter_definition.get("reward_table_id", "")),
+		},
 		"turn_log": (state.turn_log as Array).duplicate(true),
 	}
 

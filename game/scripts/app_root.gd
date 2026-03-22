@@ -5,6 +5,8 @@ const GameStateCoordinatorScript = preload("res://scripts/core/game_state_coordi
 const StartMenuScene = preload("res://scenes/screens/start_menu.tscn")
 const ExplorationScene = preload("res://scenes/screens/exploration_screen.tscn")
 const CombatScene = preload("res://scenes/screens/combat_screen.tscn")
+const RewardScene = preload("res://scenes/screens/reward_screen.tscn")
+const ForgeScene = preload("res://scenes/screens/forge_screen.tscn")
 
 @onready var hud = $HUD
 @onready var screen_host = $ScreenHost
@@ -53,6 +55,32 @@ func _show_combat(combat_state) -> void:
 	combat_screen.combat_finished.connect(_on_combat_finished)
 
 
+func _show_reward_flow(reward_flow_state: Dictionary) -> void:
+	_clear_screen_host()
+
+	var reward_screen = RewardScene.instantiate()
+	screen_host.add_child(reward_screen)
+	reward_screen.setup(reward_flow_state)
+	reward_screen.reward_selected.connect(_on_reward_selected)
+	hud.show_status(game_state_coordinator.current_session)
+
+
+func _show_forge_flow() -> void:
+	var forge_state = game_state_coordinator.open_forge_flow()
+	if not forge_state.get("ok", false):
+		var resumed_session = game_state_coordinator.complete_reward_flow()
+		if resumed_session != null and resumed_session.has_method("to_dictionary"):
+			_show_exploration(resumed_session)
+		return
+
+	_clear_screen_host()
+	var forge_screen = ForgeScene.instantiate()
+	screen_host.add_child(forge_screen)
+	forge_screen.setup(game_state_coordinator, forge_state)
+	forge_screen.forge_complete.connect(_on_forge_complete)
+	hud.show_status(game_state_coordinator.current_session)
+
+
 func _clear_screen_host() -> void:
 	for child in screen_host.get_children():
 		child.queue_free()
@@ -90,8 +118,37 @@ func _on_combat_state_updated(_combat_state) -> void:
 func _on_combat_finished(encounter_result: Dictionary) -> void:
 	var updated_session = game_state_coordinator.apply_encounter_result(encounter_result)
 	if updated_session != null and updated_session.has_method("to_dictionary"):
+		if str(encounter_result.get("outcome", "")) == "victory":
+			var reward_flow = game_state_coordinator.open_reward_flow(encounter_result.get("reward_source", {}))
+			if reward_flow.get("ok", false):
+				hud.show_status(updated_session)
+				_show_reward_flow(reward_flow)
+				return
 		hud.show_status(updated_session)
 		_show_exploration(updated_session)
 		return
 
 	hud.show_error("Encounter application failed.")
+
+
+func _on_reward_selected(option_data: Dictionary) -> void:
+	var reward_result = game_state_coordinator.apply_reward_selection(option_data)
+	if not reward_result.get("ok", false):
+		hud.show_error("Reward selection failed.")
+		return
+
+	hud.show_status(game_state_coordinator.current_session)
+	if game_state_coordinator.can_enter_forge():
+		_show_forge_flow()
+		return
+
+	var resumed_session = game_state_coordinator.complete_reward_flow()
+	if resumed_session != null and resumed_session.has_method("to_dictionary"):
+		_show_exploration(resumed_session)
+
+
+func _on_forge_complete() -> void:
+	var resumed_session = game_state_coordinator.complete_reward_flow()
+	if resumed_session != null and resumed_session.has_method("to_dictionary"):
+		hud.show_status(resumed_session)
+		_show_exploration(resumed_session)

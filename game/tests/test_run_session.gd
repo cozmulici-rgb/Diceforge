@@ -42,6 +42,12 @@ func run() -> Array[String]:
 	if not run_result.last_encounter_result.is_empty():
 		failures.append("new session should not begin with a last encounter result")
 
+	if str(run_result.flags.get("screen_state", "")) != "exploration":
+		failures.append("new sessions should begin in the exploration screen state")
+
+	if not run_result.reward_flow_state.is_empty():
+		failures.append("new sessions should not begin with an active reward flow")
+
 	if coordinator.current_session != run_result:
 		failures.append("coordinator should retain the active run session")
 

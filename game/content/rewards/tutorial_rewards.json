@@ -1,0 +1,32 @@
+{
+  "id": "tutorial_rewards",
+  "definitions": [
+    {
+      "id": "tutorial_slime_rewards",
+      "name": "Tutorial Slime Rewards",
+      "reward_type": "encounter",
+      "source_id": "tutorial_slime",
+      "can_enter_forge": true,
+      "options": [
+        {
+          "option_id": "claim_heavy_strike",
+          "grant_type": "face",
+          "content_id": "heavy_strike",
+          "quantity": 1
+        },
+        {
+          "option_id": "claim_forged_d8",
+          "grant_type": "body",
+          "content_id": "forged_d8",
+          "quantity": 1
+        },
+        {
+          "option_id": "claim_echo_shards",
+          "grant_type": "currency",
+          "content_id": "echo_shards",
+          "quantity": 12
+        }
+      ]
+    }
+  ]
+}

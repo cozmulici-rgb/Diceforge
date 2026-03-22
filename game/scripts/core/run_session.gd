@@ -16,6 +16,7 @@ var flags: Dictionary
 var room_states: Dictionary
 var action_slots: Array
 var last_encounter_result: Dictionary
+var reward_flow_state: Dictionary
 
 
 func _init(data: Dictionary = {}) -> void:
@@ -32,6 +33,7 @@ func _init(data: Dictionary = {}) -> void:
 	room_states = (data.get("room_states", {})).duplicate(true)
 	action_slots = (data.get("action_slots", [])).duplicate(true)
 	last_encounter_result = (data.get("last_encounter_result", {})).duplicate(true)
+	reward_flow_state = (data.get("reward_flow_state", {})).duplicate(true)
 
 
 func to_dictionary() -> Dictionary:
@@ -50,4 +52,5 @@ func to_dictionary() -> Dictionary:
 		"room_states": room_states.duplicate(true),
 		"action_slots": action_slots.duplicate(true),
 		"last_encounter_result": last_encounter_result.duplicate(true),
+		"reward_flow_state": reward_flow_state.duplicate(true),
 	}

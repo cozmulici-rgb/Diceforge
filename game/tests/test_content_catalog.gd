@@ -31,12 +31,24 @@ func run() -> Array[String]:
 	if not (encounter is Dictionary) or encounter.get("enemy_id", "") != "slime_echo":
 		failures.append("tutorial encounter should load with its seeded enemy")
 
+	var reward_table = catalog.load_reward_table("tutorial_slime_rewards")
+	if not (reward_table is Dictionary) or (reward_table.get("options", []) as Array).size() != 3:
+		failures.append("tutorial reward tables should load through the catalog")
+
+	var event_definition = catalog.load_event_definition("tutorial_shrine")
+	if not (event_definition is Dictionary) or (event_definition.get("options", []) as Array).is_empty():
+		failures.append("tutorial event definitions should load through the catalog")
+
+	var shop_definition = catalog.load_shop_definition("tutorial_vendor")
+	if not (shop_definition is Dictionary) or (shop_definition.get("options", []) as Array).is_empty():
+		failures.append("tutorial shop definitions should load through the catalog")
+
 	var face_definition = catalog.load_part_definition("strike")
 	if not (face_definition is Dictionary) or face_definition.get("family", "") != "attack":
 		failures.append("starter face definitions should load through load_part_definition")
 
 	var all_content = catalog.get_all_content()
-	if not all_content.has("archetypes") or not all_content.has("floors") or not all_content.has("room_graphs"):
-		failures.append("catalog should expose loaded archetypes, floors, and room graphs")
+	if not all_content.has("archetypes") or not all_content.has("floors") or not all_content.has("room_graphs") or not all_content.has("reward_definitions"):
+		failures.append("catalog should expose loaded archetypes, floors, room graphs, and reward content")
 
 	return failures

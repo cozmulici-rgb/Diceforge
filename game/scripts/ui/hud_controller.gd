@@ -13,6 +13,7 @@ func show_status(session) -> void:
 	var revealed_count := 0
 	var completed_count := 0
 	var action_slot_names: Array[String] = []
+	var inventory = session.inventory as Dictionary
 	for room_state in (session.room_states as Dictionary).values():
 		if room_state is Dictionary and bool(room_state.get("revealed", false)):
 			revealed_count += 1
@@ -30,6 +31,13 @@ func show_status(session) -> void:
 		revealed_count,
 		completed_count,
 		", ".join(action_slot_names),
+	]
+	status_label.text += " | Inventory B/F/R: %d/%d/%d | Shards: %d | State: %s" % [
+		(inventory.get("bodies", []) as Array).size(),
+		(inventory.get("faces", []) as Array).size(),
+		(inventory.get("runes", []) as Array).size(),
+		int((inventory.get("currencies", {}) as Dictionary).get("echo_shards", 0)),
+		str(session.flags.get("screen_state", "exploration")),
 	]
 
 

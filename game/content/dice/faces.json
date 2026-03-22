@@ -24,6 +24,18 @@
       "name": "Surge",
       "family": "attack",
       "power_multiplier": 1
+    },
+    {
+      "id": "heavy_strike",
+      "name": "Heavy Strike",
+      "family": "attack",
+      "power_multiplier": 3
+    },
+    {
+      "id": "bulwark",
+      "name": "Bulwark",
+      "family": "defense",
+      "power_multiplier": 2
     }
   ]
 }

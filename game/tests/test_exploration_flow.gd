@@ -44,4 +44,22 @@ func run() -> Array[String]:
 	if encounter_result.get("combat_state", null) == null:
 		failures.append("begin_encounter should return a combat state for routing")
 
+	var resolved_session = coordinator.apply_encounter_result({
+		"outcome": "victory",
+		"player_hp_after": 27,
+		"encounter_id": "tutorial_slime",
+		"room_id": "tutorial_hall",
+		"reward_source": {"reward_type": "encounter", "reward_source_id": "tutorial_slime_rewards"},
+	})
+	if resolved_session == null or not resolved_session.has_method("to_dictionary"):
+		failures.append("apply_encounter_result should preserve the run session")
+		return failures
+
+	if str(coordinator.current_session.flags.get("screen_state", "")) != "reward":
+		failures.append("a victory should route the run into the reward screen state")
+
+	var reward_flow = coordinator.open_reward_flow({"reward_type": "encounter", "reward_source_id": "tutorial_slime_rewards"})
+	if not reward_flow.get("ok", false):
+		failures.append("post-combat victories should resolve into a reward flow")
+
 	return failures

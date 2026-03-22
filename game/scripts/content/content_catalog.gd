@@ -7,6 +7,9 @@ const ROOM_DIR := "res://content/rooms"
 const DICE_DIR := "res://content/dice"
 const ENCOUNTER_DIR := "res://content/encounters"
 const ENEMY_DIR := "res://content/enemies"
+const REWARD_DIR := "res://content/rewards"
+const EVENT_DIR := "res://content/events"
+const SHOP_DIR := "res://content/shops"
 const ContentValidatorScript = preload("res://scripts/content/content_validator.gd")
 
 var validator
@@ -19,6 +22,9 @@ var _face_definitions: Dictionary = {}
 var _rune_definitions: Dictionary = {}
 var _encounter_definitions: Dictionary = {}
 var _enemy_definitions: Dictionary = {}
+var _reward_definitions: Dictionary = {}
+var _event_definitions: Dictionary = {}
+var _shop_definitions: Dictionary = {}
 
 
 func _init(content_validator = null) -> void:
@@ -37,6 +43,9 @@ func ensure_loaded() -> Dictionary:
 	_rune_definitions = _load_named_definitions("%s/runes.json" % DICE_DIR)
 	_encounter_definitions = _load_named_definitions("%s/tutorial_encounters.json" % ENCOUNTER_DIR)
 	_enemy_definitions = _load_named_definitions("%s/tutorial_enemies.json" % ENEMY_DIR)
+	_reward_definitions = _load_named_definitions("%s/tutorial_rewards.json" % REWARD_DIR)
+	_event_definitions = _load_named_definitions("%s/tutorial_events.json" % EVENT_DIR)
+	_shop_definitions = _load_named_definitions("%s/tutorial_shop.json" % SHOP_DIR)
 
 	var validation: Dictionary = validator.validate_catalog({
 		"archetypes": _archetypes,
@@ -44,8 +53,12 @@ func ensure_loaded() -> Dictionary:
 		"room_graphs": _room_graphs,
 		"body_definitions": _body_definitions,
 		"face_definitions": _face_definitions,
+		"rune_definitions": _rune_definitions,
 		"encounter_definitions": _encounter_definitions,
 		"enemy_definitions": _enemy_definitions,
+		"reward_definitions": _reward_definitions,
+		"event_definitions": _event_definitions,
+		"shop_definitions": _shop_definitions,
 	})
 
 	if not validation.get("ok", false):
@@ -96,7 +109,30 @@ func load_room_graph(id: String) -> Variant:
 
 
 func load_reward_table(id: String) -> Dictionary:
-	return _missing_content("reward_table", id)
+	var load_result := ensure_loaded()
+	if not load_result.get("ok", false):
+		return load_result
+	if not _reward_definitions.has(id):
+		return _missing_content("reward_table", id)
+	return (_reward_definitions[id] as Dictionary).duplicate(true)
+
+
+func load_event_definition(id: String) -> Dictionary:
+	var load_result := ensure_loaded()
+	if not load_result.get("ok", false):
+		return load_result
+	if not _event_definitions.has(id):
+		return _missing_content("event", id)
+	return (_event_definitions[id] as Dictionary).duplicate(true)
+
+
+func load_shop_definition(id: String) -> Dictionary:
+	var load_result := ensure_loaded()
+	if not load_result.get("ok", false):
+		return load_result
+	if not _shop_definitions.has(id):
+		return _missing_content("shop", id)
+	return (_shop_definitions[id] as Dictionary).duplicate(true)
 
 
 func load_part_definition(id: String) -> Dictionary:
@@ -154,6 +190,9 @@ func get_all_content() -> Dictionary:
 		"rune_definitions": _rune_definitions.duplicate(true),
 		"encounter_definitions": _encounter_definitions.duplicate(true),
 		"enemy_definitions": _enemy_definitions.duplicate(true),
+		"reward_definitions": _reward_definitions.duplicate(true),
+		"event_definitions": _event_definitions.duplicate(true),
+		"shop_definitions": _shop_definitions.duplicate(true),
 	}
 
 

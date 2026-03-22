@@ -1,0 +1,25 @@
+{
+  "id": "tutorial_events",
+  "definitions": [
+    {
+      "id": "tutorial_shrine",
+      "name": "Tutorial Shrine",
+      "reward_type": "event",
+      "can_enter_forge": false,
+      "options": [
+        {
+          "option_id": "event_blank_rune",
+          "grant_type": "rune",
+          "content_id": "blank_rune",
+          "quantity": 1
+        },
+        {
+          "option_id": "event_echo_shards",
+          "grant_type": "currency",
+          "content_id": "echo_shards",
+          "quantity": 5
+        }
+      ]
+    }
+  ]
+}

@@ -36,6 +36,11 @@ const REQUIRED_ENEMY_FIELDS := [
 	"damage",
 ]
 
+const REQUIRED_REWARD_FIELDS := [
+	"id",
+	"options",
+]
+
 
 func validate_catalog(payload: Dictionary) -> Dictionary:
 	var archetypes: Dictionary = payload.get("archetypes", {})
@@ -43,8 +48,12 @@ func validate_catalog(payload: Dictionary) -> Dictionary:
 	var room_graphs: Dictionary = payload.get("room_graphs", {})
 	var body_definitions: Dictionary = payload.get("body_definitions", {})
 	var face_definitions: Dictionary = payload.get("face_definitions", {})
+	var rune_definitions: Dictionary = payload.get("rune_definitions", {})
 	var encounter_definitions: Dictionary = payload.get("encounter_definitions", {})
 	var enemy_definitions: Dictionary = payload.get("enemy_definitions", {})
+	var reward_definitions: Dictionary = payload.get("reward_definitions", {})
+	var event_definitions: Dictionary = payload.get("event_definitions", {})
+	var shop_definitions: Dictionary = payload.get("shop_definitions", {})
 	var errors: Array[String] = []
 
 	for archetype_id in archetypes.keys():
@@ -127,10 +136,22 @@ func validate_catalog(payload: Dictionary) -> Dictionary:
 		var enemy_id := str(encounter_definition.get("enemy_id", ""))
 		if enemy_id == "" or not enemy_definitions.has(enemy_id):
 			errors.append("Encounter '%s' references missing enemy '%s'" % [encounter_id, enemy_id])
+		var reward_table_id := str(encounter_definition.get("reward_table_id", ""))
+		if reward_table_id != "" and not reward_definitions.has(reward_table_id):
+			errors.append("Encounter '%s' references missing reward table '%s'" % [encounter_id, reward_table_id])
 
 	for enemy_id in enemy_definitions.keys():
 		var enemy_definition: Dictionary = enemy_definitions[enemy_id]
 		errors.append_array(_validate_required_fields(enemy_definition, REQUIRED_ENEMY_FIELDS, "enemy", enemy_id))
+
+	for reward_id in reward_definitions.keys():
+		errors.append_array(_validate_reward_options(reward_definitions[reward_id], reward_id, "reward table", body_definitions, face_definitions, rune_definitions))
+
+	for event_id in event_definitions.keys():
+		errors.append_array(_validate_reward_options(event_definitions[event_id], event_id, "event", body_definitions, face_definitions, rune_definitions))
+
+	for shop_id in shop_definitions.keys():
+		errors.append_array(_validate_reward_options(shop_definitions[shop_id], shop_id, "shop", body_definitions, face_definitions, rune_definitions))
 
 	if errors.is_empty():
 		return {"ok": true, "errors": []}
@@ -143,4 +164,26 @@ func _validate_required_fields(content: Dictionary, fields: Array, content_type:
 	for field_name in fields:
 		if not content.has(field_name):
 			errors.append("%s '%s' is missing required field '%s'" % [content_type.capitalize(), content_id, field_name])
+	return errors
+
+
+func _validate_reward_options(definition: Dictionary, definition_id: String, definition_type: String, body_definitions: Dictionary, face_definitions: Dictionary, rune_definitions: Dictionary) -> Array[String]:
+	var errors: Array[String] = []
+	errors.append_array(_validate_required_fields(definition, REQUIRED_REWARD_FIELDS, definition_type, definition_id))
+	for option in definition.get("options", []):
+		if not (option is Dictionary):
+			errors.append("%s '%s' has an invalid reward option entry" % [definition_type.capitalize(), definition_id])
+			continue
+		var grant_type := str(option.get("grant_type", ""))
+		var content_id := str(option.get("content_id", ""))
+		if grant_type == "body" and not body_definitions.has(content_id):
+			errors.append("%s '%s' references missing body '%s'" % [definition_type.capitalize(), definition_id, content_id])
+		elif grant_type == "face" and not face_definitions.has(content_id):
+			errors.append("%s '%s' references missing face '%s'" % [definition_type.capitalize(), definition_id, content_id])
+		elif grant_type == "rune" and not rune_definitions.has(content_id):
+			errors.append("%s '%s' references missing rune '%s'" % [definition_type.capitalize(), definition_id, content_id])
+		elif grant_type in ["currency", "modifier", "forge_access"]:
+			continue
+		elif grant_type == "":
+			errors.append("%s '%s' has a reward option with a missing grant_type" % [definition_type.capitalize(), definition_id])
 	return errors

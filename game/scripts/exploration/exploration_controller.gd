@@ -64,7 +64,8 @@ func _refresh_view() -> void:
 	]
 
 	encounter_status_label.text = str(run_session.flags.get("encounter_status", "Explore the room shell and trigger the stub encounter."))
-	encounter_button.disabled = current_room.encounter_id == ""
+	var is_paused := str(run_session.flags.get("screen_state", "exploration")) != "exploration"
+	encounter_button.disabled = current_room.encounter_id == "" or is_paused
 	encounter_button.text = "Trigger Encounter"
 	if current_room.encounter_id != "":
 		encounter_button.text = "Trigger Encounter: %s" % current_room.encounter_id
@@ -85,6 +86,7 @@ func _rebuild_exit_buttons(room_id: String) -> void:
 
 		var button := Button.new()
 		button.text = "Move to %s (%s)" % [room_state.display_name, room_state.room_type]
+		button.disabled = str(run_session.flags.get("screen_state", "exploration")) != "exploration"
 		button.pressed.connect(_on_move_pressed.bind(neighbor_id))
 		exits_container.add_child(button)
 
