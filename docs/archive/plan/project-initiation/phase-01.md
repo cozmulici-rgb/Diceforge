@@ -34,7 +34,7 @@ Create the baseline repository structure and Docker/Compose scaffolding required
 
 ## Interface & Contract Changes
 
-Introduce the command contracts defined in `docs/design/project-initiation/contracts.md`:
+Introduce the command contracts defined in `docs/archive/design/project-initiation/contracts.md`:
 
 ```text
 BuildService {
@@ -63,4 +63,3 @@ BuildService {
 - Keep image responsibilities separate per ADR-002.
 - Do NOT add export presets or gameplay scenes in this phase.
 - Pin the base engine/tooling version in both Dockerfiles.
-

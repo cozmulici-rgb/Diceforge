@@ -14,7 +14,7 @@ Facetbound is a Godot 4 prototype for a 2D dice-driven roguelike. This repositor
 ```text
 docker/         Container images for development and export
 dist/           Generated build artifacts
-docs/           Concept, research, design, plan, and setup docs
+docs/           Active concept and setup docs, plus archived planning material
 game/           Godot project files
 scripts/        Build and verification scripts
 ```

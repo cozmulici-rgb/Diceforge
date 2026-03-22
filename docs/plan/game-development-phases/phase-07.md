@@ -1,0 +1,80 @@
+# Phase 07: Daily Void, Modifiers, And Final Validation
+
+## Objective
+
+Complete the planned feature set with curses, blessings, Daily Void mode, and final validation hooks. This phase also isolates optional online leaderboard behavior behind a gateway while keeping the mode functional offline.
+
+## Dependencies
+
+- Depends on: Phase 06
+- Enables: Full feature completion
+
+## Exact File Changes
+
+### Files to Create
+| File Path | Purpose |
+|-----------|---------|
+| `game/scripts/modes/daily_void_mode_adapter.gd` | Builds deterministic daily challenge sessions |
+| `game/scripts/integrations/leaderboard_gateway.gd` | Optional leaderboard boundary per ADR-003 |
+| `game/scripts/modifiers/modifier_registry.gd` | Applies curses and blessings to runs |
+| `game/content/modifiers/curses.json` | Curse definitions |
+| `game/content/modifiers/blessings.json` | Blessing definitions |
+| `game/content/modes/daily_void.json` | Daily mode configuration and score rules |
+| `game/tests/test_daily_void_mode.gd` | Seeded run and gateway fallback tests |
+| `game/tests/test_modifier_registry.gd` | Modifier application tests |
+
+### Files to Modify
+| File Path | What Changes |
+|-----------|-------------|
+| `game/scripts/core/game_state_coordinator.gd` | Start Daily Void runs and thread modifier state through run creation |
+| `game/scripts/core/run_session.gd` | Track modifier state, seed id, and daily-mode metadata |
+| `game/scripts/content/content_catalog.gd` | Load modifier and daily-mode definitions |
+| `game/scripts/combat/combat_controller.gd` | Respect modifier-driven combat rule changes |
+| `game/scripts/exploration/dungeon_generator.gd` | Accept seeded generation inputs for Daily Void |
+| `game/scripts/progression/meta_progression_controller.gd` | Calculate Daily Void result payloads |
+| `game/scripts/screens/start_menu_controller.gd` | Expose Daily Void start option |
+| `game/scripts/screens/progression_screen_controller.gd` | Show Daily Void submission status and local results |
+| `game/tests/test_runner.gd` | Register Daily Void and modifier tests |
+| `README.md` | Document the playable feature set and local-only Daily Void expectations |
+| `docs/setup.md` | Document any new test or mode-specific verification steps |
+
+### Files to Delete
+| File Path | Reason |
+|-----------|--------|
+| None | No deletions required in this phase |
+
+## Interface & Contract Changes
+
+New interface implemented from `contracts.md`:
+
+```text
+interface LeaderboardGateway
+  submit_daily_score(entry: DailyScoreEntry) -> SubmitResult | GatewayFailure
+  fetch_daily_leaderboard(seed_id: String) -> LeaderboardSnapshot | GatewayFailure
+```
+
+## Tests to Add / Modify
+
+| Test Case | Type | File to Create/Modify |
+|-----------|------|----------------------|
+| Daily Void score submission handles service outage | Integration | `game/tests/test_daily_void_mode.gd` |
+| Leaderboard request without valid authorization is rejected | Integration | `game/tests/test_daily_void_mode.gd` |
+| Rune and synergy chains causing excessive per-turn resolution time | Validation | `game/tests/test_modifier_registry.gd` |
+
+## Acceptance Criteria for This Phase
+
+At the end of this phase, ALL of the following must be true:
+
+- [ ] Daily Void can start from a fixed seed and produce a deterministic local run
+- [ ] Curses and blessings can alter run-state and combat behavior through a dedicated modifier system
+- [ ] Daily Void remains playable if the leaderboard service is absent or unavailable
+- [ ] Online leaderboard communication, if configured, is isolated behind `LeaderboardGateway`
+- [ ] Player-facing docs describe the completed local feature set and verification flow
+- [ ] Relevant tests pass: `docker compose run --rm export bash /workspace/scripts/run-godot-tests.sh`
+- [ ] Relevant integrity checks pass: `make verify` and `make export`
+
+## Implementation Notes
+
+- Offline Daily Void behavior is not optional; online ranking is optional.
+- Do not leak network behavior into core combat, exploration, persistence, or progression components.
+- Keep modifier rules data-driven where practical so balance iteration stays in content files rather than controller code.
