@@ -11,6 +11,8 @@ const RoomTransitionResultScript = preload("res://scripts/exploration/room_trans
 const PersistenceServiceScript = preload("res://scripts/persistence/persistence_service.gd")
 const MetaProgressionControllerScript = preload("res://scripts/progression/meta_progression_controller.gd")
 const MetaStateScript = preload("res://scripts/progression/meta_state.gd")
+const DailyVoidModeAdapterScript = preload("res://scripts/modes/daily_void_mode_adapter.gd")
+const ModifierRegistryScript = preload("res://scripts/modifiers/modifier_registry.gd")
 
 var content_catalog
 var current_session = null
@@ -21,6 +23,8 @@ var _dungeon_generator
 var persistence_service
 var meta_progression_controller
 var meta_state
+var daily_void_mode_adapter
+var modifier_registry
 var last_recovery_message := ""
 
 const ACTIVE_RUN_SLOT := "active_run"
@@ -33,6 +37,8 @@ func _init(catalog) -> void:
 	_dungeon_generator = DungeonGeneratorScript.new(catalog)
 	persistence_service = PersistenceServiceScript.new(catalog)
 	meta_progression_controller = MetaProgressionControllerScript.new(catalog)
+	daily_void_mode_adapter = DailyVoidModeAdapterScript.new(catalog)
+	modifier_registry = ModifierRegistryScript.new(catalog)
 	_load_or_initialize_meta_state()
 
 
@@ -59,8 +65,18 @@ func create_run_session(archetype_id: String) -> Variant:
 			"faces": [],
 			"runes": [],
 			"currencies": {"echo_shards": 0},
+			"modifiers": [],
 		},
 		"modifiers": [],
+		"mode_id": "standard",
+		"seed_id": "",
+		"numeric_seed": 0,
+		"daily_void_config": {},
+		"score_summary": {
+			"bosses_defeated": 0,
+			"modifier_count": 0,
+			"score_bonus": 0,
+		},
 		"flags": {
 			"starter_floor_id": str(archetype.get("starter_floor_id", "")),
 			"room_history": [str(starter_floor.get("starting_room_id", ""))],
@@ -68,6 +84,7 @@ func create_run_session(archetype_id: String) -> Variant:
 			"screen_state": "exploration",
 			"pending_floor_advance": "",
 			"pending_run_complete": false,
+			"run_mode": "standard",
 			"encounter_status": "Run started. Move into the tutorial hall to trigger the encounter stub.",
 		},
 		"room_states": {},
@@ -83,6 +100,45 @@ func create_run_session(archetype_id: String) -> Variant:
 	if _is_error_result(floor_result):
 		return floor_result
 
+	current_session = session
+	_persist_current_session()
+	return session
+
+
+func create_daily_void_session(archetype_id: String, calendar_day: String = "") -> Variant:
+	var target_day := calendar_day if calendar_day != "" else Time.get_date_string_from_system()
+	var daily_config = daily_void_mode_adapter.create_daily_run_config(target_day, meta_state)
+	if not daily_config.get("ok", false):
+		return daily_config
+	if not (daily_config.get("allowed_archetype_ids", []) as Array).has(archetype_id):
+		return {"ok": false, "error": "archetype_not_allowed", "archetype_id": archetype_id}
+
+	var session = create_run_session(archetype_id)
+	if session == null or session is Dictionary:
+		return session
+
+	var session_overrides = daily_void_mode_adapter.create_daily_run_session(daily_config, archetype_id)
+	if not session_overrides.get("ok", false):
+		return session_overrides
+	var overrides: Dictionary = session_overrides.get("session_overrides", {})
+	session.session_id = "daily_%s_%s" % [archetype_id, str(overrides.get("session_id_suffix", target_day)).replace("-", "_")]
+	session.mode_id = str(overrides.get("mode_id", "daily_void"))
+	session.seed_id = str(overrides.get("seed_id", target_day))
+	session.numeric_seed = int(overrides.get("numeric_seed", 0))
+	session.daily_void_config = daily_config.duplicate(true)
+	session.modifiers = (overrides.get("modifiers", []) as Array).duplicate(true)
+	session.inventory["modifiers"] = session.modifiers.duplicate(true)
+	session.flags["run_mode"] = "daily_void"
+	session.flags["daily_void_calendar_day"] = target_day
+	session.flags["encounter_status"] = "Daily Void ready for %s." % target_day
+	session.score_summary = {
+		"bosses_defeated": 0,
+		"modifier_count": session.modifiers.size(),
+		"score_bonus": int(modifier_registry.build_progression_snapshot(session.modifiers).get("score_bonus", 0)),
+	}
+	var floor_result = _initialize_floor(session, str(session.flags.get("starter_floor_id", "")), 1)
+	if _is_error_result(floor_result):
+		return floor_result
 	current_session = session
 	_persist_current_session()
 	return session
@@ -201,6 +257,8 @@ func apply_encounter_result(result: Dictionary) -> Variant:
 	if str(result.get("outcome", "")) == "victory":
 		_mark_room_completed(current_session.room_states, str(result.get("room_id", current_session.current_room_id)))
 		_sync_floor_state_from_room_states()
+		if bool(result.get("boss_defeated", false)):
+			current_session.score_summary["bosses_defeated"] = int(current_session.score_summary.get("bosses_defeated", 0)) + 1
 		if bool(result.get("boss_defeated", false)):
 			var current_floor = content_catalog.load_floor_template(str(current_session.floor_state.get("floor_template_id", "")))
 			var next_floor_id := str(current_floor.get("next_floor_id", ""))
@@ -346,7 +404,9 @@ func complete_reward_flow() -> Variant:
 func finalize_run(result: Variant) -> Dictionary:
 	var run_summary = _build_run_summary(result)
 	var progression_result = meta_progression_controller.process_run_end(run_summary, meta_state)
+	progression_result = daily_void_mode_adapter.finalize_daily_result(current_session, progression_result)
 	meta_state = MetaStateScript.new(progression_result.get("meta_state", {}))
+	current_session.progression_result = progression_result.duplicate(true)
 	return progression_result
 
 
@@ -452,7 +512,10 @@ func _initialize_floor(session, floor_template_id: String, floor_index: int) -> 
 	var room_graph = content_catalog.load_room_graph(str(floor_template.get("room_graph_id", "")))
 	if _is_error_result(room_graph):
 		return room_graph
-	var floor_state = _dungeon_generator.generate_floor(str(floor_template_id), int(floor_template.get("seed", floor_index)), session)
+	var generation_seed := int(floor_template.get("seed", floor_index))
+	if int(session.numeric_seed) != 0:
+		generation_seed += int(session.numeric_seed)
+	var floor_state = _dungeon_generator.generate_floor(str(floor_template_id), generation_seed, session)
 	if _is_error_result(floor_state):
 		return floor_state
 	if not _dungeon_generator.is_boss_path_reachable(floor_state):
@@ -483,6 +546,7 @@ func _sync_floor_state_from_room_states() -> void:
 
 
 func _build_run_summary(result: Variant) -> Dictionary:
+	var progression_snapshot: Dictionary = modifier_registry.build_progression_snapshot(current_session.modifiers)
 	return {
 		"outcome": str((result as Dictionary).get("outcome", "unknown")),
 		"boss_defeated": bool((result as Dictionary).get("boss_defeated", false)),
@@ -490,6 +554,13 @@ func _build_run_summary(result: Variant) -> Dictionary:
 		"floors_cleared": int(current_session.floor_index),
 		"archetype_id": current_session.archetype_id,
 		"session_id": current_session.session_id,
+		"mode_id": current_session.mode_id,
+		"seed_id": current_session.seed_id,
+		"modifier_ids": current_session.modifiers.duplicate(true),
+		"modifier_count": current_session.modifiers.size(),
+		"bosses_defeated": int(current_session.score_summary.get("bosses_defeated", 0)),
+		"score_bonus": int(progression_snapshot.get("score_bonus", 0)),
+		"echo_shard_bonus": int(progression_snapshot.get("echo_shard_bonus", 0)),
 	}
 
 

@@ -11,6 +11,8 @@ const REWARD_DIR := "res://content/rewards"
 const EVENT_DIR := "res://content/events"
 const SHOP_DIR := "res://content/shops"
 const PROGRESSION_DIR := "res://content/progression"
+const MODIFIER_DIR := "res://content/modifiers"
+const MODE_DIR := "res://content/modes"
 const ContentValidatorScript = preload("res://scripts/content/content_validator.gd")
 
 var validator
@@ -28,6 +30,9 @@ var _event_definitions: Dictionary = {}
 var _shop_definitions: Dictionary = {}
 var _unlock_definitions: Dictionary = {}
 var _achievement_definitions: Dictionary = {}
+var _curse_definitions: Dictionary = {}
+var _blessing_definitions: Dictionary = {}
+var _daily_mode_definitions: Dictionary = {}
 
 
 func _init(content_validator = null) -> void:
@@ -51,6 +56,9 @@ func ensure_loaded() -> Dictionary:
 	_shop_definitions = _load_named_definitions_directory(SHOP_DIR)
 	_unlock_definitions = _load_named_definitions("%s/unlocks.json" % PROGRESSION_DIR)
 	_achievement_definitions = _load_named_definitions("%s/achievements.json" % PROGRESSION_DIR)
+	_curse_definitions = _load_named_definitions("%s/curses.json" % MODIFIER_DIR)
+	_blessing_definitions = _load_named_definitions("%s/blessings.json" % MODIFIER_DIR)
+	_daily_mode_definitions = _load_named_definitions("%s/daily_void.json" % MODE_DIR)
 
 	var validation: Dictionary = validator.validate_catalog({
 		"archetypes": _archetypes,
@@ -66,6 +74,9 @@ func ensure_loaded() -> Dictionary:
 		"shop_definitions": _shop_definitions,
 		"unlock_definitions": _unlock_definitions,
 		"achievement_definitions": _achievement_definitions,
+		"curse_definitions": _curse_definitions,
+		"blessing_definitions": _blessing_definitions,
+		"daily_mode_definitions": _daily_mode_definitions,
 	})
 
 	if not validation.get("ok", false):
@@ -164,6 +175,26 @@ func load_enemy_definition(id: String) -> Dictionary:
 	return (_enemy_definitions[id] as Dictionary).duplicate(true)
 
 
+func load_modifier_definition(id: String) -> Dictionary:
+	var load_result := ensure_loaded()
+	if not load_result.get("ok", false):
+		return load_result
+	if _curse_definitions.has(id):
+		return (_curse_definitions[id] as Dictionary).duplicate(true)
+	if _blessing_definitions.has(id):
+		return (_blessing_definitions[id] as Dictionary).duplicate(true)
+	return _missing_content("modifier", id)
+
+
+func load_daily_mode_config(id: String) -> Dictionary:
+	var load_result := ensure_loaded()
+	if not load_result.get("ok", false):
+		return load_result
+	if not _daily_mode_definitions.has(id):
+		return _missing_content("daily_mode", id)
+	return (_daily_mode_definitions[id] as Dictionary).duplicate(true)
+
+
 func validate_saved_state(state: Dictionary) -> Dictionary:
 	var archetype_id := str(state.get("archetype_id", ""))
 	if archetype_id == "":
@@ -175,6 +206,10 @@ func validate_saved_state(state: Dictionary) -> Dictionary:
 	var archetype = load_archetype(archetype_id)
 	if archetype is Dictionary and archetype.get("error", "") != "":
 		return archetype
+	for modifier_id in state.get("modifiers", []):
+		var modifier_definition = load_modifier_definition(str(modifier_id))
+		if modifier_definition is Dictionary and modifier_definition.get("error", "") != "":
+			return modifier_definition
 
 	return {"ok": true}
 
@@ -202,6 +237,9 @@ func get_all_content() -> Dictionary:
 		"shop_definitions": _shop_definitions.duplicate(true),
 		"unlock_definitions": _unlock_definitions.duplicate(true),
 		"achievement_definitions": _achievement_definitions.duplicate(true),
+		"curse_definitions": _curse_definitions.duplicate(true),
+		"blessing_definitions": _blessing_definitions.duplicate(true),
+		"daily_mode_definitions": _daily_mode_definitions.duplicate(true),
 	}
 
 
@@ -244,6 +282,16 @@ func get_progression_definitions(definition_type: String) -> Dictionary:
 	if definition_type == "achievement":
 		return _achievement_definitions.duplicate(true)
 	return {}
+
+
+func get_modifier_definitions() -> Dictionary:
+	var load_result := ensure_loaded()
+	if not load_result.get("ok", false):
+		return {}
+	var definitions := _curse_definitions.duplicate(true)
+	for modifier_id in _blessing_definitions.keys():
+		definitions[modifier_id] = (_blessing_definitions[modifier_id] as Dictionary).duplicate(true)
+	return definitions
 
 
 func _load_content_directory(base_path: String) -> Dictionary:

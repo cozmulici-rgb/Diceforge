@@ -33,9 +33,11 @@ func _show_start_menu() -> void:
 	start_menu.configure(
 		archetypes,
 		game_state_coordinator.get_continue_run_summary(),
-		game_state_coordinator.last_recovery_message
+		game_state_coordinator.last_recovery_message,
+		game_state_coordinator.meta_state.last_daily_void_result
 	)
 	start_menu.run_requested.connect(_on_run_requested)
+	start_menu.daily_void_requested.connect(_on_daily_void_requested)
 	start_menu.continue_requested.connect(_on_continue_requested)
 
 
@@ -125,6 +127,21 @@ func _on_continue_requested(slot_id: String) -> void:
 		_show_start_menu()
 		return
 	_show_exploration(load_result.get("run_session"))
+
+
+func _on_daily_void_requested(archetype_id: String) -> void:
+	var run_result = game_state_coordinator.create_daily_void_session(archetype_id)
+	if run_result != null and not (run_result is Dictionary):
+		_show_exploration(run_result)
+		return
+
+	var message := "daily void unavailable"
+	if run_result is Dictionary:
+		if run_result.has("errors"):
+			message = ", ".join(run_result.get("errors", []))
+		elif run_result.has("error"):
+			message = str(run_result["error"])
+	hud.show_error(message)
 
 
 func _on_session_updated(run_session) -> void:

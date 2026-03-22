@@ -27,11 +27,7 @@ func process_run_end(outcome: Dictionary, meta_state) -> Dictionary:
 		"echo_shards_total": meta_state.echo_shards,
 		"new_unlock_ids": new_unlock_ids,
 		"achievement_ids": achievement_ids,
-		"daily_void_result": {
-			"seed_id": "",
-			"score": 0,
-			"submission_status": "not_attempted",
-		},
+		"daily_void_result": meta_state.last_daily_void_result.duplicate(true),
 		"meta_state": meta_state.to_dictionary(),
 	}
 
@@ -64,4 +60,5 @@ func _calculate_echo_shards(outcome: Dictionary) -> int:
 		base_shards += 15
 	if str(outcome.get("outcome", "")) == "victory" and bool(outcome.get("run_complete", false)):
 		base_shards += 25
+	base_shards += int(outcome.get("echo_shard_bonus", 0))
 	return base_shards

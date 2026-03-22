@@ -15,6 +15,9 @@
 | 6 | `phase-06.md` | Implement persistence and meta progression with Echo Shards and unlocks | Phase 5 |
 | 7 | `phase-07.md` | Add curses, blessings, Daily Void mode, and final validation/polish wiring | Phase 6 |
 
+**Execution breakdowns:**
+- `phase-07-breakdown.md`: Ordered implementation slices for Daily Void, modifiers, persistence integration, and final validation.
+
 **Total phases:** 7
 **Estimated complexity:** High
 

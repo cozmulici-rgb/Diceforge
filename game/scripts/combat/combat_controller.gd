@@ -6,6 +6,7 @@ const DiceModelScript = preload("res://scripts/combat/dice_model.gd")
 const ActionSlotScript = preload("res://scripts/combat/action_slot.gd")
 const EnemyEncounterModelScript = preload("res://scripts/combat/enemy_encounter_model.gd")
 const BossPhaseControllerScript = preload("res://scripts/combat/boss_phase_controller.gd")
+const ModifierRegistryScript = preload("res://scripts/modifiers/modifier_registry.gd")
 
 signal combat_finished(encounter_result)
 signal combat_state_updated(combat_state)
@@ -48,14 +49,16 @@ func begin_encounter(run_state, encounter_definition: Dictionary) -> Variant:
 	var action_slots: Array = []
 	for slot_data in (run_state.action_slots as Array):
 		action_slots.append(ActionSlotScript.new(slot_data).to_dictionary())
+	var modifier_registry = ModifierRegistryScript.new(content_catalog)
+	var modifier_snapshot: Dictionary = modifier_registry.build_combat_snapshot(run_state.modifiers)
 
 	var enemy_state = EnemyEncounterModelScript.new({
 		"enemy_id": str(enemy_definition.get("id", "")),
 		"display_name": str(enemy_definition.get("name", "")),
-		"hp": int(enemy_definition.get("hp", 1)),
+		"hp": max(int(enemy_definition.get("hp", 1)) + int(modifier_snapshot.get("enemy_hp_delta", 0)), 1),
 		"block": int(enemy_definition.get("starting_block", 0)),
 		"intent_label": str(enemy_definition.get("intent", "Strike")),
-		"intent_damage": int(enemy_definition.get("damage", 0)),
+		"intent_damage": max(int(enemy_definition.get("damage", 0)) + int(modifier_snapshot.get("enemy_damage_delta", 0)), 0),
 	}).to_dictionary()
 	var boss_state = boss_phase_controller.initialize_enemy_state(enemy_definition)
 	for key in boss_state.keys():
@@ -65,12 +68,13 @@ func begin_encounter(run_state, encounter_definition: Dictionary) -> Variant:
 		"encounter_id": str(encounter_definition.get("id", "")),
 		"room_id": str(run_state.current_room_id),
 		"round_index": 1,
-		"player_hp": int((run_state.player_state as Dictionary).get("hp", 0)),
+		"player_hp": int((run_state.player_state as Dictionary).get("hp", 0)) + int(modifier_snapshot.get("player_hp_bonus", 0)),
 		"player_block": 0,
 		"active_dice": (run_state.active_dice as Array).duplicate(true),
 		"action_slots": action_slots,
 		"roll_results": [],
 		"enemy_state": enemy_state,
+		"modifier_snapshot": modifier_snapshot,
 		"turn_log": ["Encounter started against %s." % enemy_state.get("display_name", "Unknown Enemy")],
 		"pending_player_rolls": (encounter_definition.get("player_rolls", []) as Array).duplicate(true),
 		"state": "player_roll",
@@ -124,6 +128,9 @@ func resolve_player_turn(state) -> Dictionary:
 			total_block += int(roll.get("rolled_value", 0)) * power_multiplier
 		elif family == "utility":
 			total_block += int(face_definition.get("bonus_block", 1))
+
+	total_attack += int((state.modifier_snapshot as Dictionary).get("attack_bonus", 0))
+	total_block += int((state.modifier_snapshot as Dictionary).get("block_bonus", 0))
 
 	var enemy_state: Dictionary = state.enemy_state.duplicate(true)
 	var enemy_block: int = int(enemy_state.get("block", 0))

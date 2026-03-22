@@ -1,8 +1,8 @@
 class_name SaveSchema
 extends RefCounted
 
-const RUN_SCHEMA_VERSION := 1
-const META_SCHEMA_VERSION := 1
+const RUN_SCHEMA_VERSION := 2
+const META_SCHEMA_VERSION := 2
 
 const REQUIRED_RUN_FIELDS := [
 	"schema_version",
@@ -14,6 +14,11 @@ const REQUIRED_RUN_FIELDS := [
 	"player_state",
 	"active_dice",
 	"inventory",
+	"mode_id",
+	"seed_id",
+	"numeric_seed",
+	"daily_void_config",
+	"score_summary",
 ]
 
 const REQUIRED_META_FIELDS := [
@@ -24,6 +29,7 @@ const REQUIRED_META_FIELDS := [
 	"unlocked_upgrade_ids",
 	"achievement_ids",
 	"daily_void_history",
+	"last_daily_void_result",
 ]
 
 

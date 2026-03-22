@@ -10,6 +10,7 @@ var active_dice: Array
 var action_slots: Array
 var roll_results: Array
 var enemy_state: Dictionary
+var modifier_snapshot: Dictionary
 var turn_log: Array
 var pending_player_rolls: Array
 var state: String
@@ -26,6 +27,7 @@ func _init(data: Dictionary = {}) -> void:
 	action_slots = (data.get("action_slots", []) as Array).duplicate(true)
 	roll_results = (data.get("roll_results", []) as Array).duplicate(true)
 	enemy_state = (data.get("enemy_state", {}) as Dictionary).duplicate(true)
+	modifier_snapshot = (data.get("modifier_snapshot", {}) as Dictionary).duplicate(true)
 	turn_log = (data.get("turn_log", []) as Array).duplicate(true)
 	pending_player_rolls = (data.get("pending_player_rolls", []) as Array).duplicate(true)
 	state = str(data.get("state", "player_roll"))
@@ -43,6 +45,7 @@ func to_dictionary() -> Dictionary:
 		"action_slots": action_slots.duplicate(true),
 		"roll_results": roll_results.duplicate(true),
 		"enemy_state": enemy_state.duplicate(true),
+		"modifier_snapshot": modifier_snapshot.duplicate(true),
 		"turn_log": turn_log.duplicate(true),
 		"pending_player_rolls": pending_player_rolls.duplicate(true),
 		"state": state,

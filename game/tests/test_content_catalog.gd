@@ -63,12 +63,20 @@ func run() -> Array[String]:
 	if not achievement_definitions.has("first_boss_clear"):
 		failures.append("achievement definitions should load through the catalog")
 
+	var modifier_definition = catalog.load_modifier_definition("void_pressure")
+	if not (modifier_definition is Dictionary) or modifier_definition.get("modifier_type", "") != "curse":
+		failures.append("modifier definitions should load through the catalog")
+
+	var daily_mode = catalog.load_daily_mode_config("daily_void")
+	if not (daily_mode is Dictionary) or (daily_mode.get("modifier_rotation", []) as Array).is_empty():
+		failures.append("daily void mode config should load through the catalog")
+
 	var face_definition = catalog.load_part_definition("strike")
 	if not (face_definition is Dictionary) or face_definition.get("family", "") != "attack":
 		failures.append("starter face definitions should load through load_part_definition")
 
 	var all_content = catalog.get_all_content()
-	if not all_content.has("archetypes") or not all_content.has("floors") or not all_content.has("room_graphs") or not all_content.has("reward_definitions") or not all_content.has("unlock_definitions"):
-		failures.append("catalog should expose loaded archetypes, floors, room graphs, reward content, and progression content")
+	if not all_content.has("archetypes") or not all_content.has("floors") or not all_content.has("room_graphs") or not all_content.has("reward_definitions") or not all_content.has("unlock_definitions") or not all_content.has("curse_definitions") or not all_content.has("daily_mode_definitions"):
+		failures.append("catalog should expose loaded archetypes, floors, room graphs, reward content, progression content, modifiers, and daily mode content")
 
 	return failures

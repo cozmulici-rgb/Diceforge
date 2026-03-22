@@ -51,6 +51,10 @@ text = "Starter run details will appear here."
 layout_mode = 2
 text = "Start Run"
 
+[node name="DailyVoidButton" type="Button" parent="CenterContainer/PanelContainer/VBoxContainer"]
+layout_mode = 2
+text = "Start Daily Void"
+
 [node name="ContinueRunButton" type="Button" parent="CenterContainer/PanelContainer/VBoxContainer"]
 layout_mode = 2
 text = "Continue Run"

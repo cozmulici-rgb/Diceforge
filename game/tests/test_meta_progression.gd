@@ -41,5 +41,7 @@ func run() -> Array[String]:
 		var loaded_meta_state: Dictionary = load_result.get("data", {})
 		if int(loaded_meta_state.get("echo_shards", 0)) != meta_state.echo_shards:
 			failures.append("loaded meta progression should match the saved shard total")
+		if not loaded_meta_state.has("last_daily_void_result"):
+			failures.append("meta progression saves should preserve daily void result metadata")
 
 	return failures

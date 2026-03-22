@@ -41,6 +41,7 @@ func generate_floor(template_id: String, seed: int, run_state = null):
 		"start_room_id": str(floor_template.get("starting_room_id", "")),
 		"boss_room_id": str(floor_template.get("boss_room_id", "")),
 		"next_floor_id": str(floor_template.get("next_floor_id", "")),
+		"generation_seed": seed,
 		"room_ids": room_ids,
 		"visited_room_ids": visited_room_ids,
 		"completed_room_ids": completed_room_ids,

@@ -1,7 +1,7 @@
 class_name RunSession
 extends RefCounted
 
-const SCHEMA_VERSION := 1
+const SCHEMA_VERSION := 2
 
 var session_id: String
 var archetype_id: String
@@ -12,6 +12,11 @@ var player_state: Dictionary
 var active_dice: Array
 var inventory: Dictionary
 var modifiers: Array
+var mode_id: String
+var seed_id: String
+var numeric_seed: int
+var daily_void_config: Dictionary
+var score_summary: Dictionary
 var flags: Dictionary
 var room_states: Dictionary
 var action_slots: Array
@@ -32,6 +37,11 @@ func _init(data: Dictionary = {}) -> void:
 	active_dice = (data.get("active_dice", [])).duplicate(true)
 	inventory = (data.get("inventory", {})).duplicate(true)
 	modifiers = (data.get("modifiers", [])).duplicate(true)
+	mode_id = str(data.get("mode_id", "standard"))
+	seed_id = str(data.get("seed_id", ""))
+	numeric_seed = int(data.get("numeric_seed", 0))
+	daily_void_config = (data.get("daily_void_config", {})).duplicate(true)
+	score_summary = (data.get("score_summary", {})).duplicate(true)
 	flags = (data.get("flags", {})).duplicate(true)
 	room_states = (data.get("room_states", {})).duplicate(true)
 	action_slots = (data.get("action_slots", [])).duplicate(true)
@@ -54,6 +64,11 @@ func to_dictionary() -> Dictionary:
 		"active_dice": active_dice.duplicate(true),
 		"inventory": inventory.duplicate(true),
 		"modifiers": modifiers.duplicate(true),
+		"mode_id": mode_id,
+		"seed_id": seed_id,
+		"numeric_seed": numeric_seed,
+		"daily_void_config": daily_void_config.duplicate(true),
+		"score_summary": score_summary.duplicate(true),
 		"flags": flags.duplicate(true),
 		"room_states": room_states.duplicate(true),
 		"action_slots": action_slots.duplicate(true),

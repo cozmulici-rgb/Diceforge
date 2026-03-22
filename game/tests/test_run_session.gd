@@ -29,6 +29,9 @@ func run() -> Array[String]:
 	if run_result.active_dice.size() != 3:
 		failures.append("new session should contain the seeded starter dice")
 
+	if str(run_result.mode_id) != "standard":
+		failures.append("new standard sessions should record the standard mode id")
+
 	if run_result.action_slots.size() != 3:
 		failures.append("new session should hydrate the default action slots")
 

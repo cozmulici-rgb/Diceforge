@@ -1,0 +1,30 @@
+{
+  "id": "blessing_catalog",
+  "definitions": [
+    {
+      "id": "ember_blessing",
+      "name": "Ember Blessing",
+      "modifier_type": "blessing",
+      "application_scope": "combat",
+      "effect_tags": ["attack_up", "block_up"],
+      "stack_mode": "unique",
+      "effects": {
+        "attack_bonus": 2,
+        "block_bonus": 1,
+        "score_bonus": 10
+      }
+    },
+    {
+      "id": "warden_breaker",
+      "name": "Warden Breaker",
+      "modifier_type": "blessing",
+      "application_scope": "reward",
+      "effect_tags": ["echo_shards_up"],
+      "stack_mode": "unique",
+      "effects": {
+        "echo_shard_bonus": 5,
+        "score_bonus": 20
+      }
+    }
+  ]
+}

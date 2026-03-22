@@ -1,0 +1,30 @@
+{
+  "id": "daily_void_mode_catalog",
+  "definitions": [
+    {
+      "id": "daily_void",
+      "name": "Daily Void",
+      "seed_salt": 7000,
+      "scoring_rule_id": "daily_void_score_v1",
+      "submission_context": "local_only",
+      "auth_token": "",
+      "default_allowed_archetype_ids": [
+        "starter_facetwalker"
+      ],
+      "modifier_rotation": [
+        {
+          "id": "pressure_rotation",
+          "modifier_ids": ["void_pressure", "glass_core"]
+        },
+        {
+          "id": "ember_rotation",
+          "modifier_ids": ["void_pressure", "ember_blessing"]
+        },
+        {
+          "id": "breaker_rotation",
+          "modifier_ids": ["glass_core", "warden_breaker"]
+        }
+      ]
+    }
+  ]
+}

@@ -29,10 +29,19 @@ func _render() -> void:
 		int(_progression_result.get("echo_shards_gained", 0)),
 		int(_progression_result.get("echo_shards_total", 0)),
 	]
-	details_label.text = "Unlocks: %s | Achievements: %s" % [
+	var daily_result: Dictionary = _progression_result.get("daily_void_result", {})
+	var detail_parts: Array[String] = []
+	detail_parts.append("Unlocks: %s | Achievements: %s" % [
 		", ".join(_to_string_array(_progression_result.get("new_unlock_ids", []))),
 		", ".join(_to_string_array(_progression_result.get("achievement_ids", []))),
-	]
+	])
+	if not daily_result.is_empty() and str(daily_result.get("seed_id", "")) != "":
+		detail_parts.append("Daily Void %s | Score %d | %s" % [
+			str(daily_result.get("seed_id", "")),
+			int(daily_result.get("score", 0)),
+			str(daily_result.get("submission_status", "not_attempted")),
+		])
+	details_label.text = "\n".join(detail_parts)
 
 
 func _on_return_pressed() -> void:
