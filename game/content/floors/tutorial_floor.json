@@ -1,0 +1,7 @@
+{
+  "id": "tutorial_floor",
+  "name": "Tutorial Floor",
+  "room_graph_id": "tutorial_rooms",
+  "starting_room_id": "tutorial_entry",
+  "rooms": []
+}

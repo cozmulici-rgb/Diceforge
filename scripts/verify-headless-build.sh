@@ -4,7 +4,8 @@ set -euo pipefail
 project_dir="${GODOT_PROJECT_PATH:-/workspace/game}"
 project_file="${project_dir}/project.godot"
 preset_file="${project_dir}/export_presets.cfg"
-main_scene="${project_dir}/scenes/main.tscn"
+main_scene="${project_dir}/scenes/app_root.tscn"
+compat_scene="${project_dir}/scenes/main.tscn"
 
 if [[ ! -f "${project_file}" ]]; then
     echo "Missing Godot project file: ${project_file}" >&2
@@ -21,6 +22,11 @@ if [[ ! -f "${main_scene}" ]]; then
     exit 1
 fi
 
+if [[ ! -f "${compat_scene}" ]]; then
+    echo "Missing compatibility scene: ${compat_scene}" >&2
+    exit 1
+fi
+
 if ! grep -q 'name="Linux/X11"' "${preset_file}"; then
     echo "Missing Linux/X11 export preset in ${preset_file}" >&2
     exit 1
@@ -33,3 +39,6 @@ godot --headless --path "${project_dir}" --import
 
 echo "Running startup scene smoke check"
 godot --headless --path "${project_dir}" --quit-after 1
+
+echo "Running deterministic test harness"
+bash /workspace/scripts/run-godot-tests.sh

@@ -1,0 +1,50 @@
+{
+  "id": "starter_facetwalker",
+  "name": "Starter Facetwalker",
+  "starter_floor_id": "tutorial_floor",
+  "player_state": {
+    "hp": 30,
+    "status_effects": []
+  },
+  "starter_dice": [
+    {
+      "id": "balanced_d6_alpha",
+      "label": "Balanced D6",
+      "sides": 6,
+      "face_set": [
+        "strike",
+        "guard",
+        "focus",
+        "strike",
+        "guard",
+        "surge"
+      ]
+    },
+    {
+      "id": "balanced_d6_beta",
+      "label": "Balanced D6",
+      "sides": 6,
+      "face_set": [
+        "strike",
+        "guard",
+        "focus",
+        "strike",
+        "guard",
+        "surge"
+      ]
+    },
+    {
+      "id": "balanced_d6_gamma",
+      "label": "Balanced D6",
+      "sides": 6,
+      "face_set": [
+        "strike",
+        "guard",
+        "focus",
+        "strike",
+        "guard",
+        "surge"
+      ]
+    }
+  ]
+}

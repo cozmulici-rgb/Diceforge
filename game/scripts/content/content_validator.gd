@@ -1,0 +1,101 @@
+class_name ContentValidator
+extends RefCounted
+
+const REQUIRED_ARCHETYPE_FIELDS := [
+	"id",
+	"name",
+	"starter_floor_id",
+	"player_state",
+	"starter_dice",
+]
+
+const REQUIRED_FLOOR_FIELDS := [
+	"id",
+	"name",
+	"room_graph_id",
+	"starting_room_id",
+]
+
+const REQUIRED_ROOM_GRAPH_FIELDS := [
+	"id",
+	"name",
+	"rooms",
+	"links",
+]
+
+
+func validate_catalog(payload: Dictionary) -> Dictionary:
+	var archetypes: Dictionary = payload.get("archetypes", {})
+	var floors: Dictionary = payload.get("floors", {})
+	var room_graphs: Dictionary = payload.get("room_graphs", {})
+	var errors: Array[String] = []
+
+	for archetype_id in archetypes.keys():
+		var archetype: Dictionary = archetypes[archetype_id]
+		errors.append_array(_validate_required_fields(archetype, REQUIRED_ARCHETYPE_FIELDS, "archetype", archetype_id))
+
+		var starter_floor_id := str(archetype.get("starter_floor_id", ""))
+		if starter_floor_id == "" or not floors.has(starter_floor_id):
+			errors.append("Archetype '%s' references missing starter floor '%s'" % [archetype_id, starter_floor_id])
+
+		var player_state = archetype.get("player_state", {})
+		if not (player_state is Dictionary) or not player_state.has("hp"):
+			errors.append("Archetype '%s' must define player_state.hp" % archetype_id)
+
+		var starter_dice = archetype.get("starter_dice", [])
+		if not (starter_dice is Array) or starter_dice.is_empty():
+			errors.append("Archetype '%s' must define at least one starter die" % archetype_id)
+
+	for floor_id in floors.keys():
+		var floor: Dictionary = floors[floor_id]
+		errors.append_array(_validate_required_fields(floor, REQUIRED_FLOOR_FIELDS, "floor", floor_id))
+
+		var room_graph_id := str(floor.get("room_graph_id", ""))
+		var starting_room_id := str(floor.get("starting_room_id", ""))
+		if room_graph_id == "" or not room_graphs.has(room_graph_id):
+			errors.append("Floor '%s' references missing room graph '%s'" % [floor_id, room_graph_id])
+			continue
+
+		var room_graph: Dictionary = room_graphs[room_graph_id]
+		var room_ids: Array[String] = []
+		for room in room_graph.get("rooms", []):
+			if room is Dictionary and room.has("id"):
+				room_ids.append(str(room["id"]))
+
+		if starting_room_id == "" or not room_ids.has(starting_room_id):
+			errors.append("Floor '%s' start room '%s' is not present in rooms" % [floor_id, starting_room_id])
+
+	for graph_id in room_graphs.keys():
+		var room_graph: Dictionary = room_graphs[graph_id]
+		errors.append_array(_validate_required_fields(room_graph, REQUIRED_ROOM_GRAPH_FIELDS, "room graph", graph_id))
+
+		var room_ids: Array[String] = []
+		for room in room_graph.get("rooms", []):
+			if room is Dictionary and room.has("id"):
+				room_ids.append(str(room["id"]))
+
+		if room_ids.is_empty():
+			errors.append("Room graph '%s' must define at least one room" % graph_id)
+
+		for link in room_graph.get("links", []):
+			if not (link is Dictionary):
+				errors.append("Room graph '%s' has an invalid link entry" % graph_id)
+				continue
+
+			var from_room := str(link.get("from", ""))
+			var to_room := str(link.get("to", ""))
+			if not room_ids.has(from_room) or not room_ids.has(to_room):
+				errors.append("Room graph '%s' has a link with unknown room ids" % graph_id)
+
+	if errors.is_empty():
+		return {"ok": true, "errors": []}
+
+	return {"ok": false, "errors": errors}
+
+
+func _validate_required_fields(content: Dictionary, fields: Array, content_type: String, content_id: String) -> Array[String]:
+	var errors: Array[String] = []
+	for field_name in fields:
+		if not content.has(field_name):
+			errors.append("%s '%s' is missing required field '%s'" % [content_type.capitalize(), content_id, field_name])
+	return errors
