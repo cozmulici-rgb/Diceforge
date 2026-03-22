@@ -1,7 +1,14 @@
 GODOT_VERSION ?= 4.3-stable
 DOCKER_COMPOSE ?= docker compose
 
-.PHONY: dev verify export
+.PHONY: help dev verify export
+
+help:
+	@printf '%s\n' \
+		'Available targets:' \
+		'  make dev     Start the interactive development container' \
+		'  make verify  Run headless Godot project validation' \
+		'  make export  Build the Linux desktop artifact into dist/'
 
 dev:
 	$(DOCKER_COMPOSE) run --rm dev
