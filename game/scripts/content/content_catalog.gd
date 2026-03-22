@@ -4,6 +4,9 @@ extends RefCounted
 const ARCHETYPE_DIR := "res://content/archetypes"
 const FLOOR_DIR := "res://content/floors"
 const ROOM_DIR := "res://content/rooms"
+const DICE_DIR := "res://content/dice"
+const ENCOUNTER_DIR := "res://content/encounters"
+const ENEMY_DIR := "res://content/enemies"
 const ContentValidatorScript = preload("res://scripts/content/content_validator.gd")
 
 var validator
@@ -11,6 +14,11 @@ var _loaded := false
 var _archetypes: Dictionary = {}
 var _floors: Dictionary = {}
 var _room_graphs: Dictionary = {}
+var _body_definitions: Dictionary = {}
+var _face_definitions: Dictionary = {}
+var _rune_definitions: Dictionary = {}
+var _encounter_definitions: Dictionary = {}
+var _enemy_definitions: Dictionary = {}
 
 
 func _init(content_validator = null) -> void:
@@ -24,11 +32,20 @@ func ensure_loaded() -> Dictionary:
 	_archetypes = _load_content_directory(ARCHETYPE_DIR)
 	_floors = _load_content_directory(FLOOR_DIR)
 	_room_graphs = _load_content_directory(ROOM_DIR)
+	_body_definitions = _load_named_definitions("%s/bodies.json" % DICE_DIR)
+	_face_definitions = _load_named_definitions("%s/faces.json" % DICE_DIR)
+	_rune_definitions = _load_named_definitions("%s/runes.json" % DICE_DIR)
+	_encounter_definitions = _load_named_definitions("%s/tutorial_encounters.json" % ENCOUNTER_DIR)
+	_enemy_definitions = _load_named_definitions("%s/tutorial_enemies.json" % ENEMY_DIR)
 
 	var validation: Dictionary = validator.validate_catalog({
 		"archetypes": _archetypes,
 		"floors": _floors,
 		"room_graphs": _room_graphs,
+		"body_definitions": _body_definitions,
+		"face_definitions": _face_definitions,
+		"encounter_definitions": _encounter_definitions,
+		"enemy_definitions": _enemy_definitions,
 	})
 
 	if not validation.get("ok", false):
@@ -61,7 +78,12 @@ func load_floor_template(id: String) -> Variant:
 
 
 func load_encounter(id: String) -> Dictionary:
-	return _missing_content("encounter", id)
+	var load_result := ensure_loaded()
+	if not load_result.get("ok", false):
+		return load_result
+	if not _encounter_definitions.has(id):
+		return _missing_content("encounter", id)
+	return (_encounter_definitions[id] as Dictionary).duplicate(true)
 
 
 func load_room_graph(id: String) -> Variant:
@@ -78,7 +100,25 @@ func load_reward_table(id: String) -> Dictionary:
 
 
 func load_part_definition(id: String) -> Dictionary:
+	var load_result := ensure_loaded()
+	if not load_result.get("ok", false):
+		return load_result
+	if _body_definitions.has(id):
+		return (_body_definitions[id] as Dictionary).duplicate(true)
+	if _face_definitions.has(id):
+		return (_face_definitions[id] as Dictionary).duplicate(true)
+	if _rune_definitions.has(id):
+		return (_rune_definitions[id] as Dictionary).duplicate(true)
 	return _missing_content("part_definition", id)
+
+
+func load_enemy_definition(id: String) -> Dictionary:
+	var load_result := ensure_loaded()
+	if not load_result.get("ok", false):
+		return load_result
+	if not _enemy_definitions.has(id):
+		return _missing_content("enemy", id)
+	return (_enemy_definitions[id] as Dictionary).duplicate(true)
 
 
 func validate_saved_state(state: Dictionary) -> Dictionary:
@@ -109,6 +149,11 @@ func get_all_content() -> Dictionary:
 		"archetypes": _archetypes.duplicate(true),
 		"floors": _floors.duplicate(true),
 		"room_graphs": _room_graphs.duplicate(true),
+		"body_definitions": _body_definitions.duplicate(true),
+		"face_definitions": _face_definitions.duplicate(true),
+		"rune_definitions": _rune_definitions.duplicate(true),
+		"encounter_definitions": _encounter_definitions.duplicate(true),
+		"enemy_definitions": _enemy_definitions.duplicate(true),
 	}
 
 
@@ -126,6 +171,20 @@ func list_archetypes() -> Array:
 	)
 
 	return archetypes
+
+
+func get_part_definitions(part_type: String) -> Dictionary:
+	var load_result := ensure_loaded()
+	if not load_result.get("ok", false):
+		return {}
+
+	if part_type == "body":
+		return _body_definitions.duplicate(true)
+	if part_type == "face":
+		return _face_definitions.duplicate(true)
+	if part_type == "rune":
+		return _rune_definitions.duplicate(true)
+	return {}
 
 
 func _load_content_directory(base_path: String) -> Dictionary:
@@ -146,6 +205,15 @@ func _load_content_directory(base_path: String) -> Dictionary:
 	dir.list_dir_end()
 
 	return content
+
+
+func _load_named_definitions(path: String) -> Dictionary:
+	var parsed: Dictionary = _load_json_file(path)
+	var definitions: Dictionary = {}
+	for definition in parsed.get("definitions", []):
+		if definition is Dictionary and definition.has("id"):
+			definitions[str(definition.get("id", ""))] = (definition as Dictionary).duplicate(true)
+	return definitions
 
 
 func _load_json_file(path: String) -> Dictionary:

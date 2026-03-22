@@ -29,12 +29,18 @@ func run() -> Array[String]:
 	if run_result.active_dice.size() != 3:
 		failures.append("new session should contain the seeded starter dice")
 
+	if run_result.action_slots.size() != 3:
+		failures.append("new session should hydrate the default action slots")
+
 	var starting_room_state: Dictionary = run_result.room_states.get("tutorial_entry", {})
 	if not bool(starting_room_state.get("revealed", false)):
 		failures.append("starting room should be revealed when the run begins")
 
 	if bool(starting_room_state.get("completed", false)):
 		failures.append("starting room should not begin completed")
+
+	if not run_result.last_encounter_result.is_empty():
+		failures.append("new session should not begin with a last encounter result")
 
 	if coordinator.current_session != run_result:
 		failures.append("coordinator should retain the active run session")

@@ -12,19 +12,24 @@ func show_status(session) -> void:
 	var hp := int((session.player_state as Dictionary).get("hp", 0))
 	var revealed_count := 0
 	var completed_count := 0
+	var action_slot_names: Array[String] = []
 	for room_state in (session.room_states as Dictionary).values():
 		if room_state is Dictionary and bool(room_state.get("revealed", false)):
 			revealed_count += 1
 		if room_state is Dictionary and bool(room_state.get("completed", false)):
 			completed_count += 1
+	for slot in (session.action_slots as Array):
+		if slot is Dictionary:
+			action_slot_names.append(str(slot.get("display_name", slot.get("slot_id", "slot"))))
 
-	status_label.text = "Run %s | Archetype: %s | Room: %s | HP: %d | Rooms: %d revealed / %d completed" % [
+	status_label.text = "Run %s | Archetype: %s | Room: %s | HP: %d | Rooms: %d/%d | Slots: %s" % [
 		session.session_id,
 		session.archetype_id,
 		session.current_room_id,
 		hp,
 		revealed_count,
 		completed_count,
+		", ".join(action_slot_names),
 	]
 
 

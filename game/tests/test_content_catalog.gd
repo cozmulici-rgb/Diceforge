@@ -27,6 +27,14 @@ func run() -> Array[String]:
 	if not (room_graph is Dictionary) or (room_graph.get("rooms", []) as Array).size() != 2:
 		failures.append("tutorial room graph should load with the seeded rooms")
 
+	var encounter = catalog.load_encounter("tutorial_slime")
+	if not (encounter is Dictionary) or encounter.get("enemy_id", "") != "slime_echo":
+		failures.append("tutorial encounter should load with its seeded enemy")
+
+	var face_definition = catalog.load_part_definition("strike")
+	if not (face_definition is Dictionary) or face_definition.get("family", "") != "attack":
+		failures.append("starter face definitions should load through load_part_definition")
+
 	var all_content = catalog.get_all_content()
 	if not all_content.has("archetypes") or not all_content.has("floors") or not all_content.has("room_graphs"):
 		failures.append("catalog should expose loaded archetypes, floors, and room graphs")

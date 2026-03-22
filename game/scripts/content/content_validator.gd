@@ -23,11 +23,28 @@ const REQUIRED_ROOM_GRAPH_FIELDS := [
 	"links",
 ]
 
+const REQUIRED_ENCOUNTER_FIELDS := [
+	"id",
+	"name",
+	"enemy_id",
+]
+
+const REQUIRED_ENEMY_FIELDS := [
+	"id",
+	"name",
+	"hp",
+	"damage",
+]
+
 
 func validate_catalog(payload: Dictionary) -> Dictionary:
 	var archetypes: Dictionary = payload.get("archetypes", {})
 	var floors: Dictionary = payload.get("floors", {})
 	var room_graphs: Dictionary = payload.get("room_graphs", {})
+	var body_definitions: Dictionary = payload.get("body_definitions", {})
+	var face_definitions: Dictionary = payload.get("face_definitions", {})
+	var encounter_definitions: Dictionary = payload.get("encounter_definitions", {})
+	var enemy_definitions: Dictionary = payload.get("enemy_definitions", {})
 	var errors: Array[String] = []
 
 	for archetype_id in archetypes.keys():
@@ -45,6 +62,17 @@ func validate_catalog(payload: Dictionary) -> Dictionary:
 		var starter_dice = archetype.get("starter_dice", [])
 		if not (starter_dice is Array) or starter_dice.is_empty():
 			errors.append("Archetype '%s' must define at least one starter die" % archetype_id)
+		else:
+			for starter_die in starter_dice:
+				if not (starter_die is Dictionary):
+					errors.append("Archetype '%s' contains an invalid starter die" % archetype_id)
+					continue
+				var body_id := str(starter_die.get("body_id", "standard_d6"))
+				if not body_definitions.has(body_id):
+					errors.append("Archetype '%s' starter die references missing body '%s'" % [archetype_id, body_id])
+				for face_id in starter_die.get("face_set", []):
+					if not face_definitions.has(str(face_id)):
+						errors.append("Archetype '%s' starter die references missing face '%s'" % [archetype_id, str(face_id)])
 
 	for floor_id in floors.keys():
 		var floor: Dictionary = floors[floor_id]
@@ -86,6 +114,23 @@ func validate_catalog(payload: Dictionary) -> Dictionary:
 			var to_room := str(link.get("to", ""))
 			if not room_ids.has(from_room) or not room_ids.has(to_room):
 				errors.append("Room graph '%s' has a link with unknown room ids" % graph_id)
+
+		for room in room_graph.get("rooms", []):
+			if room is Dictionary:
+				var encounter_id := str(room.get("encounter_id", ""))
+				if encounter_id != "" and not encounter_definitions.has(encounter_id):
+					errors.append("Room graph '%s' references missing encounter '%s'" % [graph_id, encounter_id])
+
+	for encounter_id in encounter_definitions.keys():
+		var encounter_definition: Dictionary = encounter_definitions[encounter_id]
+		errors.append_array(_validate_required_fields(encounter_definition, REQUIRED_ENCOUNTER_FIELDS, "encounter", encounter_id))
+		var enemy_id := str(encounter_definition.get("enemy_id", ""))
+		if enemy_id == "" or not enemy_definitions.has(enemy_id):
+			errors.append("Encounter '%s' references missing enemy '%s'" % [encounter_id, enemy_id])
+
+	for enemy_id in enemy_definitions.keys():
+		var enemy_definition: Dictionary = enemy_definitions[enemy_id]
+		errors.append_array(_validate_required_fields(enemy_definition, REQUIRED_ENEMY_FIELDS, "enemy", enemy_id))
 
 	if errors.is_empty():
 		return {"ok": true, "errors": []}

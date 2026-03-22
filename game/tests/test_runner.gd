@@ -1,7 +1,9 @@
 extends SceneTree
 
 const TEST_SCRIPTS := [
+	preload("res://tests/test_combat_controller.gd"),
 	preload("res://tests/test_content_catalog.gd"),
+	preload("res://tests/test_dice_model.gd"),
 	preload("res://tests/test_exploration_flow.gd"),
 	preload("res://tests/test_run_session.gd"),
 ]

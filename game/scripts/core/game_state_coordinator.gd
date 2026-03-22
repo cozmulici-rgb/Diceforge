@@ -2,6 +2,7 @@ class_name GameStateCoordinator
 extends RefCounted
 
 const RunSessionScript = preload("res://scripts/core/run_session.gd")
+const CombatControllerScript = preload("res://scripts/combat/combat_controller.gd")
 
 var content_catalog
 var current_session = null
@@ -25,7 +26,7 @@ func create_run_session(archetype_id: String) -> Variant:
 	if _is_error_result(room_graph):
 		return room_graph
 
-	var starting_room_id := str(starter_floor.get("starting_room_id", ""))
+	var starting_room_id: String = str(starter_floor.get("starting_room_id", ""))
 
 	_session_sequence += 1
 	var session = RunSessionScript.new({
@@ -50,6 +51,8 @@ func create_run_session(archetype_id: String) -> Variant:
 			"encounter_status": "Run started. Move into the tutorial hall to trigger the encounter stub.",
 		},
 		"room_states": _build_initial_room_states(room_graph, starting_room_id),
+		"action_slots": _build_default_action_slots(),
+		"last_encounter_result": {},
 	})
 
 	current_session = session
@@ -73,7 +76,7 @@ func enter_room(room_id: String) -> Dictionary:
 	if _is_error_result(room_graph):
 		return room_graph
 
-	var current_room_id := str(current_session.current_room_id)
+	var current_room_id: String = str(current_session.current_room_id)
 	if current_room_id != room_id and not _get_neighbor_ids(room_graph, current_room_id).has(room_id):
 		return {
 			"ok": false,
@@ -104,7 +107,7 @@ func begin_encounter(encounter_id: String) -> Dictionary:
 	if current_room.is_empty():
 		return {"ok": false, "error": "missing_current_room"}
 
-	var expected_encounter_id := str(current_room.get("encounter_id", ""))
+	var expected_encounter_id: String = str(current_room.get("encounter_id", ""))
 	if expected_encounter_id == "":
 		return {"ok": false, "error": "room_has_no_encounter"}
 	if encounter_id != expected_encounter_id:
@@ -115,28 +118,46 @@ func begin_encounter(encounter_id: String) -> Dictionary:
 			"encounter_id": encounter_id,
 		}
 
-	_mark_room_completed(current_session.room_states, str(current_session.current_room_id))
+	var encounter_definition = content_catalog.load_encounter(encounter_id)
+	if _is_error_result(encounter_definition):
+		return encounter_definition
+
+	var combat_controller = CombatControllerScript.new()
+	combat_controller.content_catalog = content_catalog
+	var combat_state = combat_controller.begin_encounter(current_session, encounter_definition)
+	combat_controller.free()
+	if _is_error_result(combat_state):
+		return combat_state
+
 	current_session.flags["active_encounter"] = {
 		"encounter_id": encounter_id,
 		"room_id": str(current_session.current_room_id),
+		"state": "combat_active",
 	}
-	current_session.flags["encounter_status"] = "Encounter stub ready: %s" % encounter_id
+	current_session.flags["encounter_status"] = "Combat started: %s" % encounter_id
 
 	return {
 		"ok": true,
-		"state": "encounter_stub",
+		"state": "combat_active",
 		"encounter_id": encounter_id,
 		"room_id": str(current_session.current_room_id),
+		"combat_state": combat_state,
 	}
 
 
 func apply_encounter_result(result: Dictionary) -> Variant:
-	return {
-		"ok": false,
-		"error": "not_implemented",
-		"operation": "apply_encounter_result",
-		"result": result,
-	}
+	if current_session == null:
+		return {"ok": false, "error": "no_active_session"}
+
+	current_session.player_state["hp"] = int(result.get("player_hp_after", current_session.player_state.get("hp", 0)))
+	current_session.last_encounter_result = result.duplicate(true)
+	current_session.flags["active_encounter"] = {}
+	current_session.flags["encounter_status"] = "Encounter resolved: %s" % str(result.get("outcome", "unknown"))
+
+	if str(result.get("outcome", "")) == "victory":
+		_mark_room_completed(current_session.room_states, str(result.get("room_id", current_session.current_room_id)))
+
+	return current_session
 
 
 func open_reward_flow(source: Variant) -> Dictionary:
@@ -178,6 +199,32 @@ func _build_initial_room_states(room_graph: Dictionary, starting_room_id: String
 		}
 
 	return room_states
+
+
+func _build_default_action_slots() -> Array:
+	return [
+		{
+			"slot_id": "main_attack",
+			"display_name": "Main Attack",
+			"allowed_families": ["attack"],
+			"min_assignments": 1,
+			"assigned_die_ids": [],
+		},
+		{
+			"slot_id": "guard",
+			"display_name": "Guard",
+			"allowed_families": ["defense"],
+			"min_assignments": 0,
+			"assigned_die_ids": [],
+		},
+		{
+			"slot_id": "utility",
+			"display_name": "Utility",
+			"allowed_families": ["utility"],
+			"min_assignments": 0,
+			"assigned_die_ids": [],
+		},
+	]
 
 
 func _get_neighbor_ids(room_graph: Dictionary, room_id: String) -> Array[String]:

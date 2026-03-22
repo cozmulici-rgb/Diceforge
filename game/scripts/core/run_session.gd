@@ -14,6 +14,8 @@ var inventory: Dictionary
 var modifiers: Array
 var flags: Dictionary
 var room_states: Dictionary
+var action_slots: Array
+var last_encounter_result: Dictionary
 
 
 func _init(data: Dictionary = {}) -> void:
@@ -28,6 +30,8 @@ func _init(data: Dictionary = {}) -> void:
 	modifiers = (data.get("modifiers", [])).duplicate(true)
 	flags = (data.get("flags", {})).duplicate(true)
 	room_states = (data.get("room_states", {})).duplicate(true)
+	action_slots = (data.get("action_slots", [])).duplicate(true)
+	last_encounter_result = (data.get("last_encounter_result", {})).duplicate(true)
 
 
 func to_dictionary() -> Dictionary:
@@ -44,4 +48,6 @@ func to_dictionary() -> Dictionary:
 		"modifiers": modifiers.duplicate(true),
 		"flags": flags.duplicate(true),
 		"room_states": room_states.duplicate(true),
+		"action_slots": action_slots.duplicate(true),
+		"last_encounter_result": last_encounter_result.duplicate(true),
 	}

@@ -31,14 +31,17 @@ func run() -> Array[String]:
 		failures.append("begin_encounter should produce a stub encounter state")
 		return failures
 
-	if encounter_result.get("state", "") != "encounter_stub":
-		failures.append("begin_encounter should return the encounter_stub state")
+	if encounter_result.get("state", "") != "combat_active":
+		failures.append("begin_encounter should return the combat_active state")
 
 	room_state = coordinator.current_session.room_states.get("tutorial_hall", {})
-	if not bool(room_state.get("completed", false)):
-		failures.append("starting the stub encounter should mark the room as completed")
+	if bool(room_state.get("completed", false)):
+		failures.append("room completion should wait until encounter results are applied")
 
 	if str((coordinator.current_session.flags.get("active_encounter", {}) as Dictionary).get("encounter_id", "")) != "tutorial_slime":
 		failures.append("active_encounter should be stored in run-session flags")
+
+	if encounter_result.get("combat_state", null) == null:
+		failures.append("begin_encounter should return a combat state for routing")
 
 	return failures

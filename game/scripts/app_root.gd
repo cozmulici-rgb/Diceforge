@@ -4,6 +4,7 @@ const ContentCatalogScript = preload("res://scripts/content/content_catalog.gd")
 const GameStateCoordinatorScript = preload("res://scripts/core/game_state_coordinator.gd")
 const StartMenuScene = preload("res://scenes/screens/start_menu.tscn")
 const ExplorationScene = preload("res://scenes/screens/exploration_screen.tscn")
+const CombatScene = preload("res://scenes/screens/combat_screen.tscn")
 
 @onready var hud = $HUD
 @onready var screen_host = $ScreenHost
@@ -37,8 +38,19 @@ func _show_exploration(run_session) -> void:
 	screen_host.add_child(exploration_screen)
 	exploration_screen.setup(game_state_coordinator, content_catalog, run_session)
 	exploration_screen.session_updated.connect(_on_session_updated)
+	exploration_screen.encounter_started.connect(_on_encounter_started)
 	hud.show_status(run_session)
 	print("Facetbound app root initialized with session %s" % run_session.session_id)
+
+
+func _show_combat(combat_state) -> void:
+	_clear_screen_host()
+
+	var combat_screen = CombatScene.instantiate()
+	screen_host.add_child(combat_screen)
+	combat_screen.setup(content_catalog, combat_state)
+	combat_screen.combat_state_updated.connect(_on_combat_state_updated)
+	combat_screen.combat_finished.connect(_on_combat_finished)
 
 
 func _clear_screen_host() -> void:
@@ -65,3 +77,21 @@ func _on_run_requested(archetype_id: String) -> void:
 
 func _on_session_updated(run_session) -> void:
 	hud.show_status(run_session)
+
+
+func _on_encounter_started(combat_state) -> void:
+	_show_combat(combat_state)
+
+
+func _on_combat_state_updated(_combat_state) -> void:
+	hud.show_status(game_state_coordinator.current_session)
+
+
+func _on_combat_finished(encounter_result: Dictionary) -> void:
+	var updated_session = game_state_coordinator.apply_encounter_result(encounter_result)
+	if updated_session != null and updated_session.has_method("to_dictionary"):
+		hud.show_status(updated_session)
+		_show_exploration(updated_session)
+		return
+
+	hud.show_error("Encounter application failed.")

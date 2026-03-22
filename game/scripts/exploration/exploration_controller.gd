@@ -3,6 +3,7 @@ extends Node2D
 const RoomGraphScript = preload("res://scripts/exploration/room_graph.gd")
 
 signal session_updated(run_session)
+signal encounter_started(combat_state)
 
 @onready var room_name_label: Label = $UI/MarginContainer/VBoxContainer/RoomNameLabel
 @onready var room_meta_label: Label = $UI/MarginContainer/VBoxContainer/RoomMetaLabel
@@ -115,6 +116,7 @@ func _on_encounter_pressed() -> void:
 		return
 
 	run_session = game_state_coordinator.current_session
-	run_session.flags["encounter_status"] = "Encounter stub active: %s" % current_room.encounter_id
+	run_session.flags["encounter_status"] = "Combat active: %s" % current_room.encounter_id
 	_build_room_graph()
 	_refresh_view()
+	encounter_started.emit(encounter_result.get("combat_state"))

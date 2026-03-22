@@ -1,0 +1,10 @@
+{
+  "id": "starter_bodies",
+  "definitions": [
+    {
+      "id": "standard_d6",
+      "name": "Standard D6",
+      "sides": 6
+    }
+  ]
+}

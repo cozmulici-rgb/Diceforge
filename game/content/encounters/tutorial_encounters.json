@@ -1,0 +1,11 @@
+{
+  "id": "tutorial_encounters",
+  "definitions": [
+    {
+      "id": "tutorial_slime",
+      "name": "Tutorial Slime",
+      "enemy_id": "slime_echo",
+      "player_rolls": [4, 5, 6]
+    }
+  ]
+}

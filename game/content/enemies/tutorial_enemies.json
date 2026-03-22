@@ -1,0 +1,13 @@
+{
+  "id": "tutorial_enemies",
+  "definitions": [
+    {
+      "id": "slime_echo",
+      "name": "Slime Echo",
+      "hp": 8,
+      "starting_block": 0,
+      "intent": "Gel Strike",
+      "damage": 3
+    }
+  ]
+}
