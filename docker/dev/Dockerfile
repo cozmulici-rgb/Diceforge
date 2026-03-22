@@ -5,6 +5,7 @@ ARG GODOT_VERSION
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV GODOT_VERSION=${GODOT_VERSION}
+ENV GODOT_PROJECT_PATH=/workspace/game
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \

@@ -7,7 +7,7 @@ dev:
 	$(DOCKER_COMPOSE) run --rm dev
 
 verify:
-	@echo "Phase 03 will implement headless verification."
+	$(DOCKER_COMPOSE) run --rm export bash /workspace/scripts/verify-headless-build.sh
 
 export:
-	@echo "Phase 03 will implement Linux export."
+	$(DOCKER_COMPOSE) run --rm export bash -lc "bash /workspace/scripts/verify-headless-build.sh && mkdir -p /workspace/dist && godot --headless --path /workspace/game --export-release \"Linux/X11\" /workspace/dist/facetbound.x86_64"
