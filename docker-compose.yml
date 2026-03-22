@@ -1,0 +1,29 @@
+services:
+  dev:
+    build:
+      context: .
+      dockerfile: docker/dev/Dockerfile
+      args:
+        GODOT_VERSION: ${GODOT_VERSION:-4.3-stable}
+    image: facetbound-dev:${GODOT_VERSION:-4.3-stable}
+    working_dir: /workspace
+    volumes:
+      - .:/workspace
+    stdin_open: true
+    tty: true
+    command: bash
+
+  export:
+    build:
+      context: .
+      dockerfile: docker/export/Dockerfile
+      args:
+        GODOT_VERSION: ${GODOT_VERSION:-4.3-stable}
+    image: facetbound-export:${GODOT_VERSION:-4.3-stable}
+    working_dir: /workspace
+    volumes:
+      - .:/workspace
+    command:
+      - bash
+      - -lc
+      - echo 'Phase 03 will wire the headless Godot verify/export commands.'
