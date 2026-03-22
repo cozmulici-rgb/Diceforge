@@ -17,6 +17,9 @@ var room_states: Dictionary
 var action_slots: Array
 var last_encounter_result: Dictionary
 var reward_flow_state: Dictionary
+var floor_state: Dictionary
+var run_complete: bool
+var progression_result: Dictionary
 
 
 func _init(data: Dictionary = {}) -> void:
@@ -34,6 +37,9 @@ func _init(data: Dictionary = {}) -> void:
 	action_slots = (data.get("action_slots", [])).duplicate(true)
 	last_encounter_result = (data.get("last_encounter_result", {})).duplicate(true)
 	reward_flow_state = (data.get("reward_flow_state", {})).duplicate(true)
+	floor_state = (data.get("floor_state", {})).duplicate(true)
+	run_complete = bool(data.get("run_complete", false))
+	progression_result = (data.get("progression_result", {})).duplicate(true)
 
 
 func to_dictionary() -> Dictionary:
@@ -53,4 +59,7 @@ func to_dictionary() -> Dictionary:
 		"action_slots": action_slots.duplicate(true),
 		"last_encounter_result": last_encounter_result.duplicate(true),
 		"reward_flow_state": reward_flow_state.duplicate(true),
+		"floor_state": floor_state.duplicate(true),
+		"run_complete": run_complete,
+		"progression_result": progression_result.duplicate(true),
 	}

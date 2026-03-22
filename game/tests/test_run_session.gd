@@ -10,18 +10,18 @@ func run() -> Array[String]:
 	var coordinator = GameStateCoordinatorScript.new(catalog)
 
 	var run_result = coordinator.create_run_session("starter_facetwalker")
-	if run_result == null or not run_result.has_method("to_dictionary"):
+	if run_result == null or run_result is Dictionary:
 		failures.append("valid archetype should create a run session")
 		return failures
 
 	if run_result.session_id != "run_001_starter_facetwalker":
 		failures.append("session id should be deterministic for the first run")
 
-	if run_result.current_room_id != "tutorial_entry":
-		failures.append("new session should start in tutorial_entry")
+	if run_result.current_room_id != "floor_01_start":
+		failures.append("new session should start in the floor_01 start room")
 
-	if run_result.room_graph_id != "tutorial_rooms":
-		failures.append("new session should reference the tutorial room graph")
+	if run_result.room_graph_id != "floor_01_rooms":
+		failures.append("new session should reference the floor_01 room graph")
 
 	if int((run_result.player_state as Dictionary).get("hp", 0)) != 30:
 		failures.append("new session should hydrate seeded player hp")
@@ -32,7 +32,7 @@ func run() -> Array[String]:
 	if run_result.action_slots.size() != 3:
 		failures.append("new session should hydrate the default action slots")
 
-	var starting_room_state: Dictionary = run_result.room_states.get("tutorial_entry", {})
+	var starting_room_state: Dictionary = run_result.room_states.get("floor_01_start", {})
 	if not bool(starting_room_state.get("revealed", false)):
 		failures.append("starting room should be revealed when the run begins")
 
@@ -47,6 +47,9 @@ func run() -> Array[String]:
 
 	if not run_result.reward_flow_state.is_empty():
 		failures.append("new sessions should not begin with an active reward flow")
+
+	if str((run_result.floor_state as Dictionary).get("boss_room_id", "")) != "floor_01_boss":
+		failures.append("new sessions should hydrate the active floor state including the boss room")
 
 	if coordinator.current_session != run_result:
 		failures.append("coordinator should retain the active run session")

@@ -1,7 +1,7 @@
 {
   "id": "starter_facetwalker",
   "name": "Starter Facetwalker",
-  "starter_floor_id": "tutorial_floor",
+  "starter_floor_id": "floor_01",
   "player_state": {
     "hp": 30,
     "status_effects": []

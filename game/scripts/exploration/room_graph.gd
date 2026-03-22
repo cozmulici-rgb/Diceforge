@@ -23,7 +23,10 @@ func get_room(room_id: String):
 
 
 func get_neighbor_ids(room_id: String) -> Array[String]:
-	return (connections.get(room_id, []) as Array).duplicate()
+	var neighbor_ids: Array[String] = []
+	for neighbor_id in (connections.get(room_id, []) as Array):
+		neighbor_ids.append(str(neighbor_id))
+	return neighbor_ids
 
 
 func has_room(room_id: String) -> bool:

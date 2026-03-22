@@ -10,6 +10,7 @@ const ENEMY_DIR := "res://content/enemies"
 const REWARD_DIR := "res://content/rewards"
 const EVENT_DIR := "res://content/events"
 const SHOP_DIR := "res://content/shops"
+const PROGRESSION_DIR := "res://content/progression"
 const ContentValidatorScript = preload("res://scripts/content/content_validator.gd")
 
 var validator
@@ -25,6 +26,8 @@ var _enemy_definitions: Dictionary = {}
 var _reward_definitions: Dictionary = {}
 var _event_definitions: Dictionary = {}
 var _shop_definitions: Dictionary = {}
+var _unlock_definitions: Dictionary = {}
+var _achievement_definitions: Dictionary = {}
 
 
 func _init(content_validator = null) -> void:
@@ -41,11 +44,13 @@ func ensure_loaded() -> Dictionary:
 	_body_definitions = _load_named_definitions("%s/bodies.json" % DICE_DIR)
 	_face_definitions = _load_named_definitions("%s/faces.json" % DICE_DIR)
 	_rune_definitions = _load_named_definitions("%s/runes.json" % DICE_DIR)
-	_encounter_definitions = _load_named_definitions("%s/tutorial_encounters.json" % ENCOUNTER_DIR)
-	_enemy_definitions = _load_named_definitions("%s/tutorial_enemies.json" % ENEMY_DIR)
-	_reward_definitions = _load_named_definitions("%s/tutorial_rewards.json" % REWARD_DIR)
-	_event_definitions = _load_named_definitions("%s/tutorial_events.json" % EVENT_DIR)
-	_shop_definitions = _load_named_definitions("%s/tutorial_shop.json" % SHOP_DIR)
+	_encounter_definitions = _load_named_definitions_directory(ENCOUNTER_DIR)
+	_enemy_definitions = _load_named_definitions_directory(ENEMY_DIR)
+	_reward_definitions = _load_named_definitions_directory(REWARD_DIR)
+	_event_definitions = _load_named_definitions_directory(EVENT_DIR)
+	_shop_definitions = _load_named_definitions_directory(SHOP_DIR)
+	_unlock_definitions = _load_named_definitions("%s/unlocks.json" % PROGRESSION_DIR)
+	_achievement_definitions = _load_named_definitions("%s/achievements.json" % PROGRESSION_DIR)
 
 	var validation: Dictionary = validator.validate_catalog({
 		"archetypes": _archetypes,
@@ -59,6 +64,8 @@ func ensure_loaded() -> Dictionary:
 		"reward_definitions": _reward_definitions,
 		"event_definitions": _event_definitions,
 		"shop_definitions": _shop_definitions,
+		"unlock_definitions": _unlock_definitions,
+		"achievement_definitions": _achievement_definitions,
 	})
 
 	if not validation.get("ok", false):
@@ -193,6 +200,8 @@ func get_all_content() -> Dictionary:
 		"reward_definitions": _reward_definitions.duplicate(true),
 		"event_definitions": _event_definitions.duplicate(true),
 		"shop_definitions": _shop_definitions.duplicate(true),
+		"unlock_definitions": _unlock_definitions.duplicate(true),
+		"achievement_definitions": _achievement_definitions.duplicate(true),
 	}
 
 
@@ -226,6 +235,17 @@ func get_part_definitions(part_type: String) -> Dictionary:
 	return {}
 
 
+func get_progression_definitions(definition_type: String) -> Dictionary:
+	var load_result := ensure_loaded()
+	if not load_result.get("ok", false):
+		return {}
+	if definition_type == "unlock":
+		return _unlock_definitions.duplicate(true)
+	if definition_type == "achievement":
+		return _achievement_definitions.duplicate(true)
+	return {}
+
+
 func _load_content_directory(base_path: String) -> Dictionary:
 	var content: Dictionary = {}
 	var dir := DirAccess.open(base_path)
@@ -252,6 +272,25 @@ func _load_named_definitions(path: String) -> Dictionary:
 	for definition in parsed.get("definitions", []):
 		if definition is Dictionary and definition.has("id"):
 			definitions[str(definition.get("id", ""))] = (definition as Dictionary).duplicate(true)
+	return definitions
+
+
+func _load_named_definitions_directory(base_path: String) -> Dictionary:
+	var definitions: Dictionary = {}
+	var dir := DirAccess.open(base_path)
+	if dir == null:
+		return definitions
+
+	dir.list_dir_begin()
+	var file_name := dir.get_next()
+	while file_name != "":
+		if not dir.current_is_dir() and file_name.ends_with(".json"):
+			var path := "%s/%s" % [base_path, file_name]
+			var loaded_definitions := _load_named_definitions(path)
+			for definition_id in loaded_definitions.keys():
+				definitions[definition_id] = (loaded_definitions[definition_id] as Dictionary).duplicate(true)
+		file_name = dir.get_next()
+	dir.list_dir_end()
 	return definitions
 
 

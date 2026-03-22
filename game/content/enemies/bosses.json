@@ -1,0 +1,56 @@
+{
+  "id": "boss_enemies",
+  "definitions": [
+    {
+      "id": "shard_overseer",
+      "name": "Shard Overseer",
+      "hp": 8,
+      "starting_block": 1,
+      "intent": "Lattice Swipe",
+      "damage": 4,
+      "is_boss": true,
+      "phases": [
+        {
+          "phase_index": 1,
+          "hp": 8,
+          "starting_block": 1,
+          "intent": "Lattice Swipe",
+          "damage": 4
+        },
+        {
+          "phase_index": 2,
+          "hp": 10,
+          "starting_block": 0,
+          "intent": "Refraction Pulse",
+          "damage": 5
+        }
+      ]
+    },
+    {
+      "id": "final_warden_core",
+      "name": "Final Warden",
+      "hp": 10,
+      "starting_block": 1,
+      "intent": "Seal Break",
+      "damage": 5,
+      "is_boss": true,
+      "final_boss": true,
+      "phases": [
+        {
+          "phase_index": 1,
+          "hp": 10,
+          "starting_block": 1,
+          "intent": "Seal Break",
+          "damage": 5
+        },
+        {
+          "phase_index": 2,
+          "hp": 12,
+          "starting_block": 0,
+          "intent": "Warden's Fury",
+          "damage": 6
+        }
+      ]
+    }
+  ]
+}

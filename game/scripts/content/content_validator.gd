@@ -14,6 +14,7 @@ const REQUIRED_FLOOR_FIELDS := [
 	"name",
 	"room_graph_id",
 	"starting_room_id",
+	"boss_room_id",
 ]
 
 const REQUIRED_ROOM_GRAPH_FIELDS := [
@@ -54,6 +55,8 @@ func validate_catalog(payload: Dictionary) -> Dictionary:
 	var reward_definitions: Dictionary = payload.get("reward_definitions", {})
 	var event_definitions: Dictionary = payload.get("event_definitions", {})
 	var shop_definitions: Dictionary = payload.get("shop_definitions", {})
+	var unlock_definitions: Dictionary = payload.get("unlock_definitions", {})
+	var achievement_definitions: Dictionary = payload.get("achievement_definitions", {})
 	var errors: Array[String] = []
 
 	for archetype_id in archetypes.keys():
@@ -101,6 +104,12 @@ func validate_catalog(payload: Dictionary) -> Dictionary:
 
 		if starting_room_id == "" or not room_ids.has(starting_room_id):
 			errors.append("Floor '%s' start room '%s' is not present in rooms" % [floor_id, starting_room_id])
+		var boss_room_id := str(floor.get("boss_room_id", ""))
+		if boss_room_id == "" or not room_ids.has(boss_room_id):
+			errors.append("Floor '%s' boss room '%s' is not present in rooms" % [floor_id, boss_room_id])
+		var next_floor_id := str(floor.get("next_floor_id", ""))
+		if next_floor_id != "" and not floors.has(next_floor_id):
+			errors.append("Floor '%s' references missing next floor '%s'" % [floor_id, next_floor_id])
 
 	for graph_id in room_graphs.keys():
 		var room_graph: Dictionary = room_graphs[graph_id]
@@ -152,6 +161,20 @@ func validate_catalog(payload: Dictionary) -> Dictionary:
 
 	for shop_id in shop_definitions.keys():
 		errors.append_array(_validate_reward_options(shop_definitions[shop_id], shop_id, "shop", body_definitions, face_definitions, rune_definitions))
+
+	for unlock_id in unlock_definitions.keys():
+		var unlock_definition: Dictionary = unlock_definitions[unlock_id]
+		var unlock_type := str(unlock_definition.get("unlock_type", ""))
+		var target_id := str(unlock_definition.get("target_id", ""))
+		if unlock_type == "archetype" and not archetypes.has(target_id):
+			errors.append("Unlock '%s' references missing archetype '%s'" % [unlock_id, target_id])
+		elif unlock_type == "part" and not (body_definitions.has(target_id) or face_definitions.has(target_id) or rune_definitions.has(target_id)):
+			errors.append("Unlock '%s' references missing part '%s'" % [unlock_id, target_id])
+
+	for achievement_id in achievement_definitions.keys():
+		var achievement_definition: Dictionary = achievement_definitions[achievement_id]
+		if str(achievement_definition.get("requirement", "")) == "":
+			errors.append("Achievement '%s' must define a requirement" % achievement_id)
 
 	if errors.is_empty():
 		return {"ok": true, "errors": []}

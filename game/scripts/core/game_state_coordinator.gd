@@ -6,18 +6,34 @@ const CombatControllerScript = preload("res://scripts/combat/combat_controller.g
 const RewardControllerScript = preload("res://scripts/rewards/reward_controller.gd")
 const ForgeAssemblySystemScript = preload("res://scripts/rewards/forge_assembly_system.gd")
 const RunInventoryScript = preload("res://scripts/rewards/run_inventory.gd")
+const DungeonGeneratorScript = preload("res://scripts/exploration/dungeon_generator.gd")
+const RoomTransitionResultScript = preload("res://scripts/exploration/room_transition_result.gd")
+const PersistenceServiceScript = preload("res://scripts/persistence/persistence_service.gd")
+const MetaProgressionControllerScript = preload("res://scripts/progression/meta_progression_controller.gd")
+const MetaStateScript = preload("res://scripts/progression/meta_state.gd")
 
 var content_catalog
 var current_session = null
 var _session_sequence := 0
 var _reward_controller
 var _forge_assembly_system
+var _dungeon_generator
+var persistence_service
+var meta_progression_controller
+var meta_state
+var last_recovery_message := ""
+
+const ACTIVE_RUN_SLOT := "active_run"
 
 
 func _init(catalog) -> void:
 	content_catalog = catalog
 	_reward_controller = RewardControllerScript.new(catalog)
 	_forge_assembly_system = ForgeAssemblySystemScript.new(catalog)
+	_dungeon_generator = DungeonGeneratorScript.new(catalog)
+	persistence_service = PersistenceServiceScript.new(catalog)
+	meta_progression_controller = MetaProgressionControllerScript.new(catalog)
+	_load_or_initialize_meta_state()
 
 
 func create_run_session(archetype_id: String) -> Variant:
@@ -29,18 +45,12 @@ func create_run_session(archetype_id: String) -> Variant:
 	if _is_error_result(starter_floor):
 		return starter_floor
 
-	var room_graph = content_catalog.load_room_graph(str(starter_floor.get("room_graph_id", "")))
-	if _is_error_result(room_graph):
-		return room_graph
-
-	var starting_room_id: String = str(starter_floor.get("starting_room_id", ""))
-
 	_session_sequence += 1
 	var session = RunSessionScript.new({
 		"session_id": "run_%03d_%s" % [_session_sequence, archetype_id],
 		"archetype_id": archetype_id,
 		"floor_index": 1,
-		"current_room_id": starting_room_id,
+		"current_room_id": str(starter_floor.get("starting_room_id", "")),
 		"room_graph_id": str(starter_floor.get("room_graph_id", "")),
 		"player_state": (archetype.get("player_state", {})).duplicate(true),
 		"active_dice": (archetype.get("starter_dice", [])).duplicate(true),
@@ -53,28 +63,41 @@ func create_run_session(archetype_id: String) -> Variant:
 		"modifiers": [],
 		"flags": {
 			"starter_floor_id": str(archetype.get("starter_floor_id", "")),
-			"room_history": [starting_room_id],
+			"room_history": [str(starter_floor.get("starting_room_id", ""))],
 			"active_encounter": {},
 			"screen_state": "exploration",
+			"pending_floor_advance": "",
+			"pending_run_complete": false,
 			"encounter_status": "Run started. Move into the tutorial hall to trigger the encounter stub.",
 		},
-		"room_states": _build_initial_room_states(room_graph, starting_room_id),
+		"room_states": {},
 		"action_slots": _build_default_action_slots(),
 		"last_encounter_result": {},
 		"reward_flow_state": {},
+		"floor_state": {},
+		"run_complete": false,
+		"progression_result": {},
 	})
 
+	var floor_result = _initialize_floor(session, archetype.get("starter_floor_id", ""), 1)
+	if _is_error_result(floor_result):
+		return floor_result
+
 	current_session = session
+	_persist_current_session()
 	return session
 
 
 func load_run_session(save_slot_id: String) -> Dictionary:
-	return {
-		"ok": false,
-		"error": "not_implemented",
-		"operation": "load_run_session",
-		"save_slot_id": save_slot_id,
-	}
+	var load_result = persistence_service.load_run_state(save_slot_id)
+	if not load_result.get("ok", false):
+		last_recovery_message = "Continue-run data was invalid and could not be loaded."
+		if load_result.get("error", "") == "invalid_run_state":
+			persistence_service.delete_corrupt_run_state(save_slot_id)
+		return load_result
+
+	current_session = RunSessionScript.new(load_result.get("data", {}))
+	return {"ok": true, "run_session": current_session}
 
 
 func enter_room(room_id: String) -> Dictionary:
@@ -100,8 +123,18 @@ func enter_room(room_id: String) -> Dictionary:
 	current_session.flags["room_history"] = room_history
 	current_session.flags["encounter_status"] = "Entered room %s." % room_id
 	_mark_room_revealed(current_session.room_states, room_id)
+	_sync_floor_state_from_room_states()
 
-	return {"ok": true, "room_id": room_id}
+	var room_definition = _get_room_definition(room_graph, room_id)
+	_persist_current_session()
+	return RoomTransitionResultScript.new({
+		"room_id": room_id,
+		"room_type": str(room_definition.get("type", "unknown")),
+		"encounter_id": str(room_definition.get("encounter_id", "")),
+		"reward_source_id": str(room_definition.get("reward_source_id", "")),
+		"floor_complete": bool(current_session.flags.get("pending_floor_advance", "") != ""),
+		"run_complete": current_session.run_complete,
+	}).to_dictionary()
 
 
 func begin_encounter(encounter_id: String) -> Dictionary:
@@ -145,6 +178,7 @@ func begin_encounter(encounter_id: String) -> Dictionary:
 	}
 	current_session.flags["screen_state"] = "combat"
 	current_session.flags["encounter_status"] = "Combat started: %s" % encounter_id
+	_persist_current_session()
 
 	return {
 		"ok": true,
@@ -166,10 +200,25 @@ func apply_encounter_result(result: Dictionary) -> Variant:
 
 	if str(result.get("outcome", "")) == "victory":
 		_mark_room_completed(current_session.room_states, str(result.get("room_id", current_session.current_room_id)))
+		_sync_floor_state_from_room_states()
+		if bool(result.get("boss_defeated", false)):
+			var current_floor = content_catalog.load_floor_template(str(current_session.floor_state.get("floor_template_id", "")))
+			var next_floor_id := str(current_floor.get("next_floor_id", ""))
+			if bool(result.get("run_complete", false)):
+				current_session.flags["pending_run_complete"] = true
+			elif next_floor_id != "":
+				current_session.flags["pending_floor_advance"] = next_floor_id
 		current_session.flags["screen_state"] = "reward"
+	elif str(result.get("outcome", "")) == "defeat":
+		current_session.run_complete = true
+		current_session.progression_result = finalize_run(result)
+		current_session.flags["screen_state"] = "run_complete"
+		_clear_active_run_slot()
+		_persist_meta_state()
 	else:
 		current_session.flags["screen_state"] = "exploration"
 
+	_persist_current_session()
 	return current_session
 
 
@@ -200,6 +249,7 @@ func apply_reward_selection(option_data: Dictionary) -> Dictionary:
 	current_session.reward_flow_state["selected_option"] = option_data.duplicate(true)
 	current_session.reward_flow_state["inventory_snapshot"] = current_session.inventory.duplicate(true)
 	current_session.flags["screen_state"] = "reward"
+	_persist_current_session()
 	return {
 		"ok": true,
 		"run_session": current_session,
@@ -253,6 +303,7 @@ func apply_forge_mutation(mutation: Dictionary) -> Dictionary:
 	current_session.inventory = (apply_result.get("inventory", {}) as Dictionary).duplicate(true)
 	current_session.reward_flow_state["inventory_snapshot"] = current_session.inventory.duplicate(true)
 	current_session.flags["encounter_status"] = "Forge mutation applied: %s" % str(mutation.get("operation", "unknown"))
+	_persist_current_session()
 	return {
 		"ok": true,
 		"run_session": current_session,
@@ -263,19 +314,40 @@ func apply_forge_mutation(mutation: Dictionary) -> Dictionary:
 func complete_reward_flow() -> Variant:
 	if current_session == null:
 		return {"ok": false, "error": "no_active_session"}
+	current_session.reward_flow_state = {}
+	if bool(current_session.flags.get("pending_run_complete", false)):
+		current_session.flags["pending_run_complete"] = false
+		current_session.run_complete = true
+		current_session.progression_result = finalize_run(current_session.last_encounter_result)
+		current_session.flags["screen_state"] = "run_complete"
+		current_session.flags["encounter_status"] = "Run complete."
+		_clear_active_run_slot()
+		_persist_meta_state()
+		return current_session
+
+	var next_floor_id := str(current_session.flags.get("pending_floor_advance", ""))
+	if next_floor_id != "":
+		current_session.flags["pending_floor_advance"] = ""
+		var next_floor_index: int = current_session.floor_index + 1
+		var floor_result = _initialize_floor(current_session, next_floor_id, next_floor_index)
+		if _is_error_result(floor_result):
+			return floor_result
+		current_session.flags["screen_state"] = "exploration"
+		current_session.flags["encounter_status"] = "Advanced to floor %d." % next_floor_index
+		_persist_current_session()
+		return current_session
+
 	current_session.flags["screen_state"] = "exploration"
 	current_session.flags["encounter_status"] = "Exploration resumed."
-	current_session.reward_flow_state = {}
+	_persist_current_session()
 	return current_session
 
 
 func finalize_run(result: Variant) -> Dictionary:
-	return {
-		"ok": false,
-		"error": "not_implemented",
-		"operation": "finalize_run",
-		"result": result,
-	}
+	var run_summary = _build_run_summary(result)
+	var progression_result = meta_progression_controller.process_run_end(run_summary, meta_state)
+	meta_state = MetaStateScript.new(progression_result.get("meta_state", {}))
+	return progression_result
 
 
 func _is_error_result(value: Variant) -> bool:
@@ -371,3 +443,93 @@ func _find_active_die_index(target_die_id: String) -> int:
 		if str(die_build.get("id", "")) == target_die_id:
 			return index
 	return -1
+
+
+func _initialize_floor(session, floor_template_id: String, floor_index: int) -> Variant:
+	var floor_template = content_catalog.load_floor_template(str(floor_template_id))
+	if _is_error_result(floor_template):
+		return floor_template
+	var room_graph = content_catalog.load_room_graph(str(floor_template.get("room_graph_id", "")))
+	if _is_error_result(room_graph):
+		return room_graph
+	var floor_state = _dungeon_generator.generate_floor(str(floor_template_id), int(floor_template.get("seed", floor_index)), session)
+	if _is_error_result(floor_state):
+		return floor_state
+	if not _dungeon_generator.is_boss_path_reachable(floor_state):
+		return {"ok": false, "error": "unreachable_boss_path", "floor_template_id": floor_template_id}
+
+	session.floor_index = floor_index
+	session.current_room_id = str(floor_template.get("starting_room_id", ""))
+	session.room_graph_id = str(floor_template.get("room_graph_id", ""))
+	session.room_states = _build_initial_room_states(room_graph, session.current_room_id)
+	session.floor_state = floor_state.to_dictionary()
+	session.floor_state["floor_index"] = floor_index
+	return {"ok": true}
+
+
+func _sync_floor_state_from_room_states() -> void:
+	if current_session == null:
+		return
+	var visited_room_ids: Array[String] = []
+	var completed_room_ids: Array[String] = []
+	for room_id in current_session.room_states.keys():
+		var room_state: Dictionary = current_session.room_states[room_id]
+		if bool(room_state.get("revealed", false)):
+			visited_room_ids.append(str(room_id))
+		if bool(room_state.get("completed", false)):
+			completed_room_ids.append(str(room_id))
+	current_session.floor_state["visited_room_ids"] = visited_room_ids
+	current_session.floor_state["completed_room_ids"] = completed_room_ids
+
+
+func _build_run_summary(result: Variant) -> Dictionary:
+	return {
+		"outcome": str((result as Dictionary).get("outcome", "unknown")),
+		"boss_defeated": bool((result as Dictionary).get("boss_defeated", false)),
+		"run_complete": bool((result as Dictionary).get("run_complete", current_session.run_complete)),
+		"floors_cleared": int(current_session.floor_index),
+		"archetype_id": current_session.archetype_id,
+		"session_id": current_session.session_id,
+	}
+
+
+func _persist_current_session() -> void:
+	if current_session == null or current_session.run_complete:
+		return
+	var payload = current_session.to_dictionary()
+	payload["updated_at_unix"] = Time.get_unix_time_from_system()
+	persistence_service.save_run_state(ACTIVE_RUN_SLOT, payload)
+
+
+func _clear_active_run_slot() -> void:
+	persistence_service.delete_corrupt_run_state(ACTIVE_RUN_SLOT)
+
+
+func _persist_meta_state() -> void:
+	if meta_state == null:
+		return
+	persistence_service.save_meta_state(meta_state.to_dictionary())
+
+
+func _load_or_initialize_meta_state() -> void:
+	var load_result = persistence_service.load_meta_state()
+	if load_result.get("ok", false):
+		meta_state = MetaStateScript.new(load_result.get("data", {}))
+		return
+
+	meta_state = MetaStateScript.new()
+	_persist_meta_state()
+	if load_result.get("error", "") not in ["missing_meta_state", ""]:
+		last_recovery_message = "Meta progression data was reset to safe defaults."
+
+
+func list_run_slots() -> Array:
+	return persistence_service.list_run_slots()
+
+
+func get_continue_run_summary() -> Dictionary:
+	for run_slot in list_run_slots():
+		var summary: Dictionary = run_slot
+		if str(summary.get("slot_id", "")) == ACTIVE_RUN_SLOT and not bool(summary.get("is_corrupt", false)):
+			return summary.duplicate(true)
+	return {}

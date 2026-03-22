@@ -6,6 +6,7 @@ var display_name: String
 var room_type: String
 var description: String
 var encounter_id: String
+var reward_source_id: String
 var position: Vector2
 var revealed: bool
 var completed: bool
@@ -18,6 +19,7 @@ func _init(data: Dictionary = {}) -> void:
 	room_type = str(data.get("room_type", data.get("type", "unknown")))
 	description = str(data.get("description", ""))
 	encounter_id = str(data.get("encounter_id", ""))
+	reward_source_id = str(data.get("reward_source_id", ""))
 	position = _parse_position(data.get("position", [0, 0]))
 	revealed = bool(data.get("revealed", false))
 	completed = bool(data.get("completed", false))
@@ -31,6 +33,7 @@ func to_dictionary() -> Dictionary:
 		"room_type": room_type,
 		"description": description,
 		"encounter_id": encounter_id,
+		"reward_source_id": reward_source_id,
 		"position": [position.x, position.y],
 		"revealed": revealed,
 		"completed": completed,

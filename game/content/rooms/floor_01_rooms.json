@@ -1,0 +1,57 @@
+{
+  "id": "floor_01_rooms",
+  "name": "Fractured Approach Graph",
+  "rooms": [
+    {
+      "id": "floor_01_start",
+      "name": "Gate of Splinters",
+      "type": "start",
+      "description": "The first floor opens into a split corridor with multiple safe approaches to the boss chamber.",
+      "position": [120, 220],
+      "encounter_id": ""
+    },
+    {
+      "id": "floor_01_fight",
+      "name": "Echo Span",
+      "type": "encounter",
+      "description": "A standard encounter sits on the aggressive path.",
+      "position": [320, 140],
+      "encounter_id": "tutorial_slime"
+    },
+    {
+      "id": "floor_01_shop",
+      "name": "Shard Broker",
+      "type": "shop",
+      "description": "A quiet merchant alcove offers a safe branch.",
+      "position": [320, 300],
+      "encounter_id": "",
+      "reward_source_id": "tutorial_vendor"
+    },
+    {
+      "id": "floor_01_boss",
+      "name": "Overseer Gate",
+      "type": "boss",
+      "description": "Both branches converge at the first boss arena.",
+      "position": [520, 220],
+      "encounter_id": "floor_01_overseer"
+    }
+  ],
+  "links": [
+    {
+      "from": "floor_01_start",
+      "to": "floor_01_fight"
+    },
+    {
+      "from": "floor_01_start",
+      "to": "floor_01_shop"
+    },
+    {
+      "from": "floor_01_fight",
+      "to": "floor_01_boss"
+    },
+    {
+      "from": "floor_01_shop",
+      "to": "floor_01_boss"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "id": "unlock_catalog",
+  "definitions": [
+    {
+      "id": "unlock_forged_d8",
+      "unlock_type": "part",
+      "target_id": "forged_d8",
+      "echo_shard_threshold": 20
+    },
+    {
+      "id": "unlock_bulwark",
+      "unlock_type": "part",
+      "target_id": "bulwark",
+      "echo_shard_threshold": 30
+    }
+  ]
+}

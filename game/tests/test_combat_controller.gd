@@ -49,7 +49,7 @@ func run() -> Array[String]:
 	}
 
 	var combat_state = controller.begin_encounter(run_session, encounter_definition)
-	if combat_state == null or not combat_state.has_method("to_dictionary"):
+	if combat_state == null or combat_state is Dictionary:
 		failures.append("begin_encounter should create a combat state")
 		return failures
 

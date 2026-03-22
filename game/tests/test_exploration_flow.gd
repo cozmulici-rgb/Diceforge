@@ -10,19 +10,19 @@ func run() -> Array[String]:
 	var coordinator = GameStateCoordinatorScript.new(catalog)
 
 	var run_session = coordinator.create_run_session("starter_facetwalker")
-	if run_session == null or not run_session.has_method("to_dictionary"):
+	if run_session == null or run_session is Dictionary:
 		failures.append("exploration flow requires a valid starter run session")
 		return failures
 
-	var move_result = coordinator.enter_room("tutorial_hall")
+	var move_result = coordinator.enter_room("floor_01_fight")
 	if not move_result.get("ok", false):
-		failures.append("expected a legal transition into tutorial_hall")
+		failures.append("expected a legal transition into the first branching encounter room")
 		return failures
 
-	if coordinator.current_session.current_room_id != "tutorial_hall":
+	if coordinator.current_session.current_room_id != "floor_01_fight":
 		failures.append("enter_room should update the current room")
 
-	var room_state: Dictionary = coordinator.current_session.room_states.get("tutorial_hall", {})
+	var room_state: Dictionary = coordinator.current_session.room_states.get("floor_01_fight", {})
 	if not bool(room_state.get("revealed", false)):
 		failures.append("enter_room should reveal the destination room")
 
@@ -34,7 +34,7 @@ func run() -> Array[String]:
 	if encounter_result.get("state", "") != "combat_active":
 		failures.append("begin_encounter should return the combat_active state")
 
-	room_state = coordinator.current_session.room_states.get("tutorial_hall", {})
+	room_state = coordinator.current_session.room_states.get("floor_01_fight", {})
 	if bool(room_state.get("completed", false)):
 		failures.append("room completion should wait until encounter results are applied")
 
@@ -48,10 +48,10 @@ func run() -> Array[String]:
 		"outcome": "victory",
 		"player_hp_after": 27,
 		"encounter_id": "tutorial_slime",
-		"room_id": "tutorial_hall",
+		"room_id": "floor_01_fight",
 		"reward_source": {"reward_type": "encounter", "reward_source_id": "tutorial_slime_rewards"},
 	})
-	if resolved_session == null or not resolved_session.has_method("to_dictionary"):
+	if resolved_session == null or resolved_session is Dictionary:
 		failures.append("apply_encounter_result should preserve the run session")
 		return failures
 
@@ -61,5 +61,14 @@ func run() -> Array[String]:
 	var reward_flow = coordinator.open_reward_flow({"reward_type": "encounter", "reward_source_id": "tutorial_slime_rewards"})
 	if not reward_flow.get("ok", false):
 		failures.append("post-combat victories should resolve into a reward flow")
+
+	coordinator.current_session.flags["pending_floor_advance"] = "floor_02"
+	var resumed_session = coordinator.complete_reward_flow()
+	if resumed_session == null or resumed_session is Dictionary:
+		failures.append("complete_reward_flow should preserve the run session during floor advancement")
+		return failures
+
+	if coordinator.current_session.floor_index != 2 or coordinator.current_session.current_room_id != "floor_02_start":
+		failures.append("floor completion should advance the run into the next floor start room")
 
 	return failures

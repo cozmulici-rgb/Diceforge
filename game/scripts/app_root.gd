@@ -7,6 +7,7 @@ const ExplorationScene = preload("res://scenes/screens/exploration_screen.tscn")
 const CombatScene = preload("res://scenes/screens/combat_screen.tscn")
 const RewardScene = preload("res://scenes/screens/reward_screen.tscn")
 const ForgeScene = preload("res://scenes/screens/forge_screen.tscn")
+const ProgressionScene = preload("res://scenes/screens/progression_screen.tscn")
 
 @onready var hud = $HUD
 @onready var screen_host = $ScreenHost
@@ -28,9 +29,14 @@ func _show_start_menu() -> void:
 	var start_menu = StartMenuScene.instantiate()
 	screen_host.add_child(start_menu)
 
-	var archetypes: Array = content_catalog.list_archetypes()
-	start_menu.configure(archetypes)
+	var archetypes: Array = _available_archetypes()
+	start_menu.configure(
+		archetypes,
+		game_state_coordinator.get_continue_run_summary(),
+		game_state_coordinator.last_recovery_message
+	)
 	start_menu.run_requested.connect(_on_run_requested)
+	start_menu.continue_requested.connect(_on_continue_requested)
 
 
 func _show_exploration(run_session) -> void:
@@ -81,6 +87,15 @@ func _show_forge_flow() -> void:
 	hud.show_status(game_state_coordinator.current_session)
 
 
+func _show_run_complete(run_session) -> void:
+	_clear_screen_host()
+	var progression_screen = ProgressionScene.instantiate()
+	screen_host.add_child(progression_screen)
+	progression_screen.configure(run_session.progression_result)
+	progression_screen.return_to_menu_requested.connect(_on_return_to_menu_requested)
+	hud.show_status(run_session)
+
+
 func _clear_screen_host() -> void:
 	for child in screen_host.get_children():
 		child.queue_free()
@@ -88,7 +103,7 @@ func _clear_screen_host() -> void:
 
 func _on_run_requested(archetype_id: String) -> void:
 	var run_result = game_state_coordinator.create_run_session(archetype_id)
-	if run_result != null and run_result.has_method("to_dictionary"):
+	if run_result != null and not (run_result is Dictionary):
 		_show_exploration(run_result)
 		return
 
@@ -101,6 +116,15 @@ func _on_run_requested(archetype_id: String) -> void:
 
 	hud.show_error(message)
 	push_error("App root failed to create run: %s" % message)
+
+
+func _on_continue_requested(slot_id: String) -> void:
+	var load_result = game_state_coordinator.load_run_session(slot_id)
+	if not load_result.get("ok", false):
+		hud.show_error("Continue failed. Safe defaults restored.")
+		_show_start_menu()
+		return
+	_show_exploration(load_result.get("run_session"))
 
 
 func _on_session_updated(run_session) -> void:
@@ -124,6 +148,9 @@ func _on_combat_finished(encounter_result: Dictionary) -> void:
 				hud.show_status(updated_session)
 				_show_reward_flow(reward_flow)
 				return
+		if bool(updated_session.run_complete):
+			_show_run_complete(updated_session)
+			return
 		hud.show_status(updated_session)
 		_show_exploration(updated_session)
 		return
@@ -144,11 +171,31 @@ func _on_reward_selected(option_data: Dictionary) -> void:
 
 	var resumed_session = game_state_coordinator.complete_reward_flow()
 	if resumed_session != null and resumed_session.has_method("to_dictionary"):
+		if bool(resumed_session.run_complete):
+			_show_run_complete(resumed_session)
+			return
 		_show_exploration(resumed_session)
 
 
 func _on_forge_complete() -> void:
 	var resumed_session = game_state_coordinator.complete_reward_flow()
 	if resumed_session != null and resumed_session.has_method("to_dictionary"):
+		if bool(resumed_session.run_complete):
+			hud.show_status(resumed_session)
+			_show_run_complete(resumed_session)
+			return
 		hud.show_status(resumed_session)
 		_show_exploration(resumed_session)
+
+
+func _on_return_to_menu_requested() -> void:
+	_show_start_menu()
+
+
+func _available_archetypes() -> Array:
+	var archetypes: Array = []
+	for archetype in content_catalog.list_archetypes():
+		var archetype_definition: Dictionary = archetype
+		if (game_state_coordinator.meta_state.unlocked_archetype_ids as Array).has(str(archetype_definition.get("id", ""))):
+			archetypes.append(archetype_definition.duplicate(true))
+	return archetypes

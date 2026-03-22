@@ -10,20 +10,20 @@ func run() -> Array[String]:
 	var coordinator = GameStateCoordinatorScript.new(catalog)
 
 	var run_session = coordinator.create_run_session("starter_facetwalker")
-	if run_session == null or not run_session.has_method("to_dictionary"):
+	if run_session == null or run_session is Dictionary:
 		failures.append("reward flow requires a valid run session")
 		return failures
 
-	coordinator.enter_room("tutorial_hall")
+	coordinator.enter_room("floor_01_fight")
 	coordinator.begin_encounter("tutorial_slime")
 	var updated_session = coordinator.apply_encounter_result({
 		"outcome": "victory",
 		"player_hp_after": 28,
 		"encounter_id": "tutorial_slime",
-		"room_id": "tutorial_hall",
+		"room_id": "floor_01_fight",
 		"reward_source": {"reward_type": "encounter", "reward_source_id": "tutorial_slime_rewards"},
 	})
-	if updated_session == null or not updated_session.has_method("to_dictionary"):
+	if updated_session == null or updated_session is Dictionary:
 		failures.append("apply_encounter_result should keep the run session alive on victory")
 		return failures
 

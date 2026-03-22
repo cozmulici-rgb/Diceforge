@@ -56,7 +56,8 @@ func _refresh_view() -> void:
 		return
 
 	room_name_label.text = "%s" % current_room.display_name
-	room_meta_label.text = "Type: %s | Revealed: %s | Completed: %s | Visits: %d" % [
+	room_meta_label.text = "Floor: %d | Type: %s | Revealed: %s | Completed: %s | Visits: %d" % [
+		int(run_session.floor_index),
 		current_room.room_type,
 		"yes" if current_room.revealed else "no",
 		"yes" if current_room.completed else "no",

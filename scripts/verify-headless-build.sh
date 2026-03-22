@@ -41,4 +41,5 @@ echo "Running startup scene smoke check"
 godot --headless --path "${project_dir}" --quit-after 1
 
 echo "Running deterministic test harness"
+# The shared harness now covers persistence and meta progression as well.
 bash /workspace/scripts/run-godot-tests.sh

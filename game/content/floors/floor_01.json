@@ -1,0 +1,10 @@
+{
+  "id": "floor_01",
+  "name": "Fractured Approach",
+  "room_graph_id": "floor_01_rooms",
+  "starting_room_id": "floor_01_start",
+  "boss_room_id": "floor_01_boss",
+  "boss_encounter_id": "floor_01_overseer",
+  "next_floor_id": "floor_02",
+  "seed": 101
+}

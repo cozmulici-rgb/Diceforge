@@ -39,6 +39,12 @@ func show_status(session) -> void:
 		int((inventory.get("currencies", {}) as Dictionary).get("echo_shards", 0)),
 		str(session.flags.get("screen_state", "exploration")),
 	]
+	status_label.text += " | Floor %d | Boss Room: %s" % [
+		int(session.floor_index),
+		str((session.floor_state as Dictionary).get("boss_room_id", "unknown")),
+	]
+	if bool(session.run_complete):
+		status_label.text += " | Run Complete | Progression: %s" % JSON.stringify(session.progression_result)
 
 
 func show_error(message: String) -> void:

@@ -5,6 +5,7 @@ const CombatStateScript = preload("res://scripts/combat/combat_state.gd")
 const DiceModelScript = preload("res://scripts/combat/dice_model.gd")
 const ActionSlotScript = preload("res://scripts/combat/action_slot.gd")
 const EnemyEncounterModelScript = preload("res://scripts/combat/enemy_encounter_model.gd")
+const BossPhaseControllerScript = preload("res://scripts/combat/boss_phase_controller.gd")
 
 signal combat_finished(encounter_result)
 signal combat_state_updated(combat_state)
@@ -21,6 +22,7 @@ signal combat_state_updated(combat_state)
 var content_catalog
 var dice_model = DiceModelScript.new()
 var combat_state = null
+var boss_phase_controller = BossPhaseControllerScript.new()
 
 
 func _ready() -> void:
@@ -55,6 +57,9 @@ func begin_encounter(run_state, encounter_definition: Dictionary) -> Variant:
 		"intent_label": str(enemy_definition.get("intent", "Strike")),
 		"intent_damage": int(enemy_definition.get("damage", 0)),
 	}).to_dictionary()
+	var boss_state = boss_phase_controller.initialize_enemy_state(enemy_definition)
+	for key in boss_state.keys():
+		enemy_state[key] = boss_state[key]
 
 	return CombatStateScript.new({
 		"encounter_id": str(encounter_definition.get("id", "")),
@@ -101,6 +106,7 @@ func assign_die_to_action(state, die_id: String, action_slot_id: String) -> Dict
 
 func resolve_player_turn(state) -> Dictionary:
 	var face_definitions = content_catalog.get_part_definitions("face")
+	var enemy_definition = content_catalog.load_enemy_definition(str((state.enemy_state as Dictionary).get("enemy_id", "")))
 	var total_attack: int = 0
 	var total_block: int = 0
 
@@ -129,8 +135,21 @@ func resolve_player_turn(state) -> Dictionary:
 	state.turn_log.append("Player turn resolved: %d damage, %d block." % [damage_to_enemy, total_block])
 	state.state = "enemy_turn"
 	if int(enemy_state.get("hp", 0)) <= 0:
-		state.outcome = "victory"
-		state.state = "complete"
+		if bool(enemy_state.get("is_boss", false)):
+			var phase_result = boss_phase_controller.advance_phase(enemy_state)
+			if bool(phase_result.get("transitioned", false)):
+				state.enemy_state = (phase_result.get("enemy_state", {}) as Dictionary).duplicate(true)
+				state.turn_log.append("Boss advanced to phase %d." % int((state.enemy_state as Dictionary).get("phase_index", 1)))
+				state.round_index += 1
+				state.state = "player_roll"
+				state.roll_results = []
+				state.action_slots = _reset_action_slots(state.action_slots)
+			else:
+				state.outcome = "victory"
+				state.state = "complete"
+		else:
+			state.outcome = "victory"
+			state.state = "complete"
 
 	return {"ok": true, "combat_state": state}
 
@@ -175,8 +194,9 @@ func finish_encounter(state) -> Dictionary:
 		"player_hp_after": state.player_hp,
 		"rewards_unlocked": [],
 		"echo_shards_awarded": 0,
-		"boss_defeated": false,
-		"run_complete": outcome == "defeat",
+		"boss_defeated": bool((state.enemy_state as Dictionary).get("is_boss", false)) and outcome == "victory",
+		"floor_complete": bool((state.enemy_state as Dictionary).get("is_boss", false)) and outcome == "victory",
+		"run_complete": outcome == "defeat" or (bool((state.enemy_state as Dictionary).get("final_boss", false)) and outcome == "victory"),
 		"encounter_id": state.encounter_id,
 		"room_id": state.room_id,
 		"reward_source": {
