@@ -1,0 +1,19 @@
+; Engine configuration file.
+; It is best edited using the Godot editor.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="Facetbound"
+run/main_scene="res://scenes/main.tscn"
+config/features=PackedStringArray("4.3")
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"

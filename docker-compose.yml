@@ -1,0 +1,30 @@
+services:
+  dev:
+    build:
+      context: .
+      dockerfile: docker/dev/Dockerfile
+      args:
+        GODOT_VERSION: ${GODOT_VERSION:-4.3-stable}
+    image: facetbound-dev:${GODOT_VERSION:-4.3-stable}
+    working_dir: /workspace
+    volumes:
+      - .:/workspace
+    stdin_open: true
+    tty: true
+    command: bash
+
+  export:
+    build:
+      context: .
+      dockerfile: docker/export/Dockerfile
+      args:
+        GODOT_VERSION: ${GODOT_VERSION:-4.3-stable}
+    image: facetbound-export:${GODOT_VERSION:-4.3-stable}
+    working_dir: /workspace
+    volumes:
+      - .:/workspace
+    environment:
+      GODOT_PROJECT_PATH: /workspace/game
+      GODOT_EXPORT_PRESET: Linux/X11
+      GODOT_EXPORT_PATH: /workspace/dist/facetbound.x86_64
+    command: bash
