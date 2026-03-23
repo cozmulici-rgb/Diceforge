@@ -410,7 +410,7 @@ func finalize_run(result: Variant) -> Dictionary:
 
 
 func _is_error_result(value: Variant) -> bool:
-	return value is Dictionary and not value.get("ok", false)
+	return value is Dictionary and value.has("ok") and not value.get("ok", false)
 
 
 func _build_initial_room_states(room_graph: Dictionary, starting_room_id: String) -> Dictionary:
