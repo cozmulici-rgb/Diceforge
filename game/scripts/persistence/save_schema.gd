@@ -33,11 +33,15 @@ const REQUIRED_META_FIELDS := [
 ]
 
 
-func validate_run_state(payload: Dictionary, content_catalog) -> Dictionary:
+func validate_run_state(payload: Dictionary, content_catalog = null) -> Dictionary:
 	var errors: Array[String] = []
 	errors.append_array(_validate_required_fields(payload, REQUIRED_RUN_FIELDS, "run_state"))
 	if int(payload.get("schema_version", -1)) != RUN_SCHEMA_VERSION:
 		errors.append("run_state schema_version is unsupported")
+
+	if content_catalog == null:
+		errors.append("content_catalog is required for run_state validation")
+		return {"ok": false, "errors": errors}
 
 	var state_validation = content_catalog.validate_saved_state(payload)
 	if not state_validation.get("ok", false):

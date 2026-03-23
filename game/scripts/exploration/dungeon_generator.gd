@@ -80,4 +80,4 @@ func is_boss_path_reachable(floor_state) -> bool:
 
 
 func _is_error_result(value: Variant) -> bool:
-	return value is Dictionary and not value.get("ok", true)
+	return value is Dictionary and not value.get("ok", false)

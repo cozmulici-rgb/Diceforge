@@ -5,7 +5,7 @@ extends RefCounted
 func initialize_enemy_state(enemy_definition: Dictionary) -> Dictionary:
 	var phases: Array = (enemy_definition.get("phases", []) as Array).duplicate(true)
 	if phases.is_empty():
-		return {}
+		return {"ok": false, "error": "enemy_has_no_phases"}
 
 	var first_phase: Dictionary = (phases[0] as Dictionary).duplicate(true)
 	return {

@@ -10,8 +10,11 @@ func _init(catalog = null) -> void:
 
 func list_available_unlocks(meta_state) -> Array:
 	var unlocks: Array = []
-	for unlock_id in content_catalog.get_progression_definitions("unlock").keys():
-		var unlock_definition: Dictionary = content_catalog.get_progression_definitions("unlock")[unlock_id]
+	var definitions = content_catalog.get_progression_definitions("unlock") if content_catalog != null else {}
+	if not (definitions is Dictionary):
+		return unlocks
+	for unlock_id in definitions.keys():
+		var unlock_definition: Dictionary = definitions[unlock_id]
 		if not _is_unlocked(meta_state, unlock_definition):
 			unlocks.append(unlock_definition.duplicate(true))
 	return unlocks
