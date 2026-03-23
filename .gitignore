@@ -6,3 +6,5 @@ game/.godot/
 dist/*
 !dist/.gitkeep
 tmp/
+.claude/
+logs/
