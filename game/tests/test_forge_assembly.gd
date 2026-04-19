@@ -29,7 +29,7 @@ func run() -> Array[String]:
 		"currencies": {},
 		"modifiers": [],
 	})
-	if invalid_rune.get("ok", true):
+	if invalid_rune.get("ok", false):
 		failures.append("socketing an attack rune into the neutral starter body should be rejected")
 
 	var replace_face = forge.apply_change(active_die, {

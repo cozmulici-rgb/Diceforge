@@ -24,7 +24,10 @@ RUN apt-get update \
         libxinerama1 \
         libxrandr2 \
         make \
+        scrot \
         unzip \
+        xdotool \
+        xvfb \
         xz-utils \
     && rm -rf /var/lib/apt/lists/*
 

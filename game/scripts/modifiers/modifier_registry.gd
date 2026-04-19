@@ -13,9 +13,14 @@ func _init(catalog = null) -> void:
 func load_modifier_effects(modifier_ids: Array) -> Array:
 	var effects: Array = []
 	var seen_unique: Dictionary = {}
+	if content_catalog == null:
+		return effects
 	for modifier_id in modifier_ids:
 		var modifier_definition = content_catalog.load_modifier_definition(str(modifier_id))
-		if modifier_definition is Dictionary and modifier_definition.get("error", "") != "":
+		# Valid definitions lack an "ok" key — default true so they pass through.
+		# Error dicts from _missing_content() have "ok": false and are skipped.
+		if modifier_definition is Dictionary and not modifier_definition.get("ok", true):
+			push_warning("ModifierRegistry: skipping invalid modifier '%s': %s" % [str(modifier_id), str(modifier_definition.get("error", "unknown"))])
 			continue
 		var effect = ModifierEffectScript.new(modifier_definition)
 		if effect.stack_mode == "unique":

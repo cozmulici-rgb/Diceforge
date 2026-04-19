@@ -10,8 +10,11 @@ func _init(catalog = null) -> void:
 
 func evaluate_achievements(run_summary: Dictionary, meta_state) -> Array[String]:
 	var unlocked_achievements: Array[String] = []
-	for achievement_id in content_catalog.get_progression_definitions("achievement").keys():
-		var achievement_definition: Dictionary = content_catalog.get_progression_definitions("achievement")[achievement_id]
+	var definitions = content_catalog.get_progression_definitions("achievement") if content_catalog != null else {}
+	if not (definitions is Dictionary):
+		return unlocked_achievements
+	for achievement_id in definitions.keys():
+		var achievement_definition: Dictionary = definitions[achievement_id]
 		if (meta_state.achievement_ids as Array).has(achievement_id):
 			continue
 		if _matches_requirement(achievement_definition, run_summary):

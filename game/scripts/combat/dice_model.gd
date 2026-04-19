@@ -39,7 +39,7 @@ func roll_active_dice(active_dice: Array, face_definitions: Dictionary, body_def
 		var rolled_value: int = 1
 		if not remaining_rolls.is_empty():
 			rolled_value = int(remaining_rolls.pop_front())
-		rolled_value = clampi(rolled_value, 1, max(side_count, 1))
+		rolled_value = clampi(rolled_value, 1, maxi(side_count, 1))
 
 		var face_id: String = str(face_set[min(rolled_value - 1, face_set.size() - 1)])
 		var face_definition: Dictionary = face_definitions.get(face_id, {})

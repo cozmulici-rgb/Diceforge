@@ -259,7 +259,6 @@ func apply_encounter_result(result: Dictionary) -> Variant:
 		_sync_floor_state_from_room_states()
 		if bool(result.get("boss_defeated", false)):
 			current_session.score_summary["bosses_defeated"] = int(current_session.score_summary.get("bosses_defeated", 0)) + 1
-		if bool(result.get("boss_defeated", false)):
 			var current_floor = content_catalog.load_floor_template(str(current_session.floor_state.get("floor_template_id", "")))
 			var next_floor_id := str(current_floor.get("next_floor_id", ""))
 			if bool(result.get("run_complete", false)):
@@ -411,7 +410,7 @@ func finalize_run(result: Variant) -> Dictionary:
 
 
 func _is_error_result(value: Variant) -> bool:
-	return value is Dictionary and not value.get("ok", true)
+	return value is Dictionary and value.has("ok") and not value.get("ok", false)
 
 
 func _build_initial_room_states(room_graph: Dictionary, starting_room_id: String) -> Dictionary:
