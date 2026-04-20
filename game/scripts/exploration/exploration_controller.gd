@@ -1,12 +1,15 @@
 extends Node2D
 
 const RoomGraphScript = preload("res://scripts/exploration/room_graph.gd")
+const FacetboundThemeScript = preload("res://scripts/ui/facetbound_theme.gd")
 
 signal session_updated(run_session)
 signal encounter_started(combat_state)
 
+@onready var ui_margin: MarginContainer = $UI/MarginContainer
 @onready var room_name_label: Label = $UI/MarginContainer/VBoxContainer/RoomNameLabel
 @onready var room_meta_label: Label = $UI/MarginContainer/VBoxContainer/RoomMetaLabel
+@onready var exits_header_label: Label = $UI/MarginContainer/VBoxContainer/ExitsHeaderLabel
 @onready var exits_container: VBoxContainer = $UI/MarginContainer/VBoxContainer/ExitsContainer
 @onready var encounter_button: Button = $UI/MarginContainer/VBoxContainer/EncounterButton
 @onready var encounter_status_label: Label = $UI/MarginContainer/VBoxContainer/EncounterStatusLabel
@@ -19,6 +22,7 @@ var room_graph
 
 
 func _ready() -> void:
+	_apply_theme()
 	encounter_button.pressed.connect(_on_encounter_pressed)
 
 	if run_session != null:
@@ -86,6 +90,7 @@ func _rebuild_exit_buttons(room_id: String) -> void:
 			continue
 
 		var button := Button.new()
+		button.theme_type_variation = &"FacetTertiaryButton"
 		button.text = "Move to %s (%s)" % [room_state.display_name, room_state.room_type]
 		button.disabled = str(run_session.flags.get("screen_state", "exploration")) != "exploration"
 		button.pressed.connect(_on_move_pressed.bind(neighbor_id))
@@ -123,3 +128,12 @@ func _on_encounter_pressed() -> void:
 	_build_room_graph()
 	_refresh_view()
 	encounter_started.emit(encounter_result.get("combat_state"))
+
+
+func _apply_theme() -> void:
+	ui_margin.theme = FacetboundThemeScript.build()
+	room_name_label.theme_type_variation = &"FacetTitle"
+	room_meta_label.theme_type_variation = &"FacetBodyMuted"
+	exits_header_label.theme_type_variation = &"FacetSectionLabel"
+	encounter_status_label.theme_type_variation = &"FacetInfo"
+	encounter_button.theme_type_variation = &"FacetPrimaryButton"

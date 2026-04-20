@@ -1,72 +1,75 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 
-SCREENSHOTS_DIR=/workspace/dist/screenshots
+SCREENSHOTS_DIR="${SCREENSHOTS_DIR:-/workspace/dist/screenshots}"
+SCREENSHOT_SIZE="${SCREENSHOT_SIZE:-1280x720x24}"
+DISPLAY_ID="${DISPLAY_ID:-:99}"
+GAME_PATH="${GAME_PATH:-/workspace/game}"
+LOAD_DELAY="${LOAD_DELAY:-6}"
+STEP_DELAY="${STEP_DELAY:-3}"
+SHORT_DELAY="${SHORT_DELAY:-2}"
+
 mkdir -p "$SCREENSHOTS_DIR"
 
-# Start virtual framebuffer
-Xvfb :99 -screen 0 1280x720x24 &
+cleanup() {
+    if [[ -n "${GODOT_PID:-}" ]]; then
+        kill "$GODOT_PID" 2>/dev/null || true
+    fi
+    if [[ -n "${XVFB_PID:-}" ]]; then
+        kill "$XVFB_PID" 2>/dev/null || true
+    fi
+}
+trap cleanup EXIT
+
+echo "Starting Xvfb on ${DISPLAY_ID} with screen ${SCREENSHOT_SIZE}"
+Xvfb "$DISPLAY_ID" -screen 0 "$SCREENSHOT_SIZE" &
 XVFB_PID=$!
-export DISPLAY=:99
+export DISPLAY="$DISPLAY_ID"
 sleep 1
 
-# Launch the game
-cd /workspace/game
+echo "Launching Facetbound from ${GAME_PATH}"
+cd "$GAME_PATH"
 godot --display-driver x11 --rendering-driver opengl3 --path . &
 GODOT_PID=$!
 
-# Wait for game to load
-sleep 6
+echo "Waiting ${LOAD_DELAY}s for the start menu"
+sleep "$LOAD_DELAY"
 
-# Screenshot 1: Start Menu
-scrot "$SCREENSHOTS_DIR/01_start_menu.png" --overwrite
-echo "Captured: 01_start_menu.png"
+capture() {
+    local name="$1"
+    scrot "${SCREENSHOTS_DIR}/${name}" --overwrite
+    echo "Captured: ${name}"
+}
 
-# Click "Start Run" button
-xdotool mousemove 637 456 click 1
-sleep 4
+click_at() {
+    local x="$1"
+    local y="$2"
+    xdotool mousemove "$x" "$y" click 1
+}
 
-# Screenshot 2: Exploration - Gate of Splinters
-scrot "$SCREENSHOTS_DIR/02_exploration_start.png" --overwrite
-echo "Captured: 02_exploration_start.png"
+capture "01_start_menu.png"
 
-# Click "Move to Echo Span (encounter)" - first button in the exits list (~y=167)
-xdotool mousemove 380 167 click 1
-sleep 3
+click_at 637 456
+sleep "$STEP_DELAY"
+capture "02_exploration_start.png"
 
-# Screenshot 3: Echo Span room
-scrot "$SCREENSHOTS_DIR/03_echo_span.png" --overwrite
-echo "Captured: 03_echo_span.png"
+click_at 376 212
+sleep "$STEP_DELAY"
+capture "03_echo_span.png"
 
-# Click "Trigger Encounter" button to start combat
-xdotool mousemove 380 244 click 1
-sleep 3
+click_at 376 340
+sleep "$STEP_DELAY"
+capture "04_combat.png"
 
-# Screenshot 4: Combat screen
-scrot "$SCREENSHOTS_DIR/04_combat.png" --overwrite
-echo "Captured: 04_combat.png"
+click_at 165 371
+sleep "$SHORT_DELAY"
+capture "05_combat_action.png"
 
-# Look for any action buttons in combat - try clicking around various areas
-xdotool mousemove 640 400 click 1
-sleep 2
+click_at 329 545
+sleep "$SHORT_DELAY"
+click_at 329 545
+sleep "$SHORT_DELAY"
+capture "06_after_combat.png"
 
-# Screenshot 5: Combat continued
-scrot "$SCREENSHOTS_DIR/05_combat_action.png" --overwrite
-echo "Captured: 05_combat_action.png"
-
-# Try more clicks to progress combat
-xdotool mousemove 640 500 click 1
-sleep 2
-xdotool mousemove 640 450 click 1
-sleep 2
-
-# Screenshot 6: After combat actions
-scrot "$SCREENSHOTS_DIR/06_after_combat.png" --overwrite
-echo "Captured: 06_after_combat.png"
-
-# Cleanup
-kill $GODOT_PID 2>/dev/null || true
-kill $XVFB_PID 2>/dev/null || true
-
-echo "All screenshots saved to $SCREENSHOTS_DIR"
+echo "All screenshots saved to ${SCREENSHOTS_DIR}"
 ls -lh "$SCREENSHOTS_DIR/"

@@ -7,6 +7,7 @@ const ActionSlotScript = preload("res://scripts/combat/action_slot.gd")
 const EnemyEncounterModelScript = preload("res://scripts/combat/enemy_encounter_model.gd")
 const BossPhaseControllerScript = preload("res://scripts/combat/boss_phase_controller.gd")
 const ModifierRegistryScript = preload("res://scripts/modifiers/modifier_registry.gd")
+const FacetboundThemeScript = preload("res://scripts/ui/facetbound_theme.gd")
 
 signal combat_finished(encounter_result)
 signal combat_state_updated(combat_state)
@@ -27,6 +28,7 @@ var boss_phase_controller = BossPhaseControllerScript.new()
 
 
 func _ready() -> void:
+	_apply_theme()
 	if roll_button != null:
 		roll_button.pressed.connect(_on_roll_pressed)
 	if resolve_button != null:
@@ -333,3 +335,23 @@ func _on_resolve_pressed() -> void:
 	_render()
 	if combat_state.state == "complete":
 		combat_finished.emit(finish_encounter(combat_state))
+
+
+func _apply_theme() -> void:
+	theme = FacetboundThemeScript.build()
+	if title_label != null:
+		title_label.theme_type_variation = &"FacetTitle"
+	if enemy_label != null:
+		enemy_label.theme_type_variation = &"FacetSubtitle"
+	if player_label != null:
+		player_label.theme_type_variation = &"FacetBodyMuted"
+	if slots_label != null:
+		slots_label.theme_type_variation = &"FacetBodyMuted"
+	if rolls_label != null:
+		rolls_label.theme_type_variation = &"FacetBodyMuted"
+	if log_label != null:
+		log_label.theme_type_variation = &"FacetInfo"
+	if roll_button != null:
+		roll_button.theme_type_variation = &"FacetPrimaryButton"
+	if resolve_button != null:
+		resolve_button.theme_type_variation = &"FacetSecondaryButton"

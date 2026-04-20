@@ -1,9 +1,14 @@
 extends Control
 
+const FacetboundThemeScript = preload("res://scripts/ui/facetbound_theme.gd")
+
 signal run_requested(archetype_id: String)
 signal daily_void_requested(archetype_id: String)
 signal continue_requested(slot_id: String)
 
+@onready var panel: PanelContainer = $CenterContainer/PanelContainer
+@onready var title_label: Label = $CenterContainer/PanelContainer/VBoxContainer/TitleLabel
+@onready var subtitle_label: Label = $CenterContainer/PanelContainer/VBoxContainer/SubtitleLabel
 @onready var archetype_options: OptionButton = $CenterContainer/PanelContainer/VBoxContainer/ArchetypeOptionButton
 @onready var summary_label: Label = $CenterContainer/PanelContainer/VBoxContainer/SummaryLabel
 @onready var start_button: Button = $CenterContainer/PanelContainer/VBoxContainer/StartRunButton
@@ -17,6 +22,7 @@ var _last_daily_void_result: Dictionary = {}
 
 
 func _ready() -> void:
+	_apply_theme()
 	archetype_options.item_selected.connect(_on_archetype_selected)
 	start_button.pressed.connect(_on_start_pressed)
 	daily_void_button.pressed.connect(_on_daily_void_pressed)
@@ -46,6 +52,18 @@ func configure(archetypes: Array, continue_summary: Dictionary = {}, recovery_me
 	daily_void_button.disabled = _archetypes.is_empty()
 	continue_button.disabled = _continue_summary.is_empty() or bool(_continue_summary.get("is_corrupt", false))
 	_update_summary()
+
+
+func _apply_theme() -> void:
+	theme = FacetboundThemeScript.build()
+	panel.theme_type_variation = &"FacetCard"
+	title_label.theme_type_variation = &"FacetTitle"
+	subtitle_label.theme_type_variation = &"FacetSubtitle"
+	archetype_options.theme_type_variation = &"FacetOptionButton"
+	summary_label.theme_type_variation = &"FacetBodyMuted"
+	start_button.theme_type_variation = &"FacetPrimaryButton"
+	daily_void_button.theme_type_variation = &"FacetSecondaryButton"
+	continue_button.theme_type_variation = &"FacetTertiaryButton"
 
 
 func _on_archetype_selected(_index: int) -> void:

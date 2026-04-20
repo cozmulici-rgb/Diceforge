@@ -465,6 +465,166 @@ Presentation must reinforce mechanics, not obscure them.
 - Forge previews must clearly show what changed and why.
 - Boss phase changes need strong visual/audio signaling.
 
+## 15.1 Current Screen Surface Inventory
+
+The current prototype exposes the following player-facing screens and overlays as the active media-design scope.
+
+### Start Menu
+
+Purpose:
+
+- Archetype selection
+- Continue-run entry point
+- Daily Void entry point
+- Starter summary and recovery messaging
+
+Media-design needs:
+
+- Title treatment and game identity
+- Primary CTA hierarchy for standard run, continue, and Daily Void
+- Clear summary typography for starter state and recovery status
+
+### Exploration Screen
+
+Purpose:
+
+- Room presentation
+- Exit selection
+- Encounter trigger
+- Current room state and route comprehension
+
+Media-design needs:
+
+- Strong floor/room atmosphere
+- Clear separation between playfield and route UI
+- Readable room metadata and exit hierarchy
+- Visual emphasis for encounter, event, shop, and boss room types
+
+### Combat Screen
+
+Purpose:
+
+- Enemy state
+- Player state
+- Action slot visibility
+- Rolled dice visibility
+- Combat log and round controls
+
+Media-design needs:
+
+- Strong combat readability
+- Clear enemy intent treatment
+- Distinct visual grouping for slots, rolls, and controls
+- Better emphasis on round flow and result feedback
+
+### Reward Screen
+
+Purpose:
+
+- Reward source identity
+- Reward choice presentation
+- Outcome framing after combat
+
+Media-design needs:
+
+- High-value choice presentation
+- Distinct card or option treatment
+- Rarity, part type, and reward-category readability
+
+### Forge Screen
+
+Purpose:
+
+- Active dice inspection
+- Inventory part inspection
+- Mutation candidate list
+- Preview and apply flow
+
+Media-design needs:
+
+- Side-by-side comparison of current and previewed die state
+- Strong visual distinction between equipped and spare parts
+- Clear mutation affordances and confirmation hierarchy
+
+### Progression Screen
+
+Purpose:
+
+- Run-end summary
+- Echo Shard gain
+- Unlock and achievement visibility
+- Daily Void result visibility when applicable
+
+Media-design needs:
+
+- Strong end-of-run payoff framing
+- Clear differentiation between temporary run results and permanent progress
+- Readable milestone presentation for unlocks and achievements
+
+### Shared HUD Overlay
+
+Purpose:
+
+- Persistent run status
+- Current room and floor state
+- Inventory summary
+- Screen-state feedback
+
+Media-design needs:
+
+- Compact information density without crowding screen-specific UI
+- Consistent placement across all runtime screens
+- Fast scanning for HP, shards, floor, and state changes
+
+## 15.2 Media Format And Resolution Guidelines
+
+The current prototype is presented as a desktop-first landscape game surface. Media design for current screens should therefore target a `16:9` master layout.
+
+### Master Resolution
+
+- Primary UI/media layout target: `1920x1080`
+- High-resolution source target for paintovers, key art, or layered composites: `3840x2160`
+- Lightweight preview export: `1280x720`
+
+### Recommended Asset Formats
+
+- Full-screen painted backdrops: `PNG`
+- Layered atmosphere, ornament, and frame overlays: transparent `PNG`
+- Logos and title treatments: vector source preferred, exported to transparent `PNG` for runtime use
+- Icons and small UI glyphs: transparent `PNG`, with vector source retained where possible
+
+### Screen Media Packaging
+
+For each major screen, the recommended production package is:
+
+- Background plate at `1920x1080`
+- Midground effects or atmosphere layer at `1920x1080` with transparency
+- UI ornament or frame overlay at `1920x1080` with transparency
+- Title or screen-heading treatment as a separate transparent asset when needed
+- Icons exported separately
+
+### Icon Export Sizes
+
+- Standard icon export: `256x256`
+- High-detail icon export: `512x512`
+
+These sizes give enough headroom for runtime scaling and promotional reuse without making the working asset set unnecessarily heavy.
+
+### Start Menu Media Spec
+
+The `Start Menu` should be authored with:
+
+- Master mockup: `1920x1080`
+- High-resolution concept source: `3840x2160`
+- Optional preview image: `1280x720`
+- Background plate: `1920x1080`
+- Decorative overlay: `1920x1080` transparent
+- Title/logo asset: transparent export, sized to fit the menu composition
+
+### Design Constraint
+
+Media should be authored so that it still reads cleanly when the layout compresses below the master target. Decorative detail should live mostly in peripheral regions, while primary information remains centered and readable.
+
 ## 16. Content Scope Targets For A Full Initial Game
 
 Suggested initial full-game content targets:

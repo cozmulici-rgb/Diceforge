@@ -1,5 +1,7 @@
 extends Control
 
+const FacetboundThemeScript = preload("res://scripts/ui/facetbound_theme.gd")
+
 signal forge_complete()
 
 @onready var title_label: Label = $MarginContainer/VBoxContainer/TitleLabel
@@ -16,6 +18,7 @@ var _selected_mutation: Dictionary = {}
 
 
 func _ready() -> void:
+	_apply_theme()
 	apply_button.pressed.connect(_on_apply_pressed)
 	done_button.pressed.connect(_on_done_pressed)
 	_render()
@@ -42,6 +45,7 @@ func _render() -> void:
 
 	for mutation in _build_candidate_mutations():
 		var button := Button.new()
+		button.theme_type_variation = &"FacetTertiaryButton"
 		button.text = _describe_mutation(mutation)
 		button.pressed.connect(_on_mutation_pressed.bind(mutation))
 		mutation_container.add_child(button)
@@ -154,3 +158,13 @@ func _to_string_array(values: Array) -> Array[String]:
 	for value in values:
 		string_values.append(str(value))
 	return string_values
+
+
+func _apply_theme() -> void:
+	theme = FacetboundThemeScript.build()
+	title_label.theme_type_variation = &"FacetTitle"
+	dice_label.theme_type_variation = &"FacetBodyMuted"
+	inventory_label.theme_type_variation = &"FacetBodyMuted"
+	preview_label.theme_type_variation = &"FacetInfo"
+	apply_button.theme_type_variation = &"FacetPrimaryButton"
+	done_button.theme_type_variation = &"FacetTertiaryButton"

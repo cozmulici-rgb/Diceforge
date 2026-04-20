@@ -36,6 +36,8 @@ scripts/        Build and verification scripts
   Runs the deterministic Godot-native gameplay tests headlessly in the export container.
 - `make export`
   Re-runs verification and exports the Linux desktop build into `dist/`.
+- `make screenshots`
+  Runs the Docker-based screenshot capture flow and saves image output into `dist/screenshots/`.
 
 ## Current Feature Set
 
@@ -67,5 +69,6 @@ After a successful `make export`, the repository produces:
 - Startup now routes through `res://scenes/app_root.tscn`, with `main.tscn` retained as a compatibility wrapper.
 - Seed gameplay content currently lives under `game/content/` and is validated before runtime use.
 - The shared headless test harness covers content validation, exploration, combat, bosses, forge flow, persistence, progression, modifiers, and Daily Void mode.
+- Docker screenshot capture is available through `make screenshots` for environments that cannot run a native Godot editor or export locally.
 
 More setup detail is in [setup.md](/Users/vcozmulici/workspace/ai/Diceforge/docs/setup.md). Gameplay rules are summarized in [game-rules.md](/Users/vcozmulici/workspace/ai/Diceforge/docs/game-rules.md).

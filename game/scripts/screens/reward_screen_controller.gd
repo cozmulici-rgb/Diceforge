@@ -1,5 +1,7 @@
 extends Control
 
+const FacetboundThemeScript = preload("res://scripts/ui/facetbound_theme.gd")
+
 signal reward_selected(option_data: Dictionary)
 
 @onready var title_label: Label = $MarginContainer/VBoxContainer/TitleLabel
@@ -11,6 +13,7 @@ var _reward_flow_state: Dictionary = {}
 
 
 func _ready() -> void:
+	_apply_theme()
 	_render()
 
 
@@ -37,6 +40,7 @@ func _render() -> void:
 	for option_data in _reward_flow_state.get("available_options", []):
 		var option: Dictionary = option_data
 		var button := Button.new()
+		button.theme_type_variation = &"FacetSecondaryButton"
 		button.text = "%s x%d [%s]" % [
 			str(option.get("content_id", "unknown")),
 			int(option.get("quantity", 1)),
@@ -48,3 +52,10 @@ func _render() -> void:
 
 func _on_option_pressed(option_data: Dictionary) -> void:
 	reward_selected.emit(option_data)
+
+
+func _apply_theme() -> void:
+	theme = FacetboundThemeScript.build()
+	title_label.theme_type_variation = &"FacetTitle"
+	source_label.theme_type_variation = &"FacetSubtitle"
+	summary_label.theme_type_variation = &"FacetBodyMuted"
