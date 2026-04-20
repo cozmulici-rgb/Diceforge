@@ -4,6 +4,15 @@
 
 This project uses Docker to provide a reproducible Godot 4 environment for validation and export. The source project lives under `game/`, while generated artifacts are written to `dist/`.
 
+The current prototype includes:
+
+- exploration and encounter handoff
+- deterministic dice combat
+- reward and forge flows
+- floor progression and boss completion
+- local persistence and meta progression
+- Daily Void seeded runs with local-only score persistence
+
 ## Prerequisites
 
 - Docker with Compose support
@@ -48,6 +57,8 @@ This command checks:
 - Godot can import and load the project headlessly
 - The deterministic gameplay harness passes
 
+`make verify` is the minimum integrity gate for repository changes.
+
 ### `make test`
 
 Runs the deterministic gameplay harness directly:
@@ -58,7 +69,18 @@ make test
 
 This command executes `scripts/run-godot-tests.sh`, which launches:
 
+- `res://tests/test_combat_controller.gd`
+- `res://tests/test_boss_encounter.gd`
 - `res://tests/test_content_catalog.gd`
+- `res://tests/test_daily_void_mode.gd`
+- `res://tests/test_dice_model.gd`
+- `res://tests/test_dungeon_generator.gd`
+- `res://tests/test_exploration_flow.gd`
+- `res://tests/test_forge_assembly.gd`
+- `res://tests/test_meta_progression.gd`
+- `res://tests/test_modifier_registry.gd`
+- `res://tests/test_persistence_service.gd`
+- `res://tests/test_reward_flow.gd`
 - `res://tests/test_run_session.gd`
 
 ### `make export`
@@ -79,9 +101,15 @@ This command runs verification first, then exports:
 New contributors can confirm the local setup with this sequence:
 
 1. Run `make help` and confirm the command list is printed.
-2. Run `make test` and confirm all Facetbound tests pass.
-3. Run `make verify` and confirm Godot completes without errors.
+2. Run `make test` and confirm the full Facetbound headless suite passes, including persistence, progression, modifiers, and Daily Void tests.
+3. Run `make verify` and confirm project import, smoke startup, and the shared test harness all succeed.
 4. Run `make export` and confirm both Linux export files appear under `dist/`.
+
+## Daily Void Verification Notes
+
+- Daily Void is intended to remain playable with no online service configured.
+- The shipped content uses local-only submission, so progression stores Daily Void results without attempting network submission.
+- Gateway failure handling is covered by the deterministic test suite rather than requiring a live backend.
 
 ## Troubleshooting
 

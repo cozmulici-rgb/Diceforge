@@ -1,6 +1,6 @@
 # Facetbound
 
-Facetbound is a Godot 4 prototype for a 2D dice-driven roguelike. The repository now includes the phase-01 runtime scaffold, seeded gameplay content, and a Docker-based local build flow for headless validation, deterministic tests, and Linux desktop export.
+Facetbound is a Godot 4 prototype for a 2D dice-driven roguelike. The repository now includes a playable end-to-end prototype with exploration, deterministic dice combat, rewards, forge mutations, floor progression, persistence, meta progression, Daily Void mode, and a Docker-based local build flow for headless validation and Linux desktop export.
 
 ## Stack
 
@@ -37,6 +37,22 @@ scripts/        Build and verification scripts
 - `make export`
   Re-runs verification and exports the Linux desktop build into `dist/`.
 
+## Current Feature Set
+
+- Start a run from the archetype menu and continue a saved active run.
+- Explore seeded room graphs and trigger encounter transitions.
+- Resolve deterministic turn-based dice combat against standard enemies and bosses.
+- Claim post-combat rewards and mutate active dice in the forge.
+- Advance across multiple floors and finish runs into a progression summary.
+- Persist active-run and meta progression data locally.
+- Play Daily Void as a fixed-seed local challenge with rotating modifiers.
+
+## Daily Void Notes
+
+- Daily Void is fully playable in local-only mode.
+- The current content is configured with `submission_context: local_only`, so leaderboard submission is not attempted by default.
+- Submission behavior remains isolated behind the optional `LeaderboardGateway` boundary for future online integration.
+
 ## Current Output
 
 After a successful `make export`, the repository produces:
@@ -49,6 +65,7 @@ After a successful `make export`, the repository produces:
 - Generated Godot editor metadata under `game/.godot/` is ignored.
 - Generated build artifacts under `dist/` are ignored except for `dist/.gitkeep`.
 - Startup now routes through `res://scenes/app_root.tscn`, with `main.tscn` retained as a compatibility wrapper.
-- Seed gameplay content currently lives under `game/content/` and is validated before use by the runtime scaffold.
+- Seed gameplay content currently lives under `game/content/` and is validated before runtime use.
+- The shared headless test harness covers content validation, exploration, combat, bosses, forge flow, persistence, progression, modifiers, and Daily Void mode.
 
-More setup and troubleshooting detail is in [docs/setup.md](/Users/vcozmulici/workspace/mysites/df-sandbox/docs/setup.md).
+More setup detail is in [setup.md](/Users/vcozmulici/workspace/ai/Diceforge/docs/setup.md). Gameplay rules are summarized in [game-rules.md](/Users/vcozmulici/workspace/ai/Diceforge/docs/game-rules.md).

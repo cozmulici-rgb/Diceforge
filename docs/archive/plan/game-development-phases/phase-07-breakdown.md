@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Translate [Phase 07](/Users/vcozmulici/workspace/mysites/df-sandbox/docs/plan/game-development-phases/phase-07.md) into an execution sequence that can be implemented incrementally without breaking the existing offline run loop.
+Translate [Phase 07](/Users/vcozmulici/workspace/ai/Diceforge/docs/plan/game-development-phases/phase-07.md) into an execution sequence that can be implemented incrementally without breaking the existing offline run loop.
 
 ## Delivery Strategy
 
@@ -197,12 +197,12 @@ Close the phase with stable automation and user-facing documentation.
 
 ## Done Checklist
 
-- [ ] Modifier content is data-driven and validated
-- [ ] Modifier effects apply deterministically to runtime state
-- [ ] Daily Void run creation is deterministic for a given calendar day
-- [ ] Daily Void results persist locally through meta-state
-- [ ] Leaderboard submission remains optional and isolated
-- [ ] Daily Void failure states are non-blocking
-- [ ] Headless tests cover the new mode and modifier paths
-- [ ] `make verify` passes
-- [ ] `make export` passes
+- [x] Modifier content is data-driven and validated
+- [x] Modifier effects apply deterministically to runtime state
+- [x] Daily Void run creation is deterministic for a given calendar day
+- [x] Daily Void results persist locally through meta-state
+- [x] Leaderboard submission remains optional and isolated
+- [x] Daily Void failure states are non-blocking
+- [x] Headless tests cover the new mode and modifier paths
+- [x] `make verify` passes
+- [x] `make export` passes
