@@ -19,12 +19,13 @@ var game_state_coordinator
 func _ready() -> void:
 	content_catalog = ContentCatalogScript.new()
 	game_state_coordinator = GameStateCoordinatorScript.new(content_catalog)
-	hud.show_error("Select an archetype to begin.")
+	hud.clear()
 	_show_start_menu()
 
 
 func _show_start_menu() -> void:
 	_clear_screen_host()
+	hud.clear()
 
 	var start_menu = StartMenuScene.instantiate()
 	screen_host.add_child(start_menu)
@@ -43,13 +44,13 @@ func _show_start_menu() -> void:
 
 func _show_exploration(run_session) -> void:
 	_clear_screen_host()
+	hud.clear()
 
 	var exploration_screen = ExplorationScene.instantiate()
 	screen_host.add_child(exploration_screen)
 	exploration_screen.setup(game_state_coordinator, content_catalog, run_session)
 	exploration_screen.session_updated.connect(_on_session_updated)
 	exploration_screen.encounter_started.connect(_on_encounter_started)
-	hud.show_status(run_session)
 	print("Facetbound app root initialized with session %s" % run_session.session_id)
 
 
@@ -145,6 +146,9 @@ func _on_daily_void_requested(archetype_id: String) -> void:
 
 
 func _on_session_updated(run_session) -> void:
+	if str(run_session.flags.get("screen_state", "exploration")) == "exploration":
+		hud.clear()
+		return
 	hud.show_status(run_session)
 
 

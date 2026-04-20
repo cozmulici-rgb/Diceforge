@@ -6,13 +6,13 @@ const FacetboundThemeScript = preload("res://scripts/ui/facetbound_theme.gd")
 signal session_updated(run_session)
 signal encounter_started(combat_state)
 
-@onready var ui_margin: MarginContainer = $UI/MarginContainer
-@onready var room_name_label: Label = $UI/MarginContainer/VBoxContainer/RoomNameLabel
-@onready var room_meta_label: Label = $UI/MarginContainer/VBoxContainer/RoomMetaLabel
-@onready var exits_header_label: Label = $UI/MarginContainer/VBoxContainer/ExitsHeaderLabel
-@onready var exits_container: VBoxContainer = $UI/MarginContainer/VBoxContainer/ExitsContainer
-@onready var encounter_button: Button = $UI/MarginContainer/VBoxContainer/EncounterButton
-@onready var encounter_status_label: Label = $UI/MarginContainer/VBoxContainer/EncounterStatusLabel
+@onready var ui_panel: PanelContainer = $UI/CenterContainer/PanelContainer
+@onready var room_name_label: Label = $UI/CenterContainer/PanelContainer/VBoxContainer/RoomNameLabel
+@onready var room_meta_label: Label = $UI/CenterContainer/PanelContainer/VBoxContainer/RoomMetaLabel
+@onready var exits_header_label: Label = $UI/CenterContainer/PanelContainer/VBoxContainer/ExitsHeaderLabel
+@onready var exits_container: VBoxContainer = $UI/CenterContainer/PanelContainer/VBoxContainer/ExitsContainer
+@onready var encounter_button: Button = $UI/CenterContainer/PanelContainer/VBoxContainer/EncounterButton
+@onready var encounter_status_label: Label = $UI/CenterContainer/PanelContainer/VBoxContainer/EncounterStatusLabel
 @onready var player = $Player
 
 var content_catalog
@@ -60,12 +60,11 @@ func _refresh_view() -> void:
 		return
 
 	room_name_label.text = "%s" % current_room.display_name
-	room_meta_label.text = "Floor: %d | Type: %s | Revealed: %s | Completed: %s | Visits: %d" % [
+	room_meta_label.text = "Floor %d tutorial room\nType: %s  |  Visits: %d  |  %s" % [
 		int(run_session.floor_index),
-		current_room.room_type,
-		"yes" if current_room.revealed else "no",
-		"yes" if current_room.completed else "no",
+		_format_room_type(current_room.room_type),
 		current_room.visit_count,
+		"Cleared" if current_room.completed else "Uncleared",
 	]
 
 	encounter_status_label.text = str(run_session.flags.get("encounter_status", "Explore the room shell and trigger the stub encounter."))
@@ -131,9 +130,24 @@ func _on_encounter_pressed() -> void:
 
 
 func _apply_theme() -> void:
-	ui_margin.theme = FacetboundThemeScript.build()
+	ui_panel.theme = FacetboundThemeScript.build()
+	ui_panel.theme_type_variation = &"FacetCard"
 	room_name_label.theme_type_variation = &"FacetTitle"
 	room_meta_label.theme_type_variation = &"FacetBodyMuted"
 	exits_header_label.theme_type_variation = &"FacetSectionLabel"
 	encounter_status_label.theme_type_variation = &"FacetInfo"
 	encounter_button.theme_type_variation = &"FacetPrimaryButton"
+
+
+func _format_room_type(room_type: String) -> String:
+	match room_type:
+		"start":
+			return "Start"
+		"encounter":
+			return "Encounter"
+		"boss":
+			return "Boss"
+		"shop":
+			return "Shop"
+		_:
+			return room_type.capitalize()

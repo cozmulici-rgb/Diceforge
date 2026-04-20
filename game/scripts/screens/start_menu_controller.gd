@@ -13,6 +13,7 @@ signal continue_requested(slot_id: String)
 @onready var summary_label: Label = $CenterContainer/PanelContainer/VBoxContainer/SummaryLabel
 @onready var start_button: Button = $CenterContainer/PanelContainer/VBoxContainer/StartRunButton
 @onready var daily_void_button: Button = $CenterContainer/PanelContainer/VBoxContainer/DailyVoidButton
+@onready var continue_spacer: Control = $CenterContainer/PanelContainer/VBoxContainer/ContinueSpacer
 @onready var continue_button: Button = $CenterContainer/PanelContainer/VBoxContainer/ContinueRunButton
 
 var _archetypes: Array = []
@@ -32,7 +33,8 @@ func _ready() -> void:
 		summary_label.text = "No starter archetypes are available."
 		start_button.disabled = true
 		daily_void_button.disabled = true
-	continue_button.disabled = true
+		continue_spacer.visible = false
+	continue_button.visible = false
 
 
 func configure(archetypes: Array, continue_summary: Dictionary = {}, recovery_message: String = "", last_daily_void_result: Dictionary = {}) -> void:
@@ -51,6 +53,8 @@ func configure(archetypes: Array, continue_summary: Dictionary = {}, recovery_me
 	start_button.disabled = _archetypes.is_empty()
 	daily_void_button.disabled = _archetypes.is_empty()
 	continue_button.disabled = _continue_summary.is_empty() or bool(_continue_summary.get("is_corrupt", false))
+	continue_spacer.visible = not _continue_summary.is_empty()
+	continue_button.visible = not _continue_summary.is_empty()
 	_update_summary()
 
 
@@ -114,8 +118,7 @@ func _update_summary() -> void:
 		(selected_archetype.get("starter_dice", []) as Array).size(),
 	])
 	if not _continue_summary.is_empty():
-		parts.append("Continue slot %s | Floor %d | Room %s" % [
-			str(_continue_summary.get("slot_id", "")),
+		parts.append("Resume run: floor %d | room %s" % [
 			int(_continue_summary.get("floor_index", 0)),
 			str(_continue_summary.get("room_id", "")),
 		])

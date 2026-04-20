@@ -4,7 +4,13 @@ extends CanvasLayer
 @onready var status_label: Label = $MarginContainer/StatusLabel
 
 
+func clear() -> void:
+	visible = false
+	status_label.text = ""
+
+
 func show_status(session) -> void:
+	visible = true
 	if session == null:
 		status_label.text = "No active run"
 		return
@@ -48,4 +54,5 @@ func show_status(session) -> void:
 
 
 func show_error(message: String) -> void:
+	visible = true
 	status_label.text = "Startup error: %s" % message
