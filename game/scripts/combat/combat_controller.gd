@@ -13,11 +13,12 @@ signal combat_finished(encounter_result)
 signal combat_state_updated(combat_state)
 
 @onready var title_label = get_node_or_null("MarginContainer/VBoxContainer/TitleLabel")
-@onready var enemy_label = get_node_or_null("MarginContainer/VBoxContainer/EnemyLabel")
-@onready var player_label = get_node_or_null("MarginContainer/VBoxContainer/PlayerLabel")
-@onready var slots_label = get_node_or_null("MarginContainer/VBoxContainer/SlotsLabel")
-@onready var rolls_label = get_node_or_null("MarginContainer/VBoxContainer/RollsLabel")
-@onready var log_label = get_node_or_null("MarginContainer/VBoxContainer/LogLabel")
+@onready var state_label = get_node_or_null("MarginContainer/VBoxContainer/StateLabel")
+@onready var enemy_label = get_node_or_null("MarginContainer/VBoxContainer/SummaryRow/EnemyPanel/EnemyBox/EnemyLabel")
+@onready var player_label = get_node_or_null("MarginContainer/VBoxContainer/SummaryRow/PlayerPanel/PlayerBox/PlayerLabel")
+@onready var slots_label = get_node_or_null("MarginContainer/VBoxContainer/ActionRow/SlotsPanel/SlotsBox/SlotsLabel")
+@onready var rolls_label = get_node_or_null("MarginContainer/VBoxContainer/ActionRow/RollsPanel/RollsBox/RollsLabel")
+@onready var log_label = get_node_or_null("MarginContainer/VBoxContainer/LogPanel/LogBox/LogLabel")
 @onready var roll_button = get_node_or_null("MarginContainer/VBoxContainer/ButtonRow/RollButton")
 @onready var resolve_button = get_node_or_null("MarginContainer/VBoxContainer/ButtonRow/ResolveButton")
 
@@ -285,25 +286,22 @@ func _render() -> void:
 	if combat_state == null or title_label == null:
 		return
 
-	title_label.text = "Combat: %s | Round %d" % [combat_state.encounter_id, combat_state.round_index]
-	enemy_label.text = "Enemy: %s | HP %d | Intent %s (%d)" % [
-		str((combat_state.enemy_state as Dictionary).get("display_name", "Enemy")),
-		int((combat_state.enemy_state as Dictionary).get("hp", 0)),
-		str((combat_state.enemy_state as Dictionary).get("intent_label", "Strike")),
-		int((combat_state.enemy_state as Dictionary).get("intent_damage", 0)),
-	]
-	player_label.text = "Player HP %d | Block %d | State %s" % [
-		combat_state.player_hp,
-		combat_state.player_block,
-		combat_state.state,
-	]
-	slots_label.text = "Slots: %s" % JSON.stringify(combat_state.action_slots)
-	rolls_label.text = "Rolls: %s" % JSON.stringify(combat_state.roll_results)
-	log_label.text = "Log: %s" % "\n".join(combat_state.turn_log)
+	title_label.text = str((combat_state.enemy_state as Dictionary).get("display_name", "Encounter"))
+	if state_label != null:
+		state_label.text = "Round %d  |  Phase %s" % [
+			int(combat_state.round_index),
+			_format_combat_state(str(combat_state.state)),
+		]
+	enemy_label.text = _build_enemy_summary()
+	player_label.text = _build_player_summary()
+	slots_label.text = _build_slots_summary()
+	rolls_label.text = _build_rolls_summary()
+	log_label.text = _build_log_summary()
 	if roll_button != null:
 		roll_button.disabled = combat_state.state != "player_roll"
 	if resolve_button != null:
 		resolve_button.disabled = combat_state.state == "complete"
+		resolve_button.text = "Resolve Round" if combat_state.state != "complete" else "Resolved"
 
 
 func _on_roll_pressed() -> void:
@@ -341,8 +339,10 @@ func _apply_theme() -> void:
 	theme = FacetboundThemeScript.build()
 	if title_label != null:
 		title_label.theme_type_variation = &"FacetTitle"
+	if state_label != null:
+		state_label.theme_type_variation = &"FacetSubtitle"
 	if enemy_label != null:
-		enemy_label.theme_type_variation = &"FacetSubtitle"
+		enemy_label.theme_type_variation = &"FacetBodyMuted"
 	if player_label != null:
 		player_label.theme_type_variation = &"FacetBodyMuted"
 	if slots_label != null:
@@ -355,3 +355,104 @@ func _apply_theme() -> void:
 		roll_button.theme_type_variation = &"FacetPrimaryButton"
 	if resolve_button != null:
 		resolve_button.theme_type_variation = &"FacetSecondaryButton"
+
+
+func _build_enemy_summary() -> String:
+	var enemy_state: Dictionary = combat_state.enemy_state as Dictionary
+	var lines: Array[String] = []
+	lines.append("%s" % str(enemy_state.get("display_name", "Unknown Enemy")))
+	lines.append("HP %d   Block %d" % [
+		int(enemy_state.get("hp", 0)),
+		int(enemy_state.get("block", 0)),
+	])
+	lines.append("Intent: %s (%d)" % [
+		str(enemy_state.get("intent_label", "Strike")),
+		int(enemy_state.get("intent_damage", 0)),
+	])
+	if bool(enemy_state.get("is_boss", false)):
+		lines.append("Boss phase %d" % int(enemy_state.get("phase_index", 1)))
+	return "\n".join(lines)
+
+
+func _build_player_summary() -> String:
+	var lines: Array[String] = []
+	lines.append("HP %d   Block %d" % [int(combat_state.player_hp), int(combat_state.player_block)])
+	lines.append("State: %s" % _format_combat_state(str(combat_state.state)))
+	lines.append("Dice in pool: %d" % (combat_state.active_dice as Array).size())
+	var modifier_snapshot: Dictionary = combat_state.modifier_snapshot as Dictionary
+	var attack_bonus := int(modifier_snapshot.get("attack_bonus", 0))
+	var block_bonus := int(modifier_snapshot.get("block_bonus", 0))
+	if attack_bonus != 0 or block_bonus != 0:
+		lines.append("Bonuses: +%d atk / +%d block" % [attack_bonus, block_bonus])
+	return "\n".join(lines)
+
+
+func _build_slots_summary() -> String:
+	var lines: Array[String] = []
+	for slot in (combat_state.action_slots as Array):
+		var slot_data: Dictionary = slot
+		var assigned_die_ids: Array = slot_data.get("assigned_die_ids", [])
+		var families: Array = slot_data.get("allowed_families", [])
+		var assigned_text := "Empty"
+		if not assigned_die_ids.is_empty():
+			assigned_text = ", ".join(_stringify_values(assigned_die_ids))
+		lines.append("%s [%s]\n%s" % [
+			str(slot_data.get("display_name", slot_data.get("slot_id", "Slot"))),
+			"/".join(_stringify_values(families)),
+			assigned_text,
+		])
+	return "\n\n".join(lines)
+
+
+func _build_rolls_summary() -> String:
+	var lines: Array[String] = []
+	for roll in (combat_state.roll_results as Array):
+		var roll_data: Dictionary = roll
+		lines.append("%s  %s %d  -> %s" % [
+			str(roll_data.get("die_label", roll_data.get("die_id", "Die"))),
+			str(roll_data.get("face_label", roll_data.get("face_id", "face"))),
+			int(roll_data.get("rolled_value", 0)),
+			_format_assigned_slot(str(roll_data.get("assigned_slot_id", ""))),
+		])
+	if lines.is_empty():
+		return "Roll to populate the action tray."
+	return "\n".join(lines)
+
+
+func _build_log_summary() -> String:
+	var lines: Array = combat_state.turn_log as Array
+	if lines.is_empty():
+		return "Encounter started."
+	var tail := lines.slice(max(lines.size() - 4, 0), lines.size())
+	return "\n".join(_stringify_values(tail))
+
+
+func _format_combat_state(state: String) -> String:
+	match state:
+		"player_roll":
+			return "Awaiting Roll"
+		"player_assignment":
+			return "Assigning Dice"
+		"enemy_turn":
+			return "Enemy Turn"
+		"complete":
+			return "Complete"
+		_:
+			return state.capitalize()
+
+
+func _format_assigned_slot(slot_id: String) -> String:
+	if slot_id == "":
+		return "Unassigned"
+	for slot in (combat_state.action_slots as Array):
+		var slot_data: Dictionary = slot
+		if str(slot_data.get("slot_id", "")) == slot_id:
+			return str(slot_data.get("display_name", slot_id))
+	return slot_id
+
+
+func _stringify_values(values: Array) -> PackedStringArray:
+	var parts := PackedStringArray()
+	for value in values:
+		parts.append(str(value))
+	return parts

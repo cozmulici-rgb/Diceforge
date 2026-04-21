@@ -5,7 +5,7 @@ SCREENSHOTS_DIR="${SCREENSHOTS_DIR:-/workspace/dist/screenshots}"
 SCREENSHOT_SIZE="${SCREENSHOT_SIZE:-1280x720x24}"
 DISPLAY_ID="${DISPLAY_ID:-:99}"
 GAME_PATH="${GAME_PATH:-/workspace/game}"
-LOAD_DELAY="${LOAD_DELAY:-6}"
+LOAD_DELAY="${LOAD_DELAY:-14}"
 STEP_DELAY="${STEP_DELAY:-3}"
 SHORT_DELAY="${SHORT_DELAY:-2}"
 
@@ -27,8 +27,11 @@ XVFB_PID=$!
 export DISPLAY="$DISPLAY_ID"
 sleep 1
 
-echo "Launching Facetbound from ${GAME_PATH}"
 cd "$GAME_PATH"
+echo "Importing project assets for headless capture"
+godot --headless --path . --import
+
+echo "Launching Facetbound from ${GAME_PATH}"
 godot --display-driver x11 --rendering-driver opengl3 --path . &
 GODOT_PID=$!
 
@@ -49,25 +52,30 @@ click_at() {
 
 capture "01_start_menu.png"
 
-click_at 637 456
+# Click the centered Start Run button.
+click_at 640 548
 sleep "$STEP_DELAY"
 capture "02_exploration_start.png"
 
-click_at 376 212
+# Click the first exit button: Move to Echo Span (encounter).
+click_at 704 383
 sleep "$STEP_DELAY"
 capture "03_echo_span.png"
 
-click_at 376 340
+# Click the encounter button after entering Echo Span.
+click_at 704 515
 sleep "$STEP_DELAY"
 capture "04_combat.png"
 
-click_at 165 371
+# Click Roll Dice on the structured combat layout.
+click_at 571 608
 sleep "$SHORT_DELAY"
 capture "05_combat_action.png"
 
-click_at 329 545
+# Click Resolve Round, then select the first reward option.
+click_at 735 608
 sleep "$SHORT_DELAY"
-click_at 329 545
+click_at 640 176
 sleep "$SHORT_DELAY"
 capture "06_after_combat.png"
 

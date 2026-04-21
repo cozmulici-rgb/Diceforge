@@ -35,43 +35,129 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-offset_left = 16.0
-offset_top = 16.0
-offset_right = -16.0
-offset_bottom = -16.0
+offset_left = 96.0
+offset_top = 76.0
+offset_right = -40.0
+offset_bottom = -32.0
 
 [node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 14
 
 [node name="TitleLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
 text = "Combat"
+horizontal_alignment = 1
 
-[node name="EnemyLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+[node name="StateLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Round"
+horizontal_alignment = 1
+
+[node name="SummaryRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="EnemyPanel" type="PanelContainer" parent="MarginContainer/VBoxContainer/SummaryRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="EnemyBox" type="VBoxContainer" parent="MarginContainer/VBoxContainer/SummaryRow/EnemyPanel"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="EnemySectionLabel" type="Label" parent="MarginContainer/VBoxContainer/SummaryRow/EnemyPanel/EnemyBox"]
+layout_mode = 2
 text = "Enemy"
+
+[node name="EnemyLabel" type="Label" parent="MarginContainer/VBoxContainer/SummaryRow/EnemyPanel/EnemyBox"]
+layout_mode = 2
+text = "Enemy summary"
 autowrap_mode = 3
 
-[node name="PlayerLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+[node name="PlayerPanel" type="PanelContainer" parent="MarginContainer/VBoxContainer/SummaryRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="PlayerBox" type="VBoxContainer" parent="MarginContainer/VBoxContainer/SummaryRow/PlayerPanel"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="PlayerSectionLabel" type="Label" parent="MarginContainer/VBoxContainer/SummaryRow/PlayerPanel/PlayerBox"]
+layout_mode = 2
 text = "Player"
 
-[node name="SlotsLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+[node name="PlayerLabel" type="Label" parent="MarginContainer/VBoxContainer/SummaryRow/PlayerPanel/PlayerBox"]
+layout_mode = 2
+text = "Player summary"
+autowrap_mode = 3
+
+[node name="ActionRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="SlotsPanel" type="PanelContainer" parent="MarginContainer/VBoxContainer/ActionRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="SlotsBox" type="VBoxContainer" parent="MarginContainer/VBoxContainer/ActionRow/SlotsPanel"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="SlotsSectionLabel" type="Label" parent="MarginContainer/VBoxContainer/ActionRow/SlotsPanel/SlotsBox"]
+layout_mode = 2
+text = "Assigned Slots"
+
+[node name="SlotsLabel" type="Label" parent="MarginContainer/VBoxContainer/ActionRow/SlotsPanel/SlotsBox"]
+layout_mode = 2
 text = "Slots"
 autowrap_mode = 3
 
-[node name="RollsLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+[node name="RollsPanel" type="PanelContainer" parent="MarginContainer/VBoxContainer/ActionRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="RollsBox" type="VBoxContainer" parent="MarginContainer/VBoxContainer/ActionRow/RollsPanel"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="RollsSectionLabel" type="Label" parent="MarginContainer/VBoxContainer/ActionRow/RollsPanel/RollsBox"]
+layout_mode = 2
+text = "Rolled Dice"
+
+[node name="RollsLabel" type="Label" parent="MarginContainer/VBoxContainer/ActionRow/RollsPanel/RollsBox"]
+layout_mode = 2
 text = "Rolls"
 autowrap_mode = 3
 
 [node name="ButtonRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 10
+alignment = 1
 
 [node name="RollButton" type="Button" parent="MarginContainer/VBoxContainer/ButtonRow"]
+layout_mode = 2
 text = "Roll Dice"
 
 [node name="ResolveButton" type="Button" parent="MarginContainer/VBoxContainer/ButtonRow"]
+layout_mode = 2
 text = "Resolve Round"
 
-[node name="LogLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+[node name="LogPanel" type="PanelContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="LogBox" type="VBoxContainer" parent="MarginContainer/VBoxContainer/LogPanel"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="LogSectionLabel" type="Label" parent="MarginContainer/VBoxContainer/LogPanel/LogBox"]
+layout_mode = 2
+text = "Combat Log"
+
+[node name="LogLabel" type="Label" parent="MarginContainer/VBoxContainer/LogPanel/LogBox"]
+layout_mode = 2
 text = "Log"
 autowrap_mode = 3
