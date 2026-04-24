@@ -127,9 +127,9 @@ func _style_scene() -> void:
 
 	var sidebar_style := _panel_stylebox(Color(0.05, 0.07, 0.1, 0.88), Color(ACCENT_BRIGHT.r, ACCENT_BRIGHT.g, ACCENT_BRIGHT.b, 0.22))
 	sidebar_panel.add_theme_stylebox_override("panel", sidebar_style)
-	var map_style := _panel_stylebox(Color(0.05, 0.07, 0.1, 0.72), Color(ACCENT_BRIGHT.r, ACCENT_BRIGHT.g, ACCENT_BRIGHT.b, 0.28))
+	var map_style := _panel_stylebox(Color(0.05, 0.07, 0.1, 0.42), Color(ACCENT_BRIGHT.r, ACCENT_BRIGHT.g, ACCENT_BRIGHT.b, 0.28))
 	map_shell.add_theme_stylebox_override("panel", map_style)
-	map_frame.add_theme_stylebox_override("panel", _panel_stylebox(Color(0.03, 0.05, 0.08, 0.6), Color(ACCENT_BRIGHT.r, ACCENT_BRIGHT.g, ACCENT_BRIGHT.b, 0.16), 1))
+	map_frame.add_theme_stylebox_override("panel", _panel_stylebox(Color(0.03, 0.05, 0.08, 0.18), Color(ACCENT_BRIGHT.r, ACCENT_BRIGHT.g, ACCENT_BRIGHT.b, 0.16), 1))
 
 
 func _panel_stylebox(bg: Color, border: Color, border_width: int = 2) -> StyleBoxFlat:

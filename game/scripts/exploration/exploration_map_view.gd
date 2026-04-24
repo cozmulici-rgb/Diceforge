@@ -2,8 +2,8 @@ extends Control
 
 signal room_selected(room_id: String)
 
-const BG_PANEL := Color(0.03, 0.05, 0.08, 0.64)
-const GRID_COLOR := Color(0.43, 0.75, 1.0, 0.08)
+const BG_PANEL := Color(0.03, 0.05, 0.08, 0.08)
+const GRID_COLOR := Color(0.43, 0.75, 1.0, 0.05)
 const LINK_LOCKED := Color(0.42, 0.49, 0.56, 0.2)
 const LINK_REACHABLE := Color(0.43, 0.75, 1.0, 0.55)
 const LINK_CURRENT := Color(0.78, 0.66, 0.35, 0.78)

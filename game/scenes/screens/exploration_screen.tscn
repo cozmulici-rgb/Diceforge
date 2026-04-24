@@ -278,6 +278,7 @@ size_flags_vertical = 3
 mouse_filter = 2
 
 [node name="MapBackdrop" type="TextureRect" parent="MainLayout/MapShell/MapMargin/MapStack/MapFrame/MapLayerRoot"]
+modulate = Color(1, 1, 1, 0.92)
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -295,10 +296,10 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.02, 0.04, 0.08, 0.52)
+color = Color(0.02, 0.04, 0.08, 0.18)
 
 [node name="MapOverlay" type="TextureRect" parent="MainLayout/MapShell/MapMargin/MapStack/MapFrame/MapLayerRoot"]
-modulate = Color(0.78, 0.86, 1, 0.42)
+modulate = Color(0.82, 0.9, 1, 0.24)
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
