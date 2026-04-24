@@ -25,36 +25,53 @@ var current_room_id := ""
 var highlighted_room_id := ""
 var paused := false
 var _room_points: Dictionary = {}
+var _refresh_queued := false
 
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_PASS
+	resized.connect(_queue_refresh)
 
 
 func set_graph(graph, active_room_id: String, paused_state: bool) -> void:
 	room_graph = graph
 	current_room_id = active_room_id
-	highlighted_room_id = active_room_id
+	if highlighted_room_id == "":
+		highlighted_room_id = active_room_id
 	paused = paused_state
-	_rebuild_interactives()
-	queue_redraw()
+	_queue_refresh()
 
 
 func set_highlighted_room(room_id: String) -> void:
 	highlighted_room_id = room_id
-	queue_redraw()
+	_queue_refresh()
 
 
 func get_highlighted_room_id() -> String:
 	return highlighted_room_id
 
 
+func _queue_refresh() -> void:
+	if _refresh_queued:
+		return
+	_refresh_queued = true
+	call_deferred("_refresh_map")
+
+
+func _refresh_map() -> void:
+	_refresh_queued = false
+	_rebuild_interactives()
+	queue_redraw()
+
+
 func _rebuild_interactives() -> void:
 	for child in get_children():
-		child.free()
+		child.queue_free()
 
 	_room_points.clear()
 	if room_graph == null:
+		return
+	if size.x <= 0.0 or size.y <= 0.0:
 		return
 
 	for room_id in room_graph.rooms.keys():
