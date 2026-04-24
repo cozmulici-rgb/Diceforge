@@ -1,13 +1,12 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scripts/exploration/exploration_controller.gd" id="1"]
-[ext_resource type="Script" path="res://scripts/player/player_controller.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/exploration/exploration_map_view.gd" id="2"]
 [ext_resource type="Texture2D" path="res://assets/start-menu/exports/bg-starfield.png" id="3"]
 [ext_resource type="Texture2D" path="res://assets/start-menu/exports/bg-void-fog.png" id="4"]
-[ext_resource type="Texture2D" path="res://assets/start-menu/exports/bg-rune-circle.png" id="5"]
-[ext_resource type="Texture2D" path="res://assets/start-menu/exports/bg-embers.png" id="6"]
-[ext_resource type="Texture2D" path="res://assets/start-menu/exports/sigil-large.png" id="7"]
-[ext_resource type="Texture2D" path="res://assets/start-menu/exports/sigil-small.png" id="8"]
+[ext_resource type="Texture2D" path="res://assets/start-menu/exports/sigil-large.png" id="5"]
+[ext_resource type="Texture2D" path="res://assets/exploration/exports/map-backdrop-v1.png" id="6"]
+[ext_resource type="Texture2D" path="res://assets/exploration/exports/map-overlay-v1.png" id="7"]
 
 [node name="ExplorationScreen" type="Control"]
 layout_mode = 3
@@ -34,10 +33,10 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.024, 0.032, 0.072, 0.94)
+color = Color(0.02, 0.028, 0.052, 0.98)
 
 [node name="BgStarfield" type="TextureRect" parent="BackgroundLayers"]
-modulate = Color(0.75, 0.85, 1, 0.48)
+modulate = Color(0.63, 0.8, 1, 0.36)
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -49,7 +48,7 @@ expand_mode = 1
 stretch_mode = 5
 
 [node name="BgVoidFog" type="TextureRect" parent="BackgroundLayers"]
-modulate = Color(0.58, 0.72, 1, 0.25)
+modulate = Color(0.48, 0.66, 1, 0.18)
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -57,30 +56,6 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 texture = ExtResource("4")
-expand_mode = 1
-stretch_mode = 5
-
-[node name="BgRuneCircle" type="TextureRect" parent="BackgroundLayers"]
-modulate = Color(0.5, 0.7, 1, 0.06)
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-texture = ExtResource("5")
-expand_mode = 1
-stretch_mode = 5
-
-[node name="BgEmbers" type="TextureRect" parent="BackgroundLayers"]
-modulate = Color(0.4, 0.6, 1, 0.05)
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-texture = ExtResource("6")
 expand_mode = 1
 stretch_mode = 5
 
@@ -94,158 +69,254 @@ grow_vertical = 2
 mouse_filter = 2
 
 [node name="SigilLargeRight" type="TextureRect" parent="AmbientDecor"]
-modulate = Color(0.4, 0.7, 1, 0.08)
+modulate = Color(0.48, 0.7, 1, 0.06)
 layout_mode = 1
 anchor_left = 1.0
 anchor_top = 0.5
 anchor_right = 1.0
 anchor_bottom = 0.5
-offset_left = -600.0
-offset_top = -380.0
-offset_right = 180.0
-offset_bottom = 400.0
+offset_left = -520.0
+offset_top = -340.0
+offset_right = 120.0
+offset_bottom = 300.0
 grow_horizontal = 0
-texture = ExtResource("7")
+texture = ExtResource("5")
 expand_mode = 1
 stretch_mode = 4
 
-[node name="SigilSmallBottomLeft" type="TextureRect" parent="AmbientDecor"]
-modulate = Color(0.45, 0.65, 1, 0.045)
-layout_mode = 1
-anchor_left = 0.0
-anchor_top = 1.0
-anchor_right = 0.0
-anchor_bottom = 1.0
-offset_left = -120.0
-offset_top = -140.0
-offset_right = 260.0
-offset_bottom = 240.0
-grow_vertical = 0
-texture = ExtResource("8")
-expand_mode = 1
-stretch_mode = 4
-
-[node name="RoomStage" type="Control" parent="."]
+[node name="MainLayout" type="HBoxContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = 44.0
+offset_top = 28.0
+offset_right = -44.0
+offset_bottom = -88.0
 grow_horizontal = 2
 grow_vertical = 2
-mouse_filter = 2
+theme_override_constants/separation = 20
 
-[node name="Player" type="CharacterBody2D" parent="RoomStage"]
-position = Vector2(920, 408)
-modulate = Color(1, 1, 1, 0.9)
-script = ExtResource("2")
-room_bounds = Rect2(720, 192, 400, 376)
+[node name="SidebarPanel" type="PanelContainer" parent="MainLayout"]
+custom_minimum_size = Vector2(334, 0)
+layout_mode = 2
+size_flags_vertical = 3
 
-[node name="Marker" type="Polygon2D" parent="RoomStage/Player"]
-polygon = PackedVector2Array(-12, 0, 0, -14, 12, 0, 0, 14)
-color = Color(0.968627, 0.780392, 0.333333, 0.92)
+[node name="SidebarMargin" type="MarginContainer" parent="MainLayout/SidebarPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 26
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 26
+theme_override_constants/margin_bottom = 24
 
-[node name="MarkerHalo" type="Polygon2D" parent="RoomStage/Player"]
-polygon = PackedVector2Array(-18, 0, 0, -22, 18, 0, 0, 22)
-color = Color(0.968627, 0.780392, 0.333333, 0.16)
-
-[node name="FrameCorners" type="Control" parent="."]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-
-[node name="ContentColumn" type="VBoxContainer" parent="."]
-layout_mode = 1
-anchors_preset = 0
-offset_left = 68.0
-offset_top = 32.0
-offset_right = 720.0
-offset_bottom = 640.0
-grow_vertical = 1
+[node name="SidebarContent" type="VBoxContainer" parent="MainLayout/SidebarPanel/SidebarMargin"]
+layout_mode = 2
 theme_override_constants/separation = 0
 
-[node name="KickerRow" type="HBoxContainer" parent="ContentColumn"]
+[node name="KickerRow" type="HBoxContainer" parent="MainLayout/SidebarPanel/SidebarMargin/SidebarContent"]
 layout_mode = 2
-theme_override_constants/separation = 12
+theme_override_constants/separation = 10
 
-[node name="KickerLineLeft" type="ColorRect" parent="ContentColumn/KickerRow"]
-custom_minimum_size = Vector2(40, 1)
+[node name="KickerLineLeft" type="ColorRect" parent="MainLayout/SidebarPanel/SidebarMargin/SidebarContent/KickerRow"]
+custom_minimum_size = Vector2(28, 1)
 layout_mode = 2
 size_flags_vertical = 4
 color = Color(0.43, 0.75, 1, 0.85)
 
-[node name="KickerLabel" type="Label" parent="ContentColumn/KickerRow"]
+[node name="KickerLabel" type="Label" parent="MainLayout/SidebarPanel/SidebarMargin/SidebarContent/KickerRow"]
 layout_mode = 2
-text = "THE  ·  VOID  ·  LABYRINTH"
+text = "VOID  ROUTE  INDEX"
 
-[node name="KickerLineRight" type="ColorRect" parent="ContentColumn/KickerRow"]
-custom_minimum_size = Vector2(80, 1)
+[node name="KickerLineRight" type="ColorRect" parent="MainLayout/SidebarPanel/SidebarMargin/SidebarContent/KickerRow"]
+custom_minimum_size = Vector2(52, 1)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
 color = Color(0.43, 0.75, 1, 0.3)
 
-[node name="TitleKickerSpacer" type="Control" parent="ContentColumn"]
-custom_minimum_size = Vector2(0, 4)
+[node name="TitleSpacer" type="Control" parent="MainLayout/SidebarPanel/SidebarMargin/SidebarContent"]
+custom_minimum_size = Vector2(0, 6)
 layout_mode = 2
 
-[node name="TitleLine1" type="Label" parent="ContentColumn"]
-layout_mode = 2
-text = "EXPLORE"
-
-[node name="RoomNameLabel" type="Label" parent="ContentColumn"]
+[node name="RoomNameLabel" type="Label" parent="MainLayout/SidebarPanel/SidebarMargin/SidebarContent"]
 layout_mode = 2
 text = "ROOM"
+autowrap_mode = 3
 
-[node name="SubtitleLabel" type="Label" parent="ContentColumn"]
+[node name="SubtitleLabel" type="Label" parent="MainLayout/SidebarPanel/SidebarMargin/SidebarContent"]
 layout_mode = 2
 text = "FLOOR  ·  01  ·  UNCLEARED"
 
-[node name="MetaSpacer" type="Control" parent="ContentColumn"]
-custom_minimum_size = Vector2(0, 10)
+[node name="DescriptionSpacer" type="Control" parent="MainLayout/SidebarPanel/SidebarMargin/SidebarContent"]
+custom_minimum_size = Vector2(0, 12)
 layout_mode = 2
 
-[node name="RoomMetaLabel" type="Label" parent="ContentColumn"]
+[node name="RoomMetaLabel" type="Label" parent="MainLayout/SidebarPanel/SidebarMargin/SidebarContent"]
 layout_mode = 2
 text = "Room details"
 autowrap_mode = 3
 
-[node name="ExitsSpacer" type="Control" parent="ContentColumn"]
-custom_minimum_size = Vector2(0, 14)
+[node name="SectionSpacerA" type="Control" parent="MainLayout/SidebarPanel/SidebarMargin/SidebarContent"]
+custom_minimum_size = Vector2(0, 18)
 layout_mode = 2
 
-[node name="ExitsHeaderLabel" type="Label" parent="ContentColumn"]
+[node name="SelectedHeaderLabel" type="Label" parent="MainLayout/SidebarPanel/SidebarMargin/SidebarContent"]
 layout_mode = 2
-text = "AVAILABLE  EXITS"
+text = "SELECTED  NODE"
 
-[node name="ExitsContainer" type="VBoxContainer" parent="ContentColumn"]
+[node name="SelectedRoomLabel" type="Label" parent="MainLayout/SidebarPanel/SidebarMargin/SidebarContent"]
 layout_mode = 2
-theme_override_constants/separation = 0
+text = "Select a node on the route map."
+autowrap_mode = 3
 
-[node name="EncounterSpacer" type="Control" parent="ContentColumn"]
-custom_minimum_size = Vector2(0, 12)
+[node name="SelectionMetaLabel" type="Label" parent="MainLayout/SidebarPanel/SidebarMargin/SidebarContent"]
+layout_mode = 2
+text = "Node state"
+autowrap_mode = 3
+
+[node name="ActionSpacer" type="Control" parent="MainLayout/SidebarPanel/SidebarMargin/SidebarContent"]
+custom_minimum_size = Vector2(0, 16)
 layout_mode = 2
 
-[node name="EncounterStrip" type="HBoxContainer" parent="ContentColumn"]
+[node name="PrimaryActionButton" type="Button" parent="MainLayout/SidebarPanel/SidebarMargin/SidebarContent"]
 layout_mode = 2
-theme_override_constants/separation = 12
+text = "Awaiting Route Selection"
 
-[node name="EncounterButton" type="Button" parent="ContentColumn/EncounterStrip"]
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Trigger Encounter"
-
-[node name="StatusSpacer" type="Control" parent="ContentColumn"]
+[node name="StatusSpacer" type="Control" parent="MainLayout/SidebarPanel/SidebarMargin/SidebarContent"]
 custom_minimum_size = Vector2(0, 10)
 layout_mode = 2
 
-[node name="EncounterStatusLabel" type="Label" parent="ContentColumn"]
+[node name="EncounterStatusLabel" type="Label" parent="MainLayout/SidebarPanel/SidebarMargin/SidebarContent"]
 layout_mode = 2
 autowrap_mode = 3
-text = "Explore the room shell and trigger the stub encounter."
+text = "Plot a route through the graph."
+
+[node name="SectionSpacerB" type="Control" parent="MainLayout/SidebarPanel/SidebarMargin/SidebarContent"]
+custom_minimum_size = Vector2(0, 18)
+layout_mode = 2
+
+[node name="LegendHeaderLabel" type="Label" parent="MainLayout/SidebarPanel/SidebarMargin/SidebarContent"]
+layout_mode = 2
+text = "NODE  TYPES"
+
+[node name="LegendRow" type="HBoxContainer" parent="MainLayout/SidebarPanel/SidebarMargin/SidebarContent"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="LegendStart" type="PanelContainer" parent="MainLayout/SidebarPanel/SidebarMargin/SidebarContent/LegendRow"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="MainLayout/SidebarPanel/SidebarMargin/SidebarContent/LegendRow/LegendStart"]
+layout_mode = 2
+text = "HUB"
+
+[node name="LegendFight" type="PanelContainer" parent="MainLayout/SidebarPanel/SidebarMargin/SidebarContent/LegendRow"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="MainLayout/SidebarPanel/SidebarMargin/SidebarContent/LegendRow/LegendFight"]
+layout_mode = 2
+text = "FIGHT"
+
+[node name="LegendShop" type="PanelContainer" parent="MainLayout/SidebarPanel/SidebarMargin/SidebarContent/LegendRow"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="MainLayout/SidebarPanel/SidebarMargin/SidebarContent/LegendRow/LegendShop"]
+layout_mode = 2
+text = "SHOP"
+
+[node name="LegendBoss" type="PanelContainer" parent="MainLayout/SidebarPanel/SidebarMargin/SidebarContent/LegendRow"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="MainLayout/SidebarPanel/SidebarMargin/SidebarContent/LegendRow/LegendBoss"]
+layout_mode = 2
+text = "BOSS"
+
+[node name="LegendSummaryLabel" type="Label" parent="MainLayout/SidebarPanel/SidebarMargin/SidebarContent"]
+layout_mode = 2
+text = "Current room glows gold. Visited nodes stay lit. Completed nodes gain a gold ring."
+autowrap_mode = 3
+
+[node name="MapShell" type="PanelContainer" parent="MainLayout"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="MapMargin" type="MarginContainer" parent="MainLayout/MapShell"]
+layout_mode = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 18
+
+[node name="MapStack" type="VBoxContainer" parent="MainLayout/MapShell/MapMargin"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="MapHeader" type="HBoxContainer" parent="MainLayout/MapShell/MapMargin/MapStack"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="MapTitleLabel" type="Label" parent="MainLayout/MapShell/MapMargin/MapStack/MapHeader"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "FLOOR  ROUTE"
+
+[node name="MapHintLabel" type="Label" parent="MainLayout/MapShell/MapMargin/MapStack/MapHeader"]
+layout_mode = 2
+text = "SELECT  A  NODE"
+horizontal_alignment = 2
+
+[node name="MapFrame" type="PanelContainer" parent="MainLayout/MapShell/MapMargin/MapStack"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="MapLayerRoot" type="Control" parent="MainLayout/MapShell/MapMargin/MapStack/MapFrame"]
+custom_minimum_size = Vector2(0, 420)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="MapBackdrop" type="TextureRect" parent="MainLayout/MapShell/MapMargin/MapStack/MapFrame/MapLayerRoot"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("6")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="MapBackdropTint" type="ColorRect" parent="MainLayout/MapShell/MapMargin/MapStack/MapFrame/MapLayerRoot"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.02, 0.04, 0.08, 0.52)
+
+[node name="MapOverlay" type="TextureRect" parent="MainLayout/MapShell/MapMargin/MapStack/MapFrame/MapLayerRoot"]
+modulate = Color(0.78, 0.86, 1, 0.42)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("7")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="MapView" type="Control" parent="MainLayout/MapShell/MapMargin/MapStack/MapFrame/MapLayerRoot"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("2")
 
 [node name="FooterHUD" type="Control" parent="."]
 layout_mode = 1
@@ -253,10 +324,10 @@ anchors_preset = 12
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 56.0
+offset_left = 44.0
 offset_top = -56.0
-offset_right = -56.0
-offset_bottom = -20.0
+offset_right = -44.0
+offset_bottom = -18.0
 grow_horizontal = 2
 grow_vertical = 0
 mouse_filter = 2
@@ -266,7 +337,6 @@ layout_mode = 1
 anchors_preset = 4
 anchor_top = 0.5
 anchor_bottom = 0.5
-offset_left = 0.0
 offset_top = -16.0
 offset_right = 360.0
 offset_bottom = 16.0
@@ -280,13 +350,13 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -260.0
+offset_left = -280.0
 offset_top = -16.0
-offset_right = 260.0
+offset_right = 280.0
 offset_bottom = 16.0
 grow_horizontal = 2
 grow_vertical = 2
-text = "\"Walk carefully — each face you wake, wakes you back.\""
+text = "Route objective"
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -297,7 +367,7 @@ anchor_left = 1.0
 anchor_top = 0.5
 anchor_right = 1.0
 anchor_bottom = 0.5
-offset_left = -360.0
+offset_left = -420.0
 offset_top = -16.0
 offset_right = 0.0
 offset_bottom = 16.0
@@ -305,3 +375,12 @@ grow_horizontal = 0
 grow_vertical = 2
 theme_override_constants/separation = 8
 alignment = 2
+
+[node name="FrameCorners" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
