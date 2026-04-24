@@ -144,10 +144,10 @@ func _draw() -> void:
 
 func _draw_grid() -> void:
 	for i in range(6):
-		var x := lerp(MAP_PADDING.x, size.x - MAP_PADDING.x, float(i) / 5.0)
+		var x: float = lerp(MAP_PADDING.x, size.x - MAP_PADDING.x, float(i) / 5.0)
 		draw_line(Vector2(x, MAP_PADDING.y - 26.0), Vector2(x, size.y - MAP_PADDING.y + 26.0), GRID_COLOR, 1.0)
 	for i in range(5):
-		var y := lerp(MAP_PADDING.y, size.y - MAP_PADDING.y, float(i) / 4.0)
+		var y: float = lerp(MAP_PADDING.y, size.y - MAP_PADDING.y, float(i) / 4.0)
 		draw_line(Vector2(MAP_PADDING.x - 26.0, y), Vector2(size.x - MAP_PADDING.x + 26.0, y), GRID_COLOR, 1.0)
 
 

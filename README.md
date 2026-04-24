@@ -24,6 +24,74 @@ scripts/        Build and verification scripts
 - Docker Desktop or a compatible Docker Engine with Compose support
 - GNU Make
 
+## Running On Windows
+
+The project can be executed on Windows through Docker Desktop. The simplest options are:
+
+- Use `WSL 2`, Git Bash, or another shell with `make` available, then run the standard `make` commands from this README.
+- Use PowerShell directly and replace the `make` targets with the equivalent `docker compose` commands below.
+
+### PowerShell command equivalents
+
+- `make dev`
+  `docker compose run --rm dev`
+- `make verify`
+  `docker compose run --rm export bash /workspace/scripts/verify-headless-build.sh`
+- `make test`
+  `docker compose run --rm export bash /workspace/scripts/run-godot-tests.sh`
+- `make export`
+  `docker compose run --rm export bash -lc "bash /workspace/scripts/verify-headless-build.sh && mkdir -p /workspace/dist && godot --headless --path /workspace/game --export-release \"Linux/X11\" /workspace/dist/facetbound.x86_64"`
+- `make screenshots`
+  `docker compose run --rm export bash /workspace/scripts/take_screenshots.sh`
+
+### Recommended Windows setup
+
+1. Install Docker Desktop and enable the `WSL 2` backend.
+2. Clone the repository into your Windows user directory or inside your WSL home directory.
+3. Open the repository in `PowerShell`, `Windows Terminal`, or a WSL shell.
+4. Run `docker compose run --rm export bash /workspace/scripts/run-godot-tests.sh` to confirm the environment works.
+5. Run `docker compose run --rm export bash -lc "bash /workspace/scripts/verify-headless-build.sh && mkdir -p /workspace/dist && godot --headless --path /workspace/game --export-release \"Linux/X11\" /workspace/dist/facetbound.x86_64"` to build the Linux desktop artifact.
+
+### Windows notes
+
+- The current export target is still Linux desktop, even when executed from Windows.
+- If `make` is not installed on Windows, use the PowerShell commands above.
+- If Docker Desktop reports file-sharing or mount issues, move the repository into a standard user-owned directory such as `C:\Users\<you>\source\` or into your WSL home directory.
+
+## Running From Godot
+
+You can also execute the project directly from the Godot editor without Docker.
+
+### Editor launch
+
+1. Install Godot `4.3-stable`.
+2. Open Godot and choose `Import`.
+3. Select [`game/project.godot`](/Users/vcozmulici/workspace/ai/Diceforge/game/project.godot).
+4. Open the imported project.
+5. Press `F5` or click `Run Project`.
+
+The configured startup scene is `res://scenes/app_root.tscn`, so the game boots into the normal Facetbound flow automatically.
+
+### Native CLI launch
+
+If `godot` is on your PATH, you can run the project from the repository root with:
+
+```bash
+godot --path game
+```
+
+To run the configured main scene explicitly:
+
+```bash
+godot --path game res://scenes/app_root.tscn
+```
+
+### Godot notes
+
+- The project targets Godot `4.3`, so using a different major or minor version may cause import or runtime issues.
+- The renderer is configured for `gl_compatibility`, which is usually the safest option on older or mixed GPU/driver setups.
+- The first native editor launch will generate local import metadata under `game/.godot/`.
+
 ## Commands
 
 - `make help`
