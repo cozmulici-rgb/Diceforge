@@ -331,7 +331,7 @@ func _render() -> void:
 	if roll_button != null:
 		roll_button.disabled = combat_state.state != "player_roll"
 	if resolve_button != null:
-		resolve_button.disabled = combat_state.state == "complete"
+		resolve_button.disabled = not ["player_assignment", "enemy_turn"].has(combat_state.state)
 	_sync_button_graphics()
 
 
@@ -356,6 +356,8 @@ func _on_resolve_pressed() -> void:
 		resolve_player_turn(combat_state)
 		if combat_state.state != "complete":
 			resolve_enemy_turn(combat_state)
+	elif combat_state.state == "enemy_turn":
+		resolve_enemy_turn(combat_state)
 	elif combat_state.state == "player_roll":
 		run_auto_round()
 		return
@@ -399,6 +401,7 @@ func _sync_button_graphics() -> void:
 
 func _build_enemy_summary() -> String:
 	var enemy_state: Dictionary = combat_state.enemy_state as Dictionary
+	var engine_enemy: Dictionary = _engine_enemy_state()
 	var lines: Array[String] = []
 	lines.append("%s" % str(enemy_state.get("display_name", "Unknown Enemy")))
 	lines.append("HP %d   Block %d" % [
@@ -411,14 +414,25 @@ func _build_enemy_summary() -> String:
 	])
 	if bool(enemy_state.get("is_boss", false)):
 		lines.append("Boss phase %d" % int(enemy_state.get("phase_index", 1)))
+	var statuses := _format_statuses((engine_enemy.get("statuses", []) as Array).duplicate(true))
+	if statuses != "":
+		lines.append("Statuses: %s" % statuses)
 	return "\n".join(lines)
 
 
 func _build_player_summary() -> String:
+	var engine_player: Dictionary = _engine_player_state()
 	var lines: Array[String] = []
 	lines.append("HP %d   Block %d" % [int(combat_state.player_hp), int(combat_state.player_block)])
+	lines.append("Energy %d   Regen %d" % [
+		int(engine_player.get("energy", 0)),
+		int(engine_player.get("energy_regen", 0)),
+	])
 	lines.append("State: %s" % _format_combat_state(str(combat_state.state)))
 	lines.append("Dice in pool: %d" % (combat_state.active_dice as Array).size())
+	var statuses := _format_statuses((engine_player.get("statuses", []) as Array).duplicate(true))
+	if statuses != "":
+		lines.append("Statuses: %s" % statuses)
 	var modifier_snapshot: Dictionary = combat_state.modifier_snapshot as Dictionary
 	var attack_bonus := int(modifier_snapshot.get("attack_bonus", 0))
 	var block_bonus := int(modifier_snapshot.get("block_bonus", 0))
@@ -429,6 +443,11 @@ func _build_player_summary() -> String:
 
 func _build_slots_summary() -> String:
 	var lines: Array[String] = []
+	var queue_preview := _build_queue_preview()
+	if queue_preview != "":
+		lines.append("Resolution Queue")
+		lines.append(queue_preview)
+
 	for slot in (combat_state.action_slots as Array):
 		var slot_data: Dictionary = slot
 		var assigned_die_ids: Array = slot_data.get("assigned_die_ids", [])
@@ -441,6 +460,8 @@ func _build_slots_summary() -> String:
 			"/".join(_stringify_values(families)),
 			assigned_text,
 		])
+	if lines.is_empty():
+		return "Queue empty."
 	return "\n\n".join(lines)
 
 
@@ -448,14 +469,20 @@ func _build_rolls_summary() -> String:
 	var lines: Array[String] = []
 	for roll in (combat_state.roll_results as Array):
 		var roll_data: Dictionary = roll
-		lines.append("%s  %s %d  -> %s" % [
+		var effect := _effect_label_for_roll(roll_data)
+		var energy_cost := _energy_cost_for_roll(roll_data)
+		lines.append("%s  %s %d  -> %s  [%s | cost %d]" % [
 			str(roll_data.get("die_label", roll_data.get("die_id", "Die"))),
 			str(roll_data.get("face_label", roll_data.get("face_id", "face"))),
 			int(roll_data.get("rolled_value", 0)),
 			_format_assigned_slot(str(roll_data.get("assigned_slot_id", ""))),
+			effect,
+			energy_cost,
 		])
 	if lines.is_empty():
-		return "Roll to populate the action tray."
+		if combat_state.state == "enemy_turn":
+			return "Enemy turn pending. Press resolve to continue."
+		return "Roll to populate the resolution queue."
 	return "\n".join(lines)
 
 
@@ -472,7 +499,7 @@ func _format_combat_state(state: String) -> String:
 		"player_roll":
 			return "Awaiting Roll"
 		"player_assignment":
-			return "Assigning Dice"
+			return "Queue Ready"
 		"enemy_turn":
 			return "Enemy Turn"
 		"complete":
@@ -496,6 +523,59 @@ func _stringify_values(values: Array) -> PackedStringArray:
 	for value in values:
 		parts.append(str(value))
 	return parts
+
+
+func _build_queue_preview() -> String:
+	var lines: Array[String] = []
+	for roll in (combat_state.roll_results as Array):
+		var roll_data: Dictionary = roll
+		if str(roll_data.get("assigned_slot_id", "")) == "":
+			continue
+		lines.append("%s -> %s" % [
+			str(roll_data.get("die_label", roll_data.get("die_id", "Die"))),
+			_effect_label_for_roll(roll_data),
+		])
+	return "\n".join(lines)
+
+
+func _effect_label_for_roll(roll_data: Dictionary) -> String:
+	var engine_state: Dictionary = combat_state.engine_state
+	for rolled_face in (engine_state.get("rolled_faces", []) as Array):
+		var face: Dictionary = rolled_face as Dictionary
+		if str(face.get("die_id", "")) == str(roll_data.get("die_id", "")):
+			return str(face.get("effect", roll_data.get("face_family", "utility"))).capitalize()
+	return str(roll_data.get("face_family", "utility")).capitalize()
+
+
+func _energy_cost_for_roll(roll_data: Dictionary) -> int:
+	var engine_state: Dictionary = combat_state.engine_state
+	for rolled_face in (engine_state.get("rolled_faces", []) as Array):
+		var face: Dictionary = rolled_face as Dictionary
+		if str(face.get("die_id", "")) == str(roll_data.get("die_id", "")):
+			return int(face.get("energy_cost", 0))
+	return 0
+
+
+func _format_statuses(statuses: Array) -> String:
+	if statuses.is_empty():
+		return ""
+	var parts: Array[String] = []
+	for status_entry in statuses:
+		var status: Dictionary = status_entry as Dictionary
+		parts.append("%s x%d/%d" % [
+			str(status.get("id", "status")).capitalize(),
+			int(status.get("stacks", 0)),
+			int(status.get("duration", 0)),
+		])
+	return ", ".join(parts)
+
+
+func _engine_player_state() -> Dictionary:
+	return ((combat_state.engine_state.get("player", {}) as Dictionary).duplicate(true))
+
+
+func _engine_enemy_state() -> Dictionary:
+	return ((combat_state.engine_state.get("enemy", {}) as Dictionary).duplicate(true))
 
 
 func _normalize_engine_dice(active_dice: Array) -> Array:
