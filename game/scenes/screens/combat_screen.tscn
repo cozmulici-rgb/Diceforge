@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=14 format=3]
 
 [ext_resource type="Script" path="res://scripts/combat/combat_controller.gd" id="1"]
 [ext_resource type="Texture2D" path="res://assets/combat/exports/bg-combat-void-dais-v1.png" id="2"]
@@ -11,6 +11,8 @@
 [ext_resource type="Texture2D" path="res://assets/combat/exports/combat-header-combat-log.png" id="9"]
 [ext_resource type="Texture2D" path="res://assets/combat/exports/combat-label-roll-dice.png" id="10"]
 [ext_resource type="Texture2D" path="res://assets/combat/exports/combat-label-resolve-round.png" id="11"]
+[ext_resource type="Texture2D" path="res://assets/combat/exports/combat-portrait-enemy-colossus-v1.png" id="12"]
+[ext_resource type="Texture2D" path="res://assets/combat/exports/combat-portrait-player-facetwalker-v1.png" id="13"]
 
 [node name="CombatScreen" type="Control"]
 layout_mode = 3
@@ -110,15 +112,16 @@ horizontal_alignment = 1
 
 [node name="SummaryRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
-theme_override_constants/separation = 12
+theme_override_constants/separation = 20
 
 [node name="EnemyPanel" type="PanelContainer" parent="MarginContainer/VBoxContainer/SummaryRow"]
+custom_minimum_size = Vector2(308, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 
 [node name="EnemyBox" type="VBoxContainer" parent="MarginContainer/VBoxContainer/SummaryRow/EnemyPanel"]
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 12
 
 [node name="EnemySectionLabel" type="TextureRect" parent="MarginContainer/VBoxContainer/SummaryRow/EnemyPanel/EnemyBox"]
 custom_minimum_size = Vector2(240, 24)
@@ -127,18 +130,26 @@ texture = ExtResource("5")
 expand_mode = 1
 stretch_mode = 3
 
+[node name="EnemyPortrait" type="TextureRect" parent="MarginContainer/VBoxContainer/SummaryRow/EnemyPanel/EnemyBox"]
+custom_minimum_size = Vector2(0, 268)
+layout_mode = 2
+texture = ExtResource("12")
+expand_mode = 1
+stretch_mode = 4
+
 [node name="EnemyLabel" type="Label" parent="MarginContainer/VBoxContainer/SummaryRow/EnemyPanel/EnemyBox"]
 layout_mode = 2
 text = "Enemy summary"
 autowrap_mode = 3
 
 [node name="PlayerPanel" type="PanelContainer" parent="MarginContainer/VBoxContainer/SummaryRow"]
+custom_minimum_size = Vector2(308, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 
 [node name="PlayerBox" type="VBoxContainer" parent="MarginContainer/VBoxContainer/SummaryRow/PlayerPanel"]
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 12
 
 [node name="PlayerSectionLabel" type="TextureRect" parent="MarginContainer/VBoxContainer/SummaryRow/PlayerPanel/PlayerBox"]
 custom_minimum_size = Vector2(240, 24)
@@ -146,6 +157,13 @@ layout_mode = 2
 texture = ExtResource("6")
 expand_mode = 1
 stretch_mode = 3
+
+[node name="PlayerPortrait" type="TextureRect" parent="MarginContainer/VBoxContainer/SummaryRow/PlayerPanel/PlayerBox"]
+custom_minimum_size = Vector2(0, 268)
+layout_mode = 2
+texture = ExtResource("13")
+expand_mode = 1
+stretch_mode = 4
 
 [node name="PlayerLabel" type="Label" parent="MarginContainer/VBoxContainer/SummaryRow/PlayerPanel/PlayerBox"]
 layout_mode = 2
