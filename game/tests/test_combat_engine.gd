@@ -1,0 +1,95 @@
+extends RefCounted
+
+const ContentCatalogScript = preload("res://scripts/content/content_catalog.gd")
+const CombatEngineScript = preload("res://scripts/combat/combat_engine.gd")
+
+
+func run() -> Array[String]:
+	var failures: Array[String] = []
+	var catalog = ContentCatalogScript.new()
+
+	var engine = CombatEngineScript.new(catalog)
+	var player_data := {
+		"hp": 20,
+		"max_hp": 30,
+		"energy": 3,
+		"energy_regen": 1,
+		"statuses": [],
+		"dice_pool": [
+			{
+				"id": "d_alpha",
+				"body_id": "standard_d6",
+				"face_set": ["strike", "guard", "focus", "strike", "guard", "surge"],
+				"statuses": [],
+				"runes": [],
+				"core": null,
+			},
+		],
+	}
+	var enemy_def := {
+		"id": "slime_echo",
+		"name": "Slime Echo",
+		"hp": 4,
+		"max_hp": 4,
+		"starting_block": 0,
+		"statuses": [],
+		"ai_pattern": [{"action": "attack", "damage": 2, "label": "Gel Strike"}],
+	}
+	if not engine.initialize_battle(player_data, enemy_def).get("ok", false):
+		failures.append("initialize_battle should succeed")
+		return failures
+	if not engine.roll_phase([4]).get("ok", false):
+		failures.append("roll_phase should succeed")
+		return failures
+	engine.build_autoplay_queue()
+	if not engine.run_resolution_loop().get("ok", false):
+		failures.append("run_resolution_loop should succeed")
+		return failures
+	if int(((engine.get_state().get("enemy", {}) as Dictionary).get("hp", -1))) != 0:
+		failures.append("enemy should be reduced to 0 hp")
+	engine.end_player_turn()
+	if str(engine.check_battle_end().get("result", "")) != "victory":
+		failures.append("combat should end in victory")
+
+	var engine2 = CombatEngineScript.new(catalog)
+	engine2.initialize_battle({
+		"hp": 2,
+		"max_hp": 10,
+		"energy": 3,
+		"energy_regen": 1,
+		"statuses": [],
+		"dice_pool": [
+			{
+				"id": "d_guard",
+				"body_id": "standard_d6",
+				"face_set": ["guard", "guard", "guard", "guard", "guard", "guard"],
+				"statuses": [],
+				"runes": [],
+				"core": null,
+			},
+		],
+	}, {
+		"id": "crusher",
+		"name": "Crusher",
+		"hp": 100,
+		"max_hp": 100,
+		"starting_block": 0,
+		"statuses": [],
+		"ai_pattern": [{"action": "attack", "damage": 10, "label": "Smash"}],
+	})
+	engine2.roll_phase([1])
+	engine2.build_autoplay_queue()
+	engine2.run_resolution_loop()
+	engine2.end_player_turn()
+	if str(engine2.check_battle_end().get("result", "")) != "ongoing":
+		failures.append("battle should continue after non-lethal player turn")
+	engine2.run_enemy_turn()
+	engine2.end_enemy_turn()
+	if str(engine2.check_battle_end().get("result", "")) != "defeat":
+		failures.append("enemy turn should defeat the player")
+	if int((engine2.get_state() as Dictionary).get("turn_index", -1)) < 2:
+		failures.append("turn_index should increment after enemy turn")
+	if (engine.get_log().get_entries() as Array).is_empty():
+		failures.append("BattleLog should contain entries")
+
+	return failures

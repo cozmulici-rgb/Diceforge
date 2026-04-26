@@ -6,6 +6,7 @@ const DiceModelScript = preload("res://scripts/combat/dice_model.gd")
 const ActionSlotScript = preload("res://scripts/combat/action_slot.gd")
 const EnemyEncounterModelScript = preload("res://scripts/combat/enemy_encounter_model.gd")
 const BossPhaseControllerScript = preload("res://scripts/combat/boss_phase_controller.gd")
+const CombatEngineScript = preload("res://scripts/combat/combat_engine.gd")
 const ModifierRegistryScript = preload("res://scripts/modifiers/modifier_registry.gd")
 const FacetboundThemeScript = preload("res://scripts/ui/facetbound_theme.gd")
 
@@ -28,6 +29,7 @@ var content_catalog
 var dice_model = DiceModelScript.new()
 var combat_state = null
 var boss_phase_controller = BossPhaseControllerScript.new()
+var _engine = null
 
 
 func _ready() -> void:
@@ -69,7 +71,7 @@ func begin_encounter(run_state, encounter_definition: Dictionary) -> Variant:
 	for key in boss_state.keys():
 		enemy_state[key] = boss_state[key]
 
-	return CombatStateScript.new({
+	var state = CombatStateScript.new({
 		"encounter_id": str(encounter_definition.get("id", "")),
 		"room_id": str(run_state.current_room_id),
 		"round_index": 1,
@@ -85,6 +87,20 @@ func begin_encounter(run_state, encounter_definition: Dictionary) -> Variant:
 		"state": "player_roll",
 		"outcome": "",
 	})
+
+	_engine = CombatEngineScript.new(content_catalog)
+	var player_state: Dictionary = run_state.player_state as Dictionary
+	var player_data := {
+		"hp": int(player_state.get("hp", 30)),
+		"max_hp": int(player_state.get("max_hp", player_state.get("hp", 30))),
+		"energy": int(player_state.get("energy", 3)),
+		"energy_regen": int(player_state.get("energy_regen", 1)),
+		"statuses": (player_state.get("status_effects", []) as Array).duplicate(true),
+		"dice_pool": _normalize_engine_dice(run_state.active_dice as Array),
+	}
+	_engine.initialize_battle(player_data, enemy_definition)
+	state.engine_state = _engine.get_state()
+	return state
 
 
 func roll_active_dice(state) -> Dictionary:
@@ -163,6 +179,7 @@ func resolve_player_turn(state) -> Dictionary:
 			state.outcome = "victory"
 			state.state = "complete"
 
+	_sync_engine_state(state)
 	return {"ok": true, "combat_state": state}
 
 
@@ -186,6 +203,7 @@ func resolve_enemy_turn(state) -> Dictionary:
 		state.roll_results = []
 		state.action_slots = _reset_action_slots(state.action_slots)
 
+	_sync_engine_state(state)
 	return {"ok": true, "combat_state": state}
 
 
@@ -242,6 +260,8 @@ func run_auto_round() -> Dictionary:
 		var enemy_result = resolve_enemy_turn(combat_state)
 		if not enemy_result.get("ok", false):
 			return enemy_result
+
+	_sync_engine_state(combat_state)
 
 	combat_state_updated.emit(combat_state)
 	_render()
@@ -467,3 +487,25 @@ func _stringify_values(values: Array) -> PackedStringArray:
 	for value in values:
 		parts.append(str(value))
 	return parts
+
+
+func _normalize_engine_dice(active_dice: Array) -> Array:
+	var normalized: Array = []
+	for die_data in active_dice:
+		var die: Dictionary = (die_data as Dictionary).duplicate(true)
+		if not die.has("statuses"):
+			die["statuses"] = []
+		if not die.has("runes"):
+			die["runes"] = []
+		if not die.has("core"):
+			die["core"] = null
+		if not die.has("body_id"):
+			die["body_id"] = "standard_d6"
+		normalized.append(die)
+	return normalized
+
+
+func _sync_engine_state(state) -> void:
+	if _engine == null or state == null:
+		return
+	state.engine_state = _engine.get_state()

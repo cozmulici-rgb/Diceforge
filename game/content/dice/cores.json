@@ -1,18 +1,18 @@
 {
-  "id": "starter_runes",
+  "id": "starter_cores",
   "definitions": [
     {
-      "id": "blank_rune",
-      "name": "Blank Rune",
+      "id": "blank_core",
+      "name": "Blank Core",
       "family": "neutral",
       "hooks": {}
     },
     {
-      "id": "ember_rune",
-      "name": "Ember Rune",
+      "id": "ember_core",
+      "name": "Ember Core",
       "family": "attack",
       "hooks": {
-        "on_resolution": {
+        "on_roll": {
           "type": "apply_status",
           "priority": "triggered",
           "target": "enemy",

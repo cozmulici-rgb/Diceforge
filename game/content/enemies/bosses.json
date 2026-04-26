@@ -5,24 +5,69 @@
       "id": "shard_overseer",
       "name": "Shard Overseer",
       "hp": 8,
+      "max_hp": 8,
       "starting_block": 1,
       "intent": "Lattice Swipe",
       "damage": 4,
       "is_boss": true,
+      "statuses": [],
+      "ai_pattern": [
+        {
+          "action": "attack",
+          "damage": 4,
+          "label": "Lattice Swipe"
+        },
+        {
+          "action": "debuff",
+          "status": "freeze",
+          "stacks": 1,
+          "duration": 1,
+          "label": "Crystal Cage"
+        }
+      ],
       "phases": [
         {
           "phase_index": 1,
           "hp": 8,
+          "max_hp": 8,
           "starting_block": 1,
           "intent": "Lattice Swipe",
-          "damage": 4
+          "damage": 4,
+          "ai_pattern": [
+            {
+              "action": "attack",
+              "damage": 4,
+              "label": "Lattice Swipe"
+            },
+            {
+              "action": "debuff",
+              "status": "freeze",
+              "stacks": 1,
+              "duration": 1,
+              "label": "Crystal Cage"
+            }
+          ]
         },
         {
           "phase_index": 2,
           "hp": 10,
+          "max_hp": 10,
           "starting_block": 0,
           "intent": "Refraction Pulse",
-          "damage": 5
+          "damage": 5,
+          "ai_pattern": [
+            {
+              "action": "attack",
+              "damage": 5,
+              "label": "Refraction Pulse"
+            },
+            {
+              "action": "multi_hit",
+              "hits": 2,
+              "damage_per_hit": 3,
+              "label": "Shard Scatter"
+            }
+          ]
         }
       ]
     },
@@ -30,25 +75,70 @@
       "id": "final_warden_core",
       "name": "Final Warden",
       "hp": 10,
+      "max_hp": 10,
       "starting_block": 1,
       "intent": "Seal Break",
       "damage": 5,
       "is_boss": true,
       "final_boss": true,
+      "statuses": [],
+      "ai_pattern": [
+        {
+          "action": "attack",
+          "damage": 5,
+          "label": "Seal Break"
+        },
+        {
+          "action": "debuff",
+          "status": "poison",
+          "stacks": 2,
+          "duration": 3,
+          "label": "Warden's Curse"
+        }
+      ],
       "phases": [
         {
           "phase_index": 1,
           "hp": 10,
+          "max_hp": 10,
           "starting_block": 1,
           "intent": "Seal Break",
-          "damage": 5
+          "damage": 5,
+          "ai_pattern": [
+            {
+              "action": "attack",
+              "damage": 5,
+              "label": "Seal Break"
+            },
+            {
+              "action": "debuff",
+              "status": "poison",
+              "stacks": 2,
+              "duration": 3,
+              "label": "Warden's Curse"
+            }
+          ]
         },
         {
           "phase_index": 2,
           "hp": 12,
+          "max_hp": 12,
           "starting_block": 0,
           "intent": "Warden's Fury",
-          "damage": 6
+          "damage": 6,
+          "ai_pattern": [
+            {
+              "action": "attack",
+              "damage": 6,
+              "label": "Warden's Fury"
+            },
+            {
+              "action": "multi_hit",
+              "hits": 3,
+              "damage_per_hit": 2,
+              "label": "Barrage"
+            }
+          ]
         }
       ]
     }

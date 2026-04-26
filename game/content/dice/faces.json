@@ -5,36 +5,54 @@
       "id": "strike",
       "name": "Strike",
       "family": "attack",
+      "effect": "damage",
+      "value": 2,
+      "energy_cost": 0,
       "power_multiplier": 2
     },
     {
       "id": "guard",
       "name": "Guard",
       "family": "defense",
+      "effect": "block",
+      "value": 1,
+      "energy_cost": 0,
       "power_multiplier": 1
     },
     {
       "id": "focus",
       "name": "Focus",
       "family": "utility",
+      "effect": "block",
+      "value": 1,
+      "energy_cost": 0,
       "bonus_block": 1
     },
     {
       "id": "surge",
       "name": "Surge",
       "family": "attack",
+      "effect": "damage",
+      "value": 1,
+      "energy_cost": 0,
       "power_multiplier": 1
     },
     {
       "id": "heavy_strike",
       "name": "Heavy Strike",
       "family": "attack",
+      "effect": "damage",
+      "value": 3,
+      "energy_cost": 0,
       "power_multiplier": 3
     },
     {
       "id": "bulwark",
       "name": "Bulwark",
       "family": "defense",
+      "effect": "block",
+      "value": 2,
+      "energy_cost": 0,
       "power_multiplier": 2
     }
   ]
