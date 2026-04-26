@@ -13,6 +13,13 @@ config/name="Facetbound"
 run/main_scene="res://scenes/app_root.tscn"
 config/features=PackedStringArray("4.3")
 
+[display]
+
+window/size/viewport_width=1470
+window/size/viewport_height=956
+window/size/window_width_override=1470
+window/size/window_height_override=956
+
 [rendering]
 
 renderer/rendering_method="gl_compatibility"

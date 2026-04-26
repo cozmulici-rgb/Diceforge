@@ -2,7 +2,7 @@
 set -euo pipefail
 
 SCREENSHOTS_DIR="${SCREENSHOTS_DIR:-/workspace/dist/screenshots}"
-SCREENSHOT_SIZE="${SCREENSHOT_SIZE:-1280x720x24}"
+SCREENSHOT_SIZE="${SCREENSHOT_SIZE:-1470x956x24}"
 DISPLAY_ID="${DISPLAY_ID:-:99}"
 GAME_PATH="${GAME_PATH:-/workspace/game}"
 LOAD_DELAY="${LOAD_DELAY:-14}"
@@ -63,19 +63,21 @@ sleep "$STEP_DELAY"
 capture "02_exploration_start.png"
 
 # Select Echo Span on the route map, then commit travel from the left panel.
-click_at 817 199
+# x=416(MapView)+92(padding)+0.5*808(usable); y fixed (map header+padding are pixel-constant).
+# Button rect confirmed via debug: [P:(72,162), S:(278,56)] — center at (211,190).
+click_at 912 199
 sleep "$SHORT_DELAY"
-click_at 275 227
+click_at 211 190
 sleep "$STEP_DELAY"
 capture "03_echo_span.png"
 
 # Enter the encounter from the current hostile room.
-click_at 275 227
+click_at 211 190
 sleep "$STEP_DELAY"
 capture "04_combat.png"
 
-# Click Roll Dice (new layout: center panel, button row near bottom).
-click_at 522 678
+# Click Roll Dice (center panel, button row near bottom: x=12+268+12+(886-416)/2+90, y=956-12-30).
+click_at 617 914
 sleep "$SHORT_DELAY"
 capture "05_combat_action.png"
 
@@ -84,9 +86,9 @@ sleep "$STEP_DELAY"
 capture "06_battle_active.png"
 
 # Click Resolve Round, then select the first reward option.
-click_at 738 678
+click_at 833 914
 sleep "$SHORT_DELAY"
-click_at 640 176
+click_at 735 234
 sleep "$SHORT_DELAY"
 capture "07_after_combat.png"
 
