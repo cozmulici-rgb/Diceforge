@@ -101,6 +101,7 @@ theme_override_constants/separation = 20
 custom_minimum_size = Vector2(334, 0)
 layout_mode = 2
 size_flags_vertical = 3
+clip_contents = true
 
 [node name="SidebarMargin" type="MarginContainer" parent="MainLayout/SidebarPanel"]
 layout_mode = 2
@@ -140,6 +141,7 @@ layout_mode = 2
 
 [node name="RoomNameLabel" type="Label" parent="MainLayout/SidebarPanel/SidebarMargin/SidebarContent"]
 layout_mode = 2
+size_flags_horizontal = 3
 text = "ROOM"
 autowrap_mode = 3
 
@@ -153,6 +155,7 @@ layout_mode = 2
 
 [node name="RoomMetaLabel" type="Label" parent="MainLayout/SidebarPanel/SidebarMargin/SidebarContent"]
 layout_mode = 2
+size_flags_horizontal = 3
 text = "Room details"
 autowrap_mode = 3
 
@@ -166,11 +169,13 @@ text = "SELECTED  NODE"
 
 [node name="SelectedRoomLabel" type="Label" parent="MainLayout/SidebarPanel/SidebarMargin/SidebarContent"]
 layout_mode = 2
+size_flags_horizontal = 3
 text = "Select a node on the route map."
 autowrap_mode = 3
 
 [node name="SelectionMetaLabel" type="Label" parent="MainLayout/SidebarPanel/SidebarMargin/SidebarContent"]
 layout_mode = 2
+size_flags_horizontal = 3
 text = "Node state"
 autowrap_mode = 3
 
@@ -180,6 +185,7 @@ layout_mode = 2
 
 [node name="PrimaryActionButton" type="Button" parent="MainLayout/SidebarPanel/SidebarMargin/SidebarContent"]
 layout_mode = 2
+size_flags_horizontal = 3
 text = "Awaiting Route Selection"
 
 [node name="StatusSpacer" type="Control" parent="MainLayout/SidebarPanel/SidebarMargin/SidebarContent"]
@@ -188,6 +194,7 @@ layout_mode = 2
 
 [node name="EncounterStatusLabel" type="Label" parent="MainLayout/SidebarPanel/SidebarMargin/SidebarContent"]
 layout_mode = 2
+size_flags_horizontal = 3
 autowrap_mode = 3
 text = "Plot a route through the graph."
 
@@ -233,6 +240,7 @@ text = "BOSS"
 
 [node name="LegendSummaryLabel" type="Label" parent="MainLayout/SidebarPanel/SidebarMargin/SidebarContent"]
 layout_mode = 2
+size_flags_horizontal = 3
 text = "Current room glows gold. Visited nodes stay lit. Completed nodes gain a gold ring."
 autowrap_mode = 3
 

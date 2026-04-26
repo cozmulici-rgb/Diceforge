@@ -2,6 +2,8 @@ extends Control
 
 const RoomGraphScript = preload("res://scripts/exploration/room_graph.gd")
 const FacetboundThemeScript = preload("res://scripts/ui/facetbound_theme.gd")
+const MapBackdropTexture = preload("res://assets/exploration/exports/map-backdrop-v1.png")
+const MapOverlayTexture = preload("res://assets/exploration/exports/map-overlay-v1.png")
 
 const ACCENT_BRIGHT := Color("6ebeff")
 const ACCENT_SOFT := Color(0.43, 0.75, 1.0, 0.22)
@@ -42,6 +44,8 @@ signal encounter_started(combat_state)
 @onready var legend_summary_label: Label = $MainLayout/SidebarPanel/SidebarMargin/SidebarContent/LegendSummaryLabel
 @onready var map_title_label: Label = $MainLayout/MapShell/MapMargin/MapStack/MapHeader/MapTitleLabel
 @onready var map_hint_label: Label = $MainLayout/MapShell/MapMargin/MapStack/MapHeader/MapHintLabel
+@onready var map_backdrop: TextureRect = $MainLayout/MapShell/MapMargin/MapStack/MapFrame/MapLayerRoot/MapBackdrop
+@onready var map_overlay: TextureRect = $MainLayout/MapShell/MapMargin/MapStack/MapFrame/MapLayerRoot/MapOverlay
 @onready var map_view = $MainLayout/MapShell/MapMargin/MapStack/MapFrame/MapLayerRoot/MapView
 @onready var frame_corners: Control = $FrameCorners
 @onready var footer_left: HBoxContainer = $FooterHUD/FooterLeft
@@ -58,6 +62,7 @@ var _selected_room_id := ""
 func _ready() -> void:
 	_apply_theme()
 	_style_scene()
+	_ensure_map_textures()
 	_build_frame_corners()
 	_build_footer_hud()
 	_build_legend()
@@ -88,6 +93,8 @@ func _apply_theme() -> void:
 
 
 func _style_scene() -> void:
+	sidebar_panel.custom_minimum_size.x = 334.0
+
 	kicker_label.add_theme_font_size_override("font_size", 12)
 	kicker_label.add_theme_color_override("font_color", TEXT_MUTED)
 	kicker_line_left.color = Color(ACCENT_BRIGHT.r, ACCENT_BRIGHT.g, ACCENT_BRIGHT.b, 0.85)
@@ -97,25 +104,31 @@ func _style_scene() -> void:
 	room_name_label.add_theme_color_override("font_color", Color(0.93, 0.95, 1.0))
 	room_name_label.add_theme_constant_override("outline_size", 8)
 	room_name_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
+	room_name_label.clip_text = true
 
 	subtitle_label.add_theme_font_size_override("font_size", 13)
 	subtitle_label.add_theme_color_override("font_color", TEXT_MUTED)
 	room_meta_label.add_theme_font_size_override("font_size", 15)
 	room_meta_label.add_theme_color_override("font_color", TEXT_DIM)
+	room_meta_label.clip_text = true
 
 	selected_header_label.add_theme_font_size_override("font_size", 12)
 	selected_header_label.add_theme_color_override("font_color", Color(ACCENT_BRIGHT.r, ACCENT_BRIGHT.g, ACCENT_BRIGHT.b, 0.9))
 	selected_room_label.add_theme_font_size_override("font_size", 20)
 	selected_room_label.add_theme_color_override("font_color", TEXT_PRIMARY)
+	selected_room_label.clip_text = true
 	selection_meta_label.add_theme_font_size_override("font_size", 13)
 	selection_meta_label.add_theme_color_override("font_color", TEXT_DIM)
+	selection_meta_label.clip_text = true
 
 	encounter_status_label.add_theme_font_size_override("font_size", 12)
 	encounter_status_label.add_theme_color_override("font_color", TEXT_DIM)
+	encounter_status_label.clip_text = true
 	legend_header_label.add_theme_font_size_override("font_size", 12)
 	legend_header_label.add_theme_color_override("font_color", Color(ACCENT_BRIGHT.r, ACCENT_BRIGHT.g, ACCENT_BRIGHT.b, 0.9))
 	legend_summary_label.add_theme_font_size_override("font_size", 12)
 	legend_summary_label.add_theme_color_override("font_color", TEXT_FAINT)
+	legend_summary_label.clip_text = true
 
 	map_title_label.add_theme_font_size_override("font_size", 15)
 	map_title_label.add_theme_color_override("font_color", TEXT_PRIMARY)
@@ -124,12 +137,18 @@ func _style_scene() -> void:
 
 	footer_center.add_theme_font_size_override("font_size", 12)
 	footer_center.add_theme_color_override("font_color", TEXT_DIM)
+	primary_action_button.clip_text = true
 
 	var sidebar_style := _panel_stylebox(Color(0.05, 0.07, 0.1, 0.88), Color(ACCENT_BRIGHT.r, ACCENT_BRIGHT.g, ACCENT_BRIGHT.b, 0.22))
 	sidebar_panel.add_theme_stylebox_override("panel", sidebar_style)
 	var map_style := _panel_stylebox(Color(0.05, 0.07, 0.1, 0.42), Color(ACCENT_BRIGHT.r, ACCENT_BRIGHT.g, ACCENT_BRIGHT.b, 0.28))
 	map_shell.add_theme_stylebox_override("panel", map_style)
 	map_frame.add_theme_stylebox_override("panel", _panel_stylebox(Color(0.03, 0.05, 0.08, 0.18), Color(ACCENT_BRIGHT.r, ACCENT_BRIGHT.g, ACCENT_BRIGHT.b, 0.16), 1))
+
+
+func _ensure_map_textures() -> void:
+	map_backdrop.texture = MapBackdropTexture
+	map_overlay.texture = MapOverlayTexture
 
 
 func _panel_stylebox(bg: Color, border: Color, border_width: int = 2) -> StyleBoxFlat:
