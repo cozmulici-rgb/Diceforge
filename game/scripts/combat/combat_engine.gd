@@ -58,6 +58,8 @@ func initialize_battle(player_data: Dictionary, enemy_def: Dictionary) -> Dictio
 		"resolution_queue": [],
 		"used_dice": [],
 		"temporary_modifiers": [],
+		"player_skip_turn": false,
+		"enemy_skip_turn": false,
 		"outcome": "",
 	}
 
@@ -80,6 +82,7 @@ func initialize_battle(player_data: Dictionary, enemy_def: Dictionary) -> Dictio
 
 func start_player_turn() -> void:
 	var player: Dictionary = (_state.get("player", {}) as Dictionary).duplicate(true)
+	var had_skip_status := _has_skip_status(player.get("statuses", []) as Array)
 	player["block"] = 0
 	player["energy"] = _clamping.clamp_energy(int(player.get("energy", 0)) + int(player.get("energy_regen", 1)))
 	var tick_result := _status_engine.tick_statuses(player.get("statuses", []) as Array, "player_turn_start", player, {})
@@ -87,6 +90,7 @@ func start_player_turn() -> void:
 	player["statuses"] = (tick_result.get("statuses", []) as Array).duplicate(true)
 	_state["player"] = player
 	_state["used_dice"] = []
+	_state["player_skip_turn"] = had_skip_status
 	_state["phase"] = "player_turn_start"
 
 
@@ -98,10 +102,18 @@ func roll_phase(roll_seeds: Array = []) -> Dictionary:
 		return result
 
 	var rolled_faces: Array = (result.get("rolled_faces", []) as Array).duplicate(true)
+	var player: Dictionary = (_state.get("player", {}) as Dictionary).duplicate(true)
+	var enemy: Dictionary = (_state.get("enemy", {}) as Dictionary).duplicate(true)
 	_state["rolled_faces"] = rolled_faces
 	_state["phase"] = "player_roll"
 	for entry in rolled_faces:
-		_record_roll_entry(entry as Dictionary, null)
+		var entry_data: Dictionary = entry as Dictionary
+		var hook_result := _apply_hooks_for_die(entry_data, "on_roll", player, enemy, [])
+		player = (hook_result.get("player", player) as Dictionary).duplicate(true)
+		enemy = (hook_result.get("enemy", enemy) as Dictionary).duplicate(true)
+		_record_roll_entry(entry_data, null)
+	_state["player"] = player
+	_state["enemy"] = enemy
 	return {"ok": true}
 
 
@@ -135,6 +147,11 @@ func run_resolution_loop() -> Dictionary:
 		if energy_cost > int(player.get("energy", 0)):
 			continue
 
+		var pre_resolution := _apply_hooks_for_die(entry, "pre_resolution", player, enemy, temporary_modifiers)
+		player = (pre_resolution.get("player", player) as Dictionary).duplicate(true)
+		enemy = (pre_resolution.get("enemy", enemy) as Dictionary).duplicate(true)
+		temporary_modifiers = (pre_resolution.get("temporary_modifiers", temporary_modifiers) as Array).duplicate(true)
+
 		var resolution := _effect_resolver.resolve_face(entry, int(entry.get("rolled_value", 0)), player, enemy, temporary_modifiers, {})
 		player = (resolution.get("player", player) as Dictionary).duplicate(true)
 		enemy = (resolution.get("enemy", enemy) as Dictionary).duplicate(true)
@@ -150,6 +167,11 @@ func run_resolution_loop() -> Dictionary:
 					queue = (reroll_result.get("rolled_faces", queue) as Array).duplicate(true)
 					var rerolled_entry := _find_queue_entry(queue, str(target_id))
 					_record_roll_entry(rerolled_entry, _step_index_for_entry(before_entry))
+
+		var on_resolution := _apply_hooks_for_die(entry, "on_resolution", player, enemy, temporary_modifiers)
+		player = (on_resolution.get("player", player) as Dictionary).duplicate(true)
+		enemy = (on_resolution.get("enemy", enemy) as Dictionary).duplicate(true)
+		temporary_modifiers = (on_resolution.get("temporary_modifiers", temporary_modifiers) as Array).duplicate(true)
 
 		_log.record({
 			"turn": int(_state.get("turn_index", 1)),
@@ -228,14 +250,16 @@ func run_enemy_turn() -> void:
 	var player: Dictionary = (_state.get("player", {}) as Dictionary).duplicate(true)
 	enemy["block"] = 0
 
+	var had_skip_status := _has_skip_status(enemy.get("statuses", []) as Array)
 	var enemy_tick := _status_engine.tick_statuses(enemy.get("statuses", []) as Array, "enemy_turn_start", enemy, {})
 	enemy = (enemy_tick.get("entity", enemy) as Dictionary).duplicate(true)
 	enemy["statuses"] = (enemy_tick.get("statuses", []) as Array).duplicate(true)
 
 	_state["phase"] = "enemy_turn_start"
 	_state["enemy"] = enemy
+	_state["enemy_skip_turn"] = had_skip_status
 
-	if _has_skip_status(enemy.get("statuses", []) as Array):
+	if had_skip_status:
 		return
 
 	var action := _enemy_ai.select_action(enemy, int(_state.get("turn_index", 1)))
@@ -348,6 +372,134 @@ func _record_roll_entry(entry: Dictionary, rerolled_from: Variant) -> void:
 		"outcome": "rolled" if rerolled_from == null else "rerolled",
 		"rerolled_from": rerolled_from,
 	})
+
+
+func _apply_hooks_for_die(entry: Dictionary, timing_key: String, player: Dictionary, enemy: Dictionary, temporary_modifiers: Array) -> Dictionary:
+	var hooks := _collect_die_hooks(entry, timing_key)
+	var updated_player := player.duplicate(true)
+	var updated_enemy := enemy.duplicate(true)
+	var updated_modifiers := temporary_modifiers.duplicate(true)
+
+	for hook in hooks:
+		var hook_result := _apply_hook(hook as Dictionary, updated_player, updated_enemy, updated_modifiers)
+		updated_player = (hook_result.get("player", updated_player) as Dictionary).duplicate(true)
+		updated_enemy = (hook_result.get("enemy", updated_enemy) as Dictionary).duplicate(true)
+		updated_modifiers = (hook_result.get("temporary_modifiers", updated_modifiers) as Array).duplicate(true)
+
+	return {
+		"player": updated_player,
+		"enemy": updated_enemy,
+		"temporary_modifiers": updated_modifiers,
+	}
+
+
+func _collect_die_hooks(entry: Dictionary, timing_key: String) -> Array:
+	var hooks: Array = []
+	var core_ref = entry.get("core", null)
+	if core_ref != null:
+		hooks.append_array(_hooks_from_part_reference(core_ref, timing_key))
+
+	var rune_refs: Array = (entry.get("runes", []) as Array).duplicate(true)
+	for rune_ref in rune_refs:
+		hooks.append_array(_hooks_from_part_reference(rune_ref, timing_key))
+
+	return _hook_dispatcher.collect_and_sort(hooks, timing_key)
+
+
+func _hooks_from_part_reference(part_ref: Variant, timing_key: String) -> Array:
+	var part_id := _extract_part_id(part_ref)
+	if part_id == "":
+		return []
+
+	var definition: Dictionary = _catalog.load_part_definition(part_id)
+	if definition is Dictionary and definition.get("error", "") != "":
+		return []
+
+	var hooks_value = definition.get("hooks", {})
+	if not (hooks_value is Dictionary):
+		return []
+	if not (hooks_value as Dictionary).has(timing_key):
+		return []
+
+	var timing_hook = (hooks_value as Dictionary).get(timing_key)
+	var results: Array = []
+	if timing_hook is Array:
+		for hook_entry in timing_hook:
+			if hook_entry is Dictionary:
+				var hook_data: Dictionary = (hook_entry as Dictionary).duplicate(true)
+				hook_data["timing"] = timing_key
+				hook_data["source"] = part_id
+				results.append(hook_data)
+	elif timing_hook is Dictionary:
+		var hook_data: Dictionary = (timing_hook as Dictionary).duplicate(true)
+		hook_data["timing"] = timing_key
+		hook_data["source"] = part_id
+		results.append(hook_data)
+	return results
+
+
+func _extract_part_id(part_ref: Variant) -> String:
+	if part_ref is String:
+		return str(part_ref)
+	if part_ref is Dictionary:
+		var ref_dict: Dictionary = part_ref as Dictionary
+		for key in ["id", "part_id", "rune_id", "core_id"]:
+			if str(ref_dict.get(key, "")) != "":
+				return str(ref_dict.get(key, ""))
+	return ""
+
+
+func _apply_hook(hook: Dictionary, player: Dictionary, enemy: Dictionary, temporary_modifiers: Array) -> Dictionary:
+	var updated_player := player.duplicate(true)
+	var updated_enemy := enemy.duplicate(true)
+	var updated_modifiers := temporary_modifiers.duplicate(true)
+	match str(hook.get("type", "")):
+		"apply_status":
+			var target_side := str(hook.get("target", "enemy"))
+			var status_id := str(hook.get("status", ""))
+			var statuses: Array = []
+			if target_side == "player":
+				statuses = (updated_player.get("statuses", []) as Array).duplicate(true)
+				statuses = _status_engine.add_status(statuses, {
+					"id": status_id,
+					"stacks": int(hook.get("stacks", 1)),
+					"duration": int(hook.get("duration", 1)),
+					"timing": _timing_for_status(status_id, target_side),
+				})
+				updated_player["statuses"] = statuses
+			else:
+				statuses = (updated_enemy.get("statuses", []) as Array).duplicate(true)
+				statuses = _status_engine.add_status(statuses, {
+					"id": status_id,
+					"stacks": int(hook.get("stacks", 1)),
+					"duration": int(hook.get("duration", 1)),
+					"timing": _timing_for_status(status_id, target_side),
+				})
+				updated_enemy["statuses"] = statuses
+		"damage_bonus":
+			updated_modifiers.append({
+				"type": "damage_additive",
+				"bonus": int(hook.get("value", 0)),
+				"consumed": false,
+			})
+
+	return {
+		"player": updated_player,
+		"enemy": updated_enemy,
+		"temporary_modifiers": updated_modifiers,
+	}
+
+
+func _timing_for_status(status_id: String, target_side: String) -> String:
+	match status_id:
+		"freeze", "stun":
+			return "%s_turn_start" % target_side
+		"poison":
+			return "%s_turn_end" % target_side
+		"burn":
+			return "enemy_turn_end" if target_side == "player" else "player_turn_end"
+		_:
+			return "%s_turn_end" % target_side
 
 
 func _find_queue_entry(queue: Array, die_id: String) -> Dictionary:

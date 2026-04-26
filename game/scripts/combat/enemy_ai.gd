@@ -36,7 +36,7 @@ func resolve_action(action: Dictionary, player: Dictionary, _context: Dictionary
 				"id": str(action.get("status", "poison")),
 				"stacks": int(action.get("stacks", 1)),
 				"duration": int(action.get("duration", 1)),
-				"timing": _timing_for_status(str(action.get("status", "poison"))),
+				"timing": _timing_for_player_status(str(action.get("status", "poison"))),
 			})
 			updated_player["statuses"] = statuses
 		"lock":
@@ -44,13 +44,13 @@ func resolve_action(action: Dictionary, player: Dictionary, _context: Dictionary
 	return updated_player
 
 
-func _timing_for_status(status_id: String) -> String:
+func _timing_for_player_status(status_id: String) -> String:
 	match status_id:
 		"burn":
-			return "player_turn_end"
-		"poison":
 			return "enemy_turn_end"
+		"poison":
+			return "player_turn_end"
 		"freeze", "stun":
-			return "enemy_turn_start"
+			return "player_turn_start"
 		_:
 			return "player_turn_end"

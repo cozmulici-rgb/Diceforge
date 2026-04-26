@@ -57,6 +57,8 @@ func run() -> Array[String]:
 	if not roll_result.get("ok", false):
 		failures.append("roll_active_dice should succeed for valid starter dice")
 		return failures
+	if ((combat_state.engine_state.get("rolled_faces", []) as Array)).size() != 3:
+		failures.append("live controller roll path should advance CombatEngine rolled_faces")
 
 	controller.assign_die_to_action(combat_state, "balanced_d6_alpha", "main_attack")
 	controller.assign_die_to_action(combat_state, "balanced_d6_beta", "guard")
@@ -70,6 +72,8 @@ func run() -> Array[String]:
 	var enemy_hp_after_player: int = int((combat_state.enemy_state as Dictionary).get("hp", 0))
 	if enemy_hp_after_player != 0:
 		failures.append("player turn should damage the enemy before enemy resolution")
+	if int(((combat_state.engine_state.get("enemy", {}) as Dictionary).get("hp", -1))) != enemy_hp_after_player:
+		failures.append("live controller resolve path should keep engine_state enemy hp in sync with combat state")
 
 	if combat_state.state != "complete":
 		failures.append("combat should complete when the enemy reaches zero hp before the enemy turn")

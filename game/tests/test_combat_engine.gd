@@ -92,4 +92,42 @@ func run() -> Array[String]:
 	if (engine.get_log().get_entries() as Array).is_empty():
 		failures.append("BattleLog should contain entries")
 
+	var engine3 = CombatEngineScript.new(catalog)
+	engine3.initialize_battle({
+		"hp": 20,
+		"max_hp": 30,
+		"energy": 3,
+		"energy_regen": 1,
+		"statuses": [],
+		"dice_pool": [
+			{
+				"id": "d_hooked",
+				"body_id": "standard_d6",
+				"face_set": ["strike", "guard", "focus", "strike", "guard", "surge"],
+				"statuses": [],
+				"runes": ["ember_rune"],
+				"core": "ember_core",
+			},
+		],
+	}, {
+		"id": "hook_target",
+		"name": "Hook Target",
+		"hp": 20,
+		"max_hp": 20,
+		"starting_block": 0,
+		"statuses": [],
+		"ai_pattern": [{"action": "attack", "damage": 1, "label": "Tap"}],
+	})
+	engine3.roll_phase([1])
+	var enemy_after_roll: Dictionary = (engine3.get_state().get("enemy", {}) as Dictionary).duplicate(true)
+	var statuses_after_roll: Array = (enemy_after_roll.get("statuses", []) as Array).duplicate(true)
+	if statuses_after_roll.is_empty():
+		failures.append("on_roll core hooks should apply enemy statuses")
+	engine3.build_autoplay_queue()
+	engine3.run_resolution_loop()
+	var enemy_after_resolution: Dictionary = (engine3.get_state().get("enemy", {}) as Dictionary).duplicate(true)
+	var statuses_after_resolution: Array = (enemy_after_resolution.get("statuses", []) as Array).duplicate(true)
+	if statuses_after_resolution.is_empty() or int((statuses_after_resolution[0] as Dictionary).get("stacks", 0)) < 2:
+		failures.append("on_resolution rune hooks should stack onto existing statuses")
+
 	return failures

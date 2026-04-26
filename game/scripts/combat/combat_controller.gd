@@ -104,16 +104,28 @@ func begin_encounter(run_state, encounter_definition: Dictionary) -> Variant:
 
 
 func roll_active_dice(state) -> Dictionary:
-	var body_definitions = content_catalog.get_part_definitions("body")
-	var face_definitions = content_catalog.get_part_definitions("face")
-	var roll_result = dice_model.roll_active_dice(state.active_dice, face_definitions, body_definitions, state.pending_player_rolls)
+	if _engine == null:
+		return {"ok": false, "error": "missing_combat_engine"}
+
+	_engine.start_player_turn()
+	_sync_engine_state(state)
+	if bool(state.engine_state.get("player_skip_turn", false)):
+		state.roll_results = []
+		state.state = "enemy_turn"
+		state.turn_log.append("Player turn skipped.")
+		return {"ok": true, "combat_state": state}
+
+	var roll_result: Dictionary = _engine.roll_phase((state.pending_player_rolls as Array).duplicate(true))
 	if not roll_result.get("ok", false):
 		return roll_result
 
-	state.roll_results = (roll_result.get("roll_results", []) as Array).duplicate(true)
-	state.pending_player_rolls = (roll_result.get("remaining_rolls", []) as Array).duplicate(true)
+	var engine_state: Dictionary = _engine.get_state()
+	var rolled_faces: Array = (engine_state.get("rolled_faces", []) as Array).duplicate(true)
+	state.roll_results = _build_roll_results_from_engine(rolled_faces)
+	state.pending_player_rolls = _consume_pending_rolls(state.pending_player_rolls, rolled_faces.size())
 	state.state = "player_assignment"
 	state.turn_log.append("Player rolled %s." % _summarize_rolls(state.roll_results))
+	_sync_engine_state(state)
 	return {"ok": true, "combat_state": state}
 
 
@@ -130,80 +142,77 @@ func assign_die_to_action(state, die_id: String, action_slot_id: String) -> Dict
 
 
 func resolve_player_turn(state) -> Dictionary:
-	var face_definitions = content_catalog.get_part_definitions("face")
-	var enemy_definition = content_catalog.load_enemy_definition(str((state.enemy_state as Dictionary).get("enemy_id", "")))
-	var total_attack: int = 0
-	var total_block: int = 0
+	if _engine == null:
+		return {"ok": false, "error": "missing_combat_engine"}
 
-	for roll_result in state.roll_results:
-		var roll: Dictionary = roll_result
-		if str(roll.get("assigned_slot_id", "")) == "":
-			continue
+	var before_state: Dictionary = _engine.get_state()
+	var before_enemy: Dictionary = (before_state.get("enemy", {}) as Dictionary).duplicate(true)
+	var before_player: Dictionary = (before_state.get("player", {}) as Dictionary).duplicate(true)
 
-		var face_definition: Dictionary = face_definitions.get(str(roll.get("face_id", "")), {})
-		var family: String = str(face_definition.get("family", roll.get("face_family", "utility")))
-		var power_multiplier: int = int(face_definition.get("power_multiplier", 1))
-		if family == "attack":
-			total_attack += int(roll.get("rolled_value", 0)) * power_multiplier
-		elif family == "defense":
-			total_block += int(roll.get("rolled_value", 0)) * power_multiplier
-		elif family == "utility":
-			total_block += int(face_definition.get("bonus_block", 1))
-
-	total_attack += int((state.modifier_snapshot as Dictionary).get("attack_bonus", 0))
-	total_block += int((state.modifier_snapshot as Dictionary).get("block_bonus", 0))
-
-	var enemy_state: Dictionary = state.enemy_state.duplicate(true)
-	var enemy_block: int = int(enemy_state.get("block", 0))
-	var damage_to_enemy: int = max(total_attack - enemy_block, 0)
-	enemy_state["block"] = max(enemy_block - total_attack, 0)
-	enemy_state["hp"] = max(int(enemy_state.get("hp", 0)) - damage_to_enemy, 0)
-	state.enemy_state = enemy_state
-	state.player_block += total_block
-	state.turn_log.append("Player turn resolved: %d damage, %d block." % [damage_to_enemy, total_block])
-	state.state = "enemy_turn"
-	if int(enemy_state.get("hp", 0)) <= 0:
-		if bool(enemy_state.get("is_boss", false)):
-			var phase_result = boss_phase_controller.advance_phase(enemy_state)
-			if bool(phase_result.get("transitioned", false)):
-				state.enemy_state = (phase_result.get("enemy_state", {}) as Dictionary).duplicate(true)
-				state.turn_log.append("Boss advanced to phase %d." % int((state.enemy_state as Dictionary).get("phase_index", 1)))
-				state.round_index += 1
-				state.state = "player_roll"
-				state.roll_results = []
-				state.action_slots = _reset_action_slots(state.action_slots)
-			else:
-				state.outcome = "victory"
-				state.state = "complete"
-		else:
-			state.outcome = "victory"
-			state.state = "complete"
+	var queue := _resolution_queue_from_assignments(state.roll_results, before_state)
+	_engine.set_resolution_queue(queue)
+	var resolution_result: Dictionary = _engine.run_resolution_loop()
+	if not resolution_result.get("ok", false):
+		return resolution_result
+	_engine.end_player_turn()
+	var battle_result: Dictionary = _engine.check_battle_end()
 
 	_sync_engine_state(state)
+	var after_engine_state: Dictionary = state.engine_state
+	var after_enemy: Dictionary = (after_engine_state.get("enemy", {}) as Dictionary).duplicate(true)
+	var after_player: Dictionary = (after_engine_state.get("player", {}) as Dictionary).duplicate(true)
+	var damage_to_enemy := maxi(int(before_enemy.get("hp", 0)) - int(after_enemy.get("hp", 0)), 0)
+	var gained_block := maxi(int(after_player.get("block", 0)) - int(before_player.get("block", 0)), 0)
+
+	state.turn_log.append("Player turn resolved: %d damage, %d block." % [damage_to_enemy, gained_block])
+	state.roll_results = []
+
+	match str(battle_result.get("result", "ongoing")):
+		"victory":
+			state.outcome = "victory"
+			state.state = "complete"
+		"defeat":
+			state.outcome = "defeat"
+			state.state = "complete"
+		_:
+			state.state = "enemy_turn"
+
 	return {"ok": true, "combat_state": state}
 
 
 func resolve_enemy_turn(state) -> Dictionary:
 	if state.outcome == "victory":
 		return {"ok": true, "combat_state": state}
+	if _engine == null:
+		return {"ok": false, "error": "missing_combat_engine"}
 
-	var enemy_state: Dictionary = state.enemy_state.duplicate(true)
-	var incoming_damage: int = int(enemy_state.get("intent_damage", 0))
-	var mitigated_damage: int = max(incoming_damage - state.player_block, 0)
-	state.player_block = max(state.player_block - incoming_damage, 0)
-	state.player_hp = max(state.player_hp - mitigated_damage, 0)
-	state.turn_log.append("Enemy turn resolved: %d incoming, %d taken." % [incoming_damage, mitigated_damage])
-
-	if state.player_hp <= 0:
-		state.outcome = "defeat"
-		state.state = "complete"
-	else:
-		state.round_index += 1
-		state.state = "player_roll"
-		state.roll_results = []
-		state.action_slots = _reset_action_slots(state.action_slots)
+	var before_state: Dictionary = _engine.get_state()
+	var before_player: Dictionary = (before_state.get("player", {}) as Dictionary).duplicate(true)
+	_engine.run_enemy_turn()
+	_engine.end_enemy_turn()
+	var battle_result: Dictionary = _engine.check_battle_end()
 
 	_sync_engine_state(state)
+	var after_player: Dictionary = ((state.engine_state.get("player", {}) as Dictionary).duplicate(true))
+	var taken_damage := maxi(int(before_player.get("hp", 0)) - int(after_player.get("hp", 0)), 0)
+	var incoming_damage := taken_damage + maxi(int(before_player.get("block", 0)) - int(after_player.get("block", 0)), 0)
+	if bool(state.engine_state.get("enemy_skip_turn", false)):
+		state.turn_log.append("Enemy turn skipped.")
+	else:
+		state.turn_log.append("Enemy turn resolved: %d incoming, %d taken." % [incoming_damage, taken_damage])
+
+	state.roll_results = []
+	state.action_slots = _reset_action_slots(state.action_slots)
+	match str(battle_result.get("result", "ongoing")):
+		"victory":
+			state.outcome = "victory"
+			state.state = "complete"
+		"defeat":
+			state.outcome = "defeat"
+			state.state = "complete"
+		_:
+			state.state = "player_roll"
+
 	return {"ok": true, "combat_state": state}
 
 
@@ -496,7 +505,12 @@ func _normalize_engine_dice(active_dice: Array) -> Array:
 		if not die.has("statuses"):
 			die["statuses"] = []
 		if not die.has("runes"):
-			die["runes"] = []
+			var equipped_runes: Array = (die.get("equipped_runes", []) as Array).duplicate(true)
+			die["runes"] = equipped_runes.map(func(rune_data: Variant) -> Variant:
+				if rune_data is Dictionary:
+					return str((rune_data as Dictionary).get("rune_id", ""))
+				return rune_data
+			)
 		if not die.has("core"):
 			die["core"] = null
 		if not die.has("body_id"):
@@ -509,3 +523,63 @@ func _sync_engine_state(state) -> void:
 	if _engine == null or state == null:
 		return
 	state.engine_state = _engine.get_state()
+	var engine_state: Dictionary = state.engine_state
+	var player: Dictionary = (engine_state.get("player", {}) as Dictionary).duplicate(true)
+	var enemy: Dictionary = (engine_state.get("enemy", {}) as Dictionary).duplicate(true)
+	state.player_hp = int(player.get("hp", state.player_hp))
+	state.player_block = int(player.get("block", state.player_block))
+	state.round_index = int(engine_state.get("turn_index", state.round_index))
+	if enemy.is_empty():
+		return
+
+	state.enemy_state["enemy_id"] = str(enemy.get("id", state.enemy_state.get("enemy_id", "")))
+	state.enemy_state["display_name"] = str(enemy.get("display_name", state.enemy_state.get("display_name", "")))
+	state.enemy_state["hp"] = int(enemy.get("hp", state.enemy_state.get("hp", 0)))
+	state.enemy_state["block"] = int(enemy.get("block", state.enemy_state.get("block", 0)))
+	state.enemy_state["intent_label"] = str(enemy.get("intent_label", state.enemy_state.get("intent_label", "Strike")))
+	state.enemy_state["intent_damage"] = int(enemy.get("intent_damage", state.enemy_state.get("intent_damage", 0)))
+	state.enemy_state["is_boss"] = bool(enemy.get("is_boss", state.enemy_state.get("is_boss", false)))
+	state.enemy_state["final_boss"] = bool(enemy.get("final_boss", state.enemy_state.get("final_boss", false)))
+	state.enemy_state["phase_index"] = int(enemy.get("phase_index", state.enemy_state.get("phase_index", 1))) + 1
+
+
+func _build_roll_results_from_engine(rolled_faces: Array) -> Array:
+	var results: Array = []
+	for rolled_face in rolled_faces:
+		var face: Dictionary = rolled_face as Dictionary
+		results.append({
+			"die_id": str(face.get("die_id", "")),
+			"die_label": str(face.get("die_label", face.get("die_id", ""))),
+			"rolled_value": int(face.get("rolled_value", 0)),
+			"face_id": str(face.get("face_id", "")),
+			"face_family": str(face.get("face_family", "utility")),
+			"face_label": str(face.get("face_label", face.get("face_id", ""))),
+			"assigned_slot_id": "",
+		})
+	return results
+
+
+func _consume_pending_rolls(pending_rolls: Array, consumed_count: int) -> Array:
+	var remaining := (pending_rolls as Array).duplicate(true)
+	for _index in range(mini(consumed_count, remaining.size())):
+		remaining.pop_front()
+	return remaining
+
+
+func _resolution_queue_from_assignments(roll_results: Array, engine_state: Dictionary) -> Array:
+	var rolled_faces: Array = (engine_state.get("rolled_faces", []) as Array).duplicate(true)
+	var queued_die_ids := PackedStringArray()
+	for roll_result in roll_results:
+		var roll: Dictionary = roll_result as Dictionary
+		if str(roll.get("assigned_slot_id", "")) == "":
+			continue
+		queued_die_ids.append(str(roll.get("die_id", "")))
+
+	var queue: Array = []
+	for die_id in queued_die_ids:
+		for rolled_face in rolled_faces:
+			var face: Dictionary = rolled_face as Dictionary
+			if str(face.get("die_id", "")) == die_id:
+				queue.append(face.duplicate(true))
+				break
+	return queue
