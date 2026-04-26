@@ -21,6 +21,8 @@ signal combat_state_updated(combat_state)
 @onready var log_label = get_node_or_null("MarginContainer/VBoxContainer/LogPanel/LogBox/LogLabel")
 @onready var roll_button = get_node_or_null("MarginContainer/VBoxContainer/ButtonRow/RollButton")
 @onready var resolve_button = get_node_or_null("MarginContainer/VBoxContainer/ButtonRow/ResolveButton")
+@onready var roll_label_graphic: TextureRect = get_node_or_null("MarginContainer/VBoxContainer/ButtonRow/RollButton/RollLabelGraphic")
+@onready var resolve_label_graphic: TextureRect = get_node_or_null("MarginContainer/VBoxContainer/ButtonRow/ResolveButton/ResolveLabelGraphic")
 
 var content_catalog
 var dice_model = DiceModelScript.new()
@@ -301,7 +303,7 @@ func _render() -> void:
 		roll_button.disabled = combat_state.state != "player_roll"
 	if resolve_button != null:
 		resolve_button.disabled = combat_state.state == "complete"
-		resolve_button.text = "Resolve Round" if combat_state.state != "complete" else "Resolved"
+	_sync_button_graphics()
 
 
 func _on_roll_pressed() -> void:
@@ -353,8 +355,17 @@ func _apply_theme() -> void:
 		log_label.theme_type_variation = &"FacetInfo"
 	if roll_button != null:
 		roll_button.theme_type_variation = &"FacetPrimaryButton"
+		roll_button.text = ""
 	if resolve_button != null:
 		resolve_button.theme_type_variation = &"FacetSecondaryButton"
+		resolve_button.text = ""
+
+
+func _sync_button_graphics() -> void:
+	if roll_label_graphic != null and roll_button != null:
+		roll_label_graphic.modulate = Color(1, 1, 1, 0.42) if roll_button.disabled else Color(1, 1, 1, 1)
+	if resolve_label_graphic != null and resolve_button != null:
+		resolve_label_graphic.modulate = Color(1, 1, 1, 0.42) if resolve_button.disabled else Color(1, 1, 1, 1)
 
 
 func _build_enemy_summary() -> String:

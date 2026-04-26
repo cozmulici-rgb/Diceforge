@@ -142,43 +142,9 @@ Each active die can include:
 
 ## Combat
 
-Combat is deterministic in the current prototype, with scripted player roll sets per encounter. This keeps the game testable and makes balance iteration easier.
+Combat logic for Facetbound is defined in [`design/combat-algorithm.md`](/Users/vcozmulici/workspace/ai/Diceforge/docs/design/combat-algorithm.md). That document is the single source of truth for turn structure, roll and sequencing phases, per-die resolution, status timing, damage rules, and determinism.
 
-### Turn Structure
-
-Each round follows this sequence:
-
-1. Roll all active dice.
-2. Assign rolled dice to action slots.
-3. Resolve player effects.
-4. Resolve enemy intent.
-5. Check victory or defeat.
-
-### Action Slots
-
-The default action slots are:
-
-- `Main Attack`
-  - allowed faces: `attack`
-  - minimum assignment: `1`
-- `Guard`
-  - allowed faces: `defense`
-  - minimum assignment: `0`
-- `Utility`
-  - allowed faces: `utility`
-  - minimum assignment: `0`
-
-### Damage Model
-
-- Attack faces deal damage from rolled value and multiplier.
-- Defense faces generate block.
-- Utility faces currently add bonus block.
-- Enemy block is consumed before enemy health is reduced.
-- Player block absorbs incoming damage before health is reduced.
-
-### Bosses
-
-Bosses can transition across multiple phases. The current bosses both use two-phase fight structures.
+This wiki only covers content that combat consumes — encounters, enemies, bosses, and rewards — in the sections that follow.
 
 ## Enemies
 
@@ -521,3 +487,4 @@ What is still intentionally limited:
 - [game-rules.md](/Users/vcozmulici/workspace/ai/Diceforge/docs/game-rules.md)
 - [setup.md](/Users/vcozmulici/workspace/ai/Diceforge/docs/setup.md)
 - [concept.md](/Users/vcozmulici/workspace/ai/Diceforge/docs/concept.md)
+- [design/combat-algorithm.md](/Users/vcozmulici/workspace/ai/Diceforge/docs/design/combat-algorithm.md)

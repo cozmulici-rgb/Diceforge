@@ -50,20 +50,27 @@ click_at() {
     xdotool mousemove "$x" "$y" click 1
 }
 
+press_key() {
+    local key="$1"
+    xdotool key "$key"
+}
+
 capture "01_start_menu.png"
 
-# Click the centered Start Run button.
-click_at 640 548
+# Trigger the highlighted New Run action from the redesigned start menu.
+press_key Return
 sleep "$STEP_DELAY"
 capture "02_exploration_start.png"
 
-# Click the first exit button: Move to Echo Span (encounter).
-click_at 704 383
+# Select Echo Span on the route map, then commit travel from the left panel.
+click_at 817 199
+sleep "$SHORT_DELAY"
+click_at 275 227
 sleep "$STEP_DELAY"
 capture "03_echo_span.png"
 
-# Click the encounter button after entering Echo Span.
-click_at 704 515
+# Enter the encounter from the current hostile room.
+click_at 275 227
 sleep "$STEP_DELAY"
 capture "04_combat.png"
 

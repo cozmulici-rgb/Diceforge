@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="280" height="32" viewBox="0 0 280 32">
+  <rect x="0" y="10" width="52" height="1" fill="#6ebeff" fill-opacity="0.7"/>
+  <rect x="228" y="10" width="52" height="1" fill="#6ebeff" fill-opacity="0.28"/>
+  <text x="140" y="22" text-anchor="middle" font-family="Verdana, Arial, sans-serif" font-size="16" font-weight="700" letter-spacing="2" fill="#e7e3da">ROLLED DICE</text>
+</svg>

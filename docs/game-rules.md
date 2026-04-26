@@ -2,6 +2,8 @@
 
 This document describes the current gameplay rules for the Facetbound prototype in this repository. It focuses on the rules that are implemented now, with light references to intended structure where that helps explain the loop.
 
+For combat logic specifically — turn structure, per-die resolution, status timing, determinism rules — see [`docs/design/combat-algorithm.md`](/Users/vcozmulici/workspace/ai/Diceforge/docs/design/combat-algorithm.md). That doc is the target combat specification; section 9 of it summarizes how the target spec differs from the prototype rules described here.
+
 ## 1. Objective
 
 Facetbound is a single-player dice-driven roguelike prototype. The player enters a run, clears rooms, defeats bosses, claims rewards, mutates dice in the forge, and either dies or completes the current run path.
@@ -32,11 +34,10 @@ Each run follows this loop:
 1. Choose an archetype.
 2. Enter a floor and move between connected rooms.
 3. Trigger an encounter in hostile rooms.
-4. Roll active dice during combat and assign them to action slots.
-5. Resolve player actions, then enemy actions.
-6. On victory, choose one reward.
-7. If forge access is granted, apply one or more dice mutations from inventory.
-8. Continue exploration, advance to the next floor after boss victories, or end the run on defeat or final completion.
+4. Run the combat loop until the encounter ends in victory or defeat (see [`docs/design/combat-algorithm.md`](/Users/vcozmulici/workspace/ai/Diceforge/docs/design/combat-algorithm.md)).
+5. On victory, choose one reward.
+6. If forge access is granted, apply one or more dice mutations from inventory.
+7. Continue exploration, advance to the next floor after boss victories, or end the run on defeat or final completion.
 
 ## 4. Exploration Rules
 
@@ -109,52 +110,16 @@ The prototype currently uses rune family compatibility in forge validation. Rune
 
 ## 6. Combat Rules
 
-### 6.1 Combat Sequence
+Combat logic is documented in [`docs/design/combat-algorithm.md`](/Users/vcozmulici/workspace/ai/Diceforge/docs/design/combat-algorithm.md).
 
-Each combat round follows this order:
+That document is the single source of truth for turn structure, roll and sequencing phases, per-die resolution, status timing, damage application, and determinism rules.
 
-1. The player rolls all active dice.
-2. Rolled dice are assigned to action slots.
-3. The player turn resolves.
-4. The enemy turn resolves if combat is still active.
-5. If either side reaches zero health, the encounter ends.
-
-### 6.2 Action Slots
-
-The default player action slots are:
-
-- `Main Attack`
-  - allowed families: `attack`
-  - minimum assignments: `1`
-- `Guard`
-  - allowed families: `defense`
-  - minimum assignments: `0`
-- `Utility`
-  - allowed families: `utility`
-  - minimum assignments: `0`
-
-A die can be assigned only once per round.
-
-### 6.3 Resolution Rules
-
-- Attack faces contribute damage based on rolled value and face multiplier.
-- Defense faces contribute block based on rolled value and face multiplier.
-- Utility faces currently contribute bonus block according to their face rule.
-- Modifier bonuses can increase player attack, block, health, enemy health, and enemy damage.
-
-### 6.4 Damage Rules
-
-- Enemy block is removed before health damage is applied.
-- Player block reduces incoming enemy damage.
-- Remaining incoming damage is subtracted from player health.
-- If enemy health reaches `0`, the encounter ends in victory.
-- If player health reaches `0`, the encounter ends in defeat.
-
-### 6.5 Enemy and Boss Rules
+Encounter-level rules that connect combat to the run remain here:
 
 - Encounters load an enemy definition and create combat state from it.
-- Bosses may have multiple phases.
-- Boss victories can:
+- A combat outcome of victory opens the reward flow defined in section 7.
+- A combat outcome of defeat ends the run and triggers progression resolution in section 10.
+- Boss victories may also:
   - increment the boss counter for the run
   - unlock floor advancement
   - complete the run if the defeated boss is marked as final

@@ -1,6 +1,16 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://scripts/combat/combat_controller.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/combat/exports/bg-combat-void-dais-v1.png" id="2"]
+[ext_resource type="Texture2D" path="res://assets/combat/exports/bg-combat-void-fog-v1.png" id="3"]
+[ext_resource type="Texture2D" path="res://assets/combat/exports/overlay-combat-runes-v1.png" id="4"]
+[ext_resource type="Texture2D" path="res://assets/combat/exports/combat-header-enemy.png" id="5"]
+[ext_resource type="Texture2D" path="res://assets/combat/exports/combat-header-player.png" id="6"]
+[ext_resource type="Texture2D" path="res://assets/combat/exports/combat-header-assigned-slots.png" id="7"]
+[ext_resource type="Texture2D" path="res://assets/combat/exports/combat-header-rolled-dice.png" id="8"]
+[ext_resource type="Texture2D" path="res://assets/combat/exports/combat-header-combat-log.png" id="9"]
+[ext_resource type="Texture2D" path="res://assets/combat/exports/combat-label-roll-dice.png" id="10"]
+[ext_resource type="Texture2D" path="res://assets/combat/exports/combat-label-resolve-round.png" id="11"]
 
 [node name="CombatScreen" type="Control"]
 layout_mode = 3
@@ -11,7 +21,16 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1")
 
-[node name="Backdrop" type="ColorRect" parent="."]
+[node name="BackgroundLayers" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Backdrop" type="ColorRect" parent="BackgroundLayers"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -20,13 +39,48 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.0431373, 0.0588235, 0.0784314, 1)
 
+[node name="CombatBackdrop" type="TextureRect" parent="BackgroundLayers"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("2")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="CombatFog" type="TextureRect" parent="BackgroundLayers"]
+modulate = Color(0.72, 0.84, 1, 0.34)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("3")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="CombatOverlay" type="TextureRect" parent="BackgroundLayers"]
+modulate = Color(0.92, 0.96, 1, 0.26)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("4")
+expand_mode = 1
+stretch_mode = 5
+
 [node name="CombatPlate" type="ColorRect" parent="."]
 layout_mode = 1
 offset_left = 20.0
 offset_top = 20.0
 offset_right = 1260.0
 offset_bottom = 700.0
-color = Color(0.0784314, 0.101961, 0.129412, 0.96)
+color = Color(0.0509804, 0.0666667, 0.0941176, 0.78)
 
 [node name="MarginContainer" type="MarginContainer" parent="."]
 layout_mode = 1
@@ -66,9 +120,12 @@ size_flags_horizontal = 3
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="EnemySectionLabel" type="Label" parent="MarginContainer/VBoxContainer/SummaryRow/EnemyPanel/EnemyBox"]
+[node name="EnemySectionLabel" type="TextureRect" parent="MarginContainer/VBoxContainer/SummaryRow/EnemyPanel/EnemyBox"]
+custom_minimum_size = Vector2(240, 24)
 layout_mode = 2
-text = "Enemy"
+texture = ExtResource("5")
+expand_mode = 1
+stretch_mode = 3
 
 [node name="EnemyLabel" type="Label" parent="MarginContainer/VBoxContainer/SummaryRow/EnemyPanel/EnemyBox"]
 layout_mode = 2
@@ -83,9 +140,12 @@ size_flags_horizontal = 3
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="PlayerSectionLabel" type="Label" parent="MarginContainer/VBoxContainer/SummaryRow/PlayerPanel/PlayerBox"]
+[node name="PlayerSectionLabel" type="TextureRect" parent="MarginContainer/VBoxContainer/SummaryRow/PlayerPanel/PlayerBox"]
+custom_minimum_size = Vector2(240, 24)
 layout_mode = 2
-text = "Player"
+texture = ExtResource("6")
+expand_mode = 1
+stretch_mode = 3
 
 [node name="PlayerLabel" type="Label" parent="MarginContainer/VBoxContainer/SummaryRow/PlayerPanel/PlayerBox"]
 layout_mode = 2
@@ -105,9 +165,12 @@ size_flags_vertical = 3
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="SlotsSectionLabel" type="Label" parent="MarginContainer/VBoxContainer/ActionRow/SlotsPanel/SlotsBox"]
+[node name="SlotsSectionLabel" type="TextureRect" parent="MarginContainer/VBoxContainer/ActionRow/SlotsPanel/SlotsBox"]
+custom_minimum_size = Vector2(320, 24)
 layout_mode = 2
-text = "Assigned Slots"
+texture = ExtResource("7")
+expand_mode = 1
+stretch_mode = 3
 
 [node name="SlotsLabel" type="Label" parent="MarginContainer/VBoxContainer/ActionRow/SlotsPanel/SlotsBox"]
 layout_mode = 2
@@ -123,9 +186,12 @@ size_flags_vertical = 3
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="RollsSectionLabel" type="Label" parent="MarginContainer/VBoxContainer/ActionRow/RollsPanel/RollsBox"]
+[node name="RollsSectionLabel" type="TextureRect" parent="MarginContainer/VBoxContainer/ActionRow/RollsPanel/RollsBox"]
+custom_minimum_size = Vector2(280, 24)
 layout_mode = 2
-text = "Rolled Dice"
+texture = ExtResource("8")
+expand_mode = 1
+stretch_mode = 3
 
 [node name="RollsLabel" type="Label" parent="MarginContainer/VBoxContainer/ActionRow/RollsPanel/RollsBox"]
 layout_mode = 2
@@ -139,11 +205,49 @@ alignment = 1
 
 [node name="RollButton" type="Button" parent="MarginContainer/VBoxContainer/ButtonRow"]
 layout_mode = 2
-text = "Roll Dice"
+custom_minimum_size = Vector2(126, 56)
+text = ""
+
+[node name="RollLabelGraphic" type="TextureRect" parent="MarginContainer/VBoxContainer/ButtonRow/RollButton"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -60.0
+offset_top = -10.0
+offset_right = 60.0
+offset_bottom = 10.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("10")
+expand_mode = 1
+stretch_mode = 3
 
 [node name="ResolveButton" type="Button" parent="MarginContainer/VBoxContainer/ButtonRow"]
 layout_mode = 2
-text = "Resolve Round"
+custom_minimum_size = Vector2(182, 56)
+text = ""
+
+[node name="ResolveLabelGraphic" type="TextureRect" parent="MarginContainer/VBoxContainer/ButtonRow/ResolveButton"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -78.0
+offset_top = -10.0
+offset_right = 78.0
+offset_bottom = 10.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("11")
+expand_mode = 1
+stretch_mode = 3
 
 [node name="LogPanel" type="PanelContainer" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
@@ -153,9 +257,12 @@ size_flags_vertical = 3
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="LogSectionLabel" type="Label" parent="MarginContainer/VBoxContainer/LogPanel/LogBox"]
+[node name="LogSectionLabel" type="TextureRect" parent="MarginContainer/VBoxContainer/LogPanel/LogBox"]
+custom_minimum_size = Vector2(300, 24)
 layout_mode = 2
-text = "Combat Log"
+texture = ExtResource("9")
+expand_mode = 1
+stretch_mode = 3
 
 [node name="LogLabel" type="Label" parent="MarginContainer/VBoxContainer/LogPanel/LogBox"]
 layout_mode = 2
