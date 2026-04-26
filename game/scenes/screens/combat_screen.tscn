@@ -1,18 +1,11 @@
-[gd_scene load_steps=14 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/combat/combat_controller.gd" id="1"]
 [ext_resource type="Texture2D" path="res://assets/combat/exports/bg-combat-void-dais-v1.png" id="2"]
 [ext_resource type="Texture2D" path="res://assets/combat/exports/bg-combat-void-fog-v1.png" id="3"]
 [ext_resource type="Texture2D" path="res://assets/combat/exports/overlay-combat-runes-v1.png" id="4"]
-[ext_resource type="Texture2D" path="res://assets/combat/exports/combat-header-enemy.png" id="5"]
-[ext_resource type="Texture2D" path="res://assets/combat/exports/combat-header-player.png" id="6"]
-[ext_resource type="Texture2D" path="res://assets/combat/exports/combat-header-assigned-slots.png" id="7"]
-[ext_resource type="Texture2D" path="res://assets/combat/exports/combat-header-rolled-dice.png" id="8"]
-[ext_resource type="Texture2D" path="res://assets/combat/exports/combat-header-combat-log.png" id="9"]
-[ext_resource type="Texture2D" path="res://assets/combat/exports/combat-label-roll-dice.png" id="10"]
-[ext_resource type="Texture2D" path="res://assets/combat/exports/combat-label-resolve-round.png" id="11"]
-[ext_resource type="Texture2D" path="res://assets/combat/exports/combat-portrait-enemy-colossus-v1.png" id="12"]
-[ext_resource type="Texture2D" path="res://assets/combat/exports/combat-portrait-player-facetwalker-v1.png" id="13"]
+[ext_resource type="Texture2D" path="res://assets/combat/exports/combat-portrait-enemy-colossus-v1.png" id="5"]
+[ext_resource type="Texture2D" path="res://assets/combat/exports/combat-portrait-player-facetwalker-v1.png" id="6"]
 
 [node name="CombatScreen" type="Control"]
 layout_mode = 3
@@ -39,7 +32,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.0431373, 0.0588235, 0.0784314, 1)
+color = Color(0.043, 0.059, 0.078, 1)
 
 [node name="CombatBackdrop" type="TextureRect" parent="BackgroundLayers"]
 layout_mode = 1
@@ -76,213 +69,313 @@ texture = ExtResource("4")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="CombatPlate" type="ColorRect" parent="."]
-layout_mode = 1
-offset_left = 20.0
-offset_top = 20.0
-offset_right = 1260.0
-offset_bottom = 700.0
-color = Color(0.0509804, 0.0666667, 0.0941176, 0.78)
-
-[node name="MarginContainer" type="MarginContainer" parent="."]
+[node name="RootMargin" type="MarginContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-offset_left = 96.0
-offset_top = 76.0
-offset_right = -40.0
-offset_bottom = -32.0
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
 
-[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
-layout_mode = 2
-theme_override_constants/separation = 14
-
-[node name="TitleLabel" type="Label" parent="MarginContainer/VBoxContainer"]
-layout_mode = 2
-text = "Combat"
-horizontal_alignment = 1
-
-[node name="StateLabel" type="Label" parent="MarginContainer/VBoxContainer"]
-layout_mode = 2
-text = "Round"
-horizontal_alignment = 1
-
-[node name="SummaryRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
-layout_mode = 2
-theme_override_constants/separation = 20
-
-[node name="EnemyPanel" type="PanelContainer" parent="MarginContainer/VBoxContainer/SummaryRow"]
-custom_minimum_size = Vector2(308, 0)
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="EnemyBox" type="VBoxContainer" parent="MarginContainer/VBoxContainer/SummaryRow/EnemyPanel"]
+[node name="MainRow" type="HBoxContainer" parent="RootMargin"]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="EnemySectionLabel" type="TextureRect" parent="MarginContainer/VBoxContainer/SummaryRow/EnemyPanel/EnemyBox"]
-custom_minimum_size = Vector2(240, 24)
+[node name="LeftPanel" type="PanelContainer" parent="RootMargin/MainRow"]
+custom_minimum_size = Vector2(268, 0)
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="EnemyVBox" type="VBoxContainer" parent="RootMargin/MainRow/LeftPanel"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+
+[node name="EnemyHeaderLabel" type="Label" parent="RootMargin/MainRow/LeftPanel/EnemyVBox"]
+layout_mode = 2
+text = "Enemy"
+horizontal_alignment = 1
+
+[node name="EnemyPortrait" type="TextureRect" parent="RootMargin/MainRow/LeftPanel/EnemyVBox"]
+custom_minimum_size = Vector2(0, 160)
 layout_mode = 2
 texture = ExtResource("5")
 expand_mode = 1
-stretch_mode = 3
-
-[node name="EnemyPortrait" type="TextureRect" parent="MarginContainer/VBoxContainer/SummaryRow/EnemyPanel/EnemyBox"]
-custom_minimum_size = Vector2(0, 268)
-layout_mode = 2
-texture = ExtResource("12")
-expand_mode = 1
 stretch_mode = 4
 
-[node name="EnemyLabel" type="Label" parent="MarginContainer/VBoxContainer/SummaryRow/EnemyPanel/EnemyBox"]
+[node name="BossPhaseLabel" type="Label" parent="RootMargin/MainRow/LeftPanel/EnemyVBox"]
 layout_mode = 2
-text = "Enemy summary"
-autowrap_mode = 3
+text = "Boss: Phase 1"
+horizontal_alignment = 1
+visible = false
 
-[node name="PlayerPanel" type="PanelContainer" parent="MarginContainer/VBoxContainer/SummaryRow"]
-custom_minimum_size = Vector2(308, 0)
+[node name="EnemyHpVBox" type="VBoxContainer" parent="RootMargin/MainRow/LeftPanel/EnemyVBox"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="EnemyHpRow" type="HBoxContainer" parent="RootMargin/MainRow/LeftPanel/EnemyVBox/EnemyHpVBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="EnemyHpIcon" type="Label" parent="RootMargin/MainRow/LeftPanel/EnemyVBox/EnemyHpVBox/EnemyHpRow"]
+layout_mode = 2
+text = "HP"
+
+[node name="EnemyHpLabel" type="Label" parent="RootMargin/MainRow/LeftPanel/EnemyVBox/EnemyHpVBox/EnemyHpRow"]
 layout_mode = 2
 size_flags_horizontal = 3
+text = "0"
 
-[node name="PlayerBox" type="VBoxContainer" parent="MarginContainer/VBoxContainer/SummaryRow/PlayerPanel"]
+[node name="EnemyBlockBadge" type="Label" parent="RootMargin/MainRow/LeftPanel/EnemyVBox/EnemyHpVBox/EnemyHpRow"]
 layout_mode = 2
-theme_override_constants/separation = 12
+text = "Block 0"
 
-[node name="PlayerSectionLabel" type="TextureRect" parent="MarginContainer/VBoxContainer/SummaryRow/PlayerPanel/PlayerBox"]
-custom_minimum_size = Vector2(240, 24)
+[node name="EnemyHpBar" type="ProgressBar" parent="RootMargin/MainRow/LeftPanel/EnemyVBox/EnemyHpVBox"]
+custom_minimum_size = Vector2(0, 8)
+layout_mode = 2
+max_value = 100.0
+value = 100.0
+show_percentage = false
+
+[node name="EnemySep1" type="HSeparator" parent="RootMargin/MainRow/LeftPanel/EnemyVBox"]
+layout_mode = 2
+
+[node name="IntentHeader" type="Label" parent="RootMargin/MainRow/LeftPanel/EnemyVBox"]
+layout_mode = 2
+text = "Intent"
+
+[node name="IntentNameLabel" type="Label" parent="RootMargin/MainRow/LeftPanel/EnemyVBox"]
+layout_mode = 2
+text = "—"
+autowrap_mode = 3
+
+[node name="IntentDetailLabel" type="Label" parent="RootMargin/MainRow/LeftPanel/EnemyVBox"]
+layout_mode = 2
+text = ""
+autowrap_mode = 3
+
+[node name="EnemySep2" type="HSeparator" parent="RootMargin/MainRow/LeftPanel/EnemyVBox"]
+layout_mode = 2
+
+[node name="EnemyStatusHeader" type="Label" parent="RootMargin/MainRow/LeftPanel/EnemyVBox"]
+layout_mode = 2
+text = "Status"
+
+[node name="EnemyStatusRow" type="HBoxContainer" parent="RootMargin/MainRow/LeftPanel/EnemyVBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="EnemySep3" type="HSeparator" parent="RootMargin/MainRow/LeftPanel/EnemyVBox"]
+layout_mode = 2
+
+[node name="EnemyTurnHeader" type="Label" parent="RootMargin/MainRow/LeftPanel/EnemyVBox"]
+layout_mode = 2
+text = "Enemy Turn"
+
+[node name="EnemyTurnLabel" type="Label" parent="RootMargin/MainRow/LeftPanel/EnemyVBox"]
+layout_mode = 2
+text = "..."
+autowrap_mode = 3
+
+[node name="SkipHeader" type="Label" parent="RootMargin/MainRow/LeftPanel/EnemyVBox"]
+layout_mode = 2
+text = "Skip Condition"
+
+[node name="SkipLabel" type="Label" parent="RootMargin/MainRow/LeftPanel/EnemyVBox"]
+layout_mode = 2
+text = "—"
+autowrap_mode = 3
+
+[node name="CenterVBox" type="VBoxContainer" parent="RootMargin/MainRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+
+[node name="TitleVBox" type="VBoxContainer" parent="RootMargin/MainRow/CenterVBox"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="EnemyNameLabel" type="Label" parent="RootMargin/MainRow/CenterVBox/TitleVBox"]
+layout_mode = 2
+text = "Encounter"
+horizontal_alignment = 1
+
+[node name="RoundLabel" type="Label" parent="RootMargin/MainRow/CenterVBox/TitleVBox"]
+layout_mode = 2
+text = "Round 1"
+horizontal_alignment = 1
+
+[node name="StateLabel" type="Label" parent="RootMargin/MainRow/CenterVBox/TitleVBox"]
+layout_mode = 2
+text = "◇  Awaiting Roll  ◇"
+horizontal_alignment = 1
+
+[node name="DiceSectionVBox" type="VBoxContainer" parent="RootMargin/MainRow/CenterVBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="DiceHeader" type="Label" parent="RootMargin/MainRow/CenterVBox/DiceSectionVBox"]
+layout_mode = 2
+text = "◇  Rolled Dice  ◇"
+horizontal_alignment = 1
+
+[node name="DiceRow" type="HBoxContainer" parent="RootMargin/MainRow/CenterVBox/DiceSectionVBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+alignment = 1
+theme_override_constants/separation = 8
+
+[node name="QueueSectionVBox" type="VBoxContainer" parent="RootMargin/MainRow/CenterVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 6
+
+[node name="QueueHeader" type="Label" parent="RootMargin/MainRow/CenterVBox/QueueSectionVBox"]
+layout_mode = 2
+text = "◇  Resolution Queue  ◇"
+horizontal_alignment = 1
+
+[node name="QueueScroll" type="ScrollContainer" parent="RootMargin/MainRow/CenterVBox/QueueSectionVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="QueueList" type="VBoxContainer" parent="RootMargin/MainRow/CenterVBox/QueueSectionVBox/QueueScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="QueueHint" type="Label" parent="RootMargin/MainRow/CenterVBox/QueueSectionVBox"]
+layout_mode = 2
+text = "Roll to populate the resolution queue."
+horizontal_alignment = 1
+
+[node name="ButtonRow" type="HBoxContainer" parent="RootMargin/MainRow/CenterVBox"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 16
+
+[node name="RollButton" type="Button" parent="RootMargin/MainRow/CenterVBox/ButtonRow"]
+custom_minimum_size = Vector2(180, 60)
+layout_mode = 2
+text = "Roll Dice"
+
+[node name="ResolveButton" type="Button" parent="RootMargin/MainRow/CenterVBox/ButtonRow"]
+custom_minimum_size = Vector2(220, 60)
+layout_mode = 2
+text = "Resolve"
+
+[node name="RightPanel" type="PanelContainer" parent="RootMargin/MainRow"]
+custom_minimum_size = Vector2(268, 0)
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="PlayerVBox" type="VBoxContainer" parent="RootMargin/MainRow/RightPanel"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+
+[node name="PlayerHeaderLabel" type="Label" parent="RootMargin/MainRow/RightPanel/PlayerVBox"]
+layout_mode = 2
+text = "You"
+horizontal_alignment = 1
+
+[node name="PlayerPortrait" type="TextureRect" parent="RootMargin/MainRow/RightPanel/PlayerVBox"]
+custom_minimum_size = Vector2(0, 120)
 layout_mode = 2
 texture = ExtResource("6")
 expand_mode = 1
-stretch_mode = 3
-
-[node name="PlayerPortrait" type="TextureRect" parent="MarginContainer/VBoxContainer/SummaryRow/PlayerPanel/PlayerBox"]
-custom_minimum_size = Vector2(0, 268)
-layout_mode = 2
-texture = ExtResource("13")
-expand_mode = 1
 stretch_mode = 4
 
-[node name="PlayerLabel" type="Label" parent="MarginContainer/VBoxContainer/SummaryRow/PlayerPanel/PlayerBox"]
+[node name="PlayerHpVBox" type="VBoxContainer" parent="RootMargin/MainRow/RightPanel/PlayerVBox"]
 layout_mode = 2
-text = "Player summary"
-autowrap_mode = 3
+theme_override_constants/separation = 4
 
-[node name="ActionRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+[node name="PlayerHpRow" type="HBoxContainer" parent="RootMargin/MainRow/RightPanel/PlayerVBox/PlayerHpVBox"]
 layout_mode = 2
-theme_override_constants/separation = 12
+theme_override_constants/separation = 8
 
-[node name="SlotsPanel" type="PanelContainer" parent="MarginContainer/VBoxContainer/ActionRow"]
+[node name="PlayerHpIcon" type="Label" parent="RootMargin/MainRow/RightPanel/PlayerVBox/PlayerHpVBox/PlayerHpRow"]
+layout_mode = 2
+text = "HP"
+
+[node name="PlayerHpLabel" type="Label" parent="RootMargin/MainRow/RightPanel/PlayerVBox/PlayerHpVBox/PlayerHpRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_vertical = 3
+text = "0 / 0"
 
-[node name="SlotsBox" type="VBoxContainer" parent="MarginContainer/VBoxContainer/ActionRow/SlotsPanel"]
+[node name="PlayerBlockBadge" type="Label" parent="RootMargin/MainRow/RightPanel/PlayerVBox/PlayerHpVBox/PlayerHpRow"]
+layout_mode = 2
+text = "Block 0"
+
+[node name="PlayerHpBar" type="ProgressBar" parent="RootMargin/MainRow/RightPanel/PlayerVBox/PlayerHpVBox"]
+custom_minimum_size = Vector2(0, 8)
+layout_mode = 2
+max_value = 100.0
+value = 100.0
+show_percentage = false
+
+[node name="PlayerEnergyRow" type="HBoxContainer" parent="RootMargin/MainRow/RightPanel/PlayerVBox"]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="SlotsSectionLabel" type="TextureRect" parent="MarginContainer/VBoxContainer/ActionRow/SlotsPanel/SlotsBox"]
-custom_minimum_size = Vector2(320, 24)
+[node name="EnergyIcon" type="Label" parent="RootMargin/MainRow/RightPanel/PlayerVBox/PlayerEnergyRow"]
 layout_mode = 2
-texture = ExtResource("7")
-expand_mode = 1
-stretch_mode = 3
+text = "Energy"
 
-[node name="SlotsLabel" type="Label" parent="MarginContainer/VBoxContainer/ActionRow/SlotsPanel/SlotsBox"]
-layout_mode = 2
-text = "Slots"
-autowrap_mode = 3
-
-[node name="RollsPanel" type="PanelContainer" parent="MarginContainer/VBoxContainer/ActionRow"]
+[node name="EnergyLabel" type="Label" parent="RootMargin/MainRow/RightPanel/PlayerVBox/PlayerEnergyRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_vertical = 3
+text = "0"
 
-[node name="RollsBox" type="VBoxContainer" parent="MarginContainer/VBoxContainer/ActionRow/RollsPanel"]
+[node name="RegenLabel" type="Label" parent="RootMargin/MainRow/RightPanel/PlayerVBox/PlayerEnergyRow"]
+layout_mode = 2
+text = "+0 Regen"
+
+[node name="PlayerSep1" type="HSeparator" parent="RootMargin/MainRow/RightPanel/PlayerVBox"]
+layout_mode = 2
+
+[node name="PlayerStatusHeader" type="Label" parent="RootMargin/MainRow/RightPanel/PlayerVBox"]
+layout_mode = 2
+text = "Status"
+
+[node name="PlayerStatusRow" type="HBoxContainer" parent="RootMargin/MainRow/RightPanel/PlayerVBox"]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="RollsSectionLabel" type="TextureRect" parent="MarginContainer/VBoxContainer/ActionRow/RollsPanel/RollsBox"]
-custom_minimum_size = Vector2(280, 24)
+[node name="PlayerSep2" type="HSeparator" parent="RootMargin/MainRow/RightPanel/PlayerVBox"]
 layout_mode = 2
-texture = ExtResource("8")
-expand_mode = 1
-stretch_mode = 3
 
-[node name="RollsLabel" type="Label" parent="MarginContainer/VBoxContainer/ActionRow/RollsPanel/RollsBox"]
+[node name="BonusesHeader" type="Label" parent="RootMargin/MainRow/RightPanel/PlayerVBox"]
 layout_mode = 2
-text = "Rolls"
-autowrap_mode = 3
+text = "Bonuses"
 
-[node name="ButtonRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+[node name="PlayerBonusList" type="VBoxContainer" parent="RootMargin/MainRow/RightPanel/PlayerVBox"]
 layout_mode = 2
-theme_override_constants/separation = 10
-alignment = 1
+theme_override_constants/separation = 4
 
-[node name="RollButton" type="Button" parent="MarginContainer/VBoxContainer/ButtonRow"]
+[node name="PlayerSep3" type="HSeparator" parent="RootMargin/MainRow/RightPanel/PlayerVBox"]
 layout_mode = 2
-custom_minimum_size = Vector2(126, 56)
-text = ""
 
-[node name="RollLabelGraphic" type="TextureRect" parent="MarginContainer/VBoxContainer/ButtonRow/RollButton"]
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -60.0
-offset_top = -10.0
-offset_right = 60.0
-offset_bottom = 10.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-texture = ExtResource("10")
-expand_mode = 1
-stretch_mode = 3
-
-[node name="ResolveButton" type="Button" parent="MarginContainer/VBoxContainer/ButtonRow"]
+[node name="LogHeader" type="Label" parent="RootMargin/MainRow/RightPanel/PlayerVBox"]
 layout_mode = 2
-custom_minimum_size = Vector2(182, 56)
-text = ""
+text = "◇ Combat Log ◇"
+horizontal_alignment = 1
 
-[node name="ResolveLabelGraphic" type="TextureRect" parent="MarginContainer/VBoxContainer/ButtonRow/ResolveButton"]
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -78.0
-offset_top = -10.0
-offset_right = 78.0
-offset_bottom = 10.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-texture = ExtResource("11")
-expand_mode = 1
-stretch_mode = 3
-
-[node name="LogPanel" type="PanelContainer" parent="MarginContainer/VBoxContainer"]
+[node name="LogScroll" type="ScrollContainer" parent="RootMargin/MainRow/RightPanel/PlayerVBox"]
+custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
 size_flags_vertical = 3
+horizontal_scroll_mode = 0
 
-[node name="LogBox" type="VBoxContainer" parent="MarginContainer/VBoxContainer/LogPanel"]
+[node name="CombatLogList" type="VBoxContainer" parent="RootMargin/MainRow/RightPanel/PlayerVBox/LogScroll"]
 layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="LogSectionLabel" type="TextureRect" parent="MarginContainer/VBoxContainer/LogPanel/LogBox"]
-custom_minimum_size = Vector2(300, 24)
-layout_mode = 2
-texture = ExtResource("9")
-expand_mode = 1
-stretch_mode = 3
-
-[node name="LogLabel" type="Label" parent="MarginContainer/VBoxContainer/LogPanel/LogBox"]
-layout_mode = 2
-text = "Log"
-autowrap_mode = 3
+size_flags_horizontal = 3
+theme_override_constants/separation = 3

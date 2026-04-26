@@ -304,6 +304,10 @@ func get_state() -> Dictionary:
 	return _state.duplicate(true)
 
 
+func load_state(snapshot: Dictionary) -> void:
+	_state = snapshot.duplicate(true)
+
+
 func get_log():
 	return _log
 

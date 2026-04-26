@@ -74,17 +74,21 @@ click_at 275 227
 sleep "$STEP_DELAY"
 capture "04_combat.png"
 
-# Click Roll Dice on the structured combat layout.
-click_at 571 608
+# Click Roll Dice (new layout: center panel, button row near bottom).
+click_at 522 678
 sleep "$SHORT_DELAY"
 capture "05_combat_action.png"
 
+# Capture the battle decision point — all dice assigned, resolution queue ready.
+sleep "$STEP_DELAY"
+capture "06_battle_active.png"
+
 # Click Resolve Round, then select the first reward option.
-click_at 735 608
+click_at 738 678
 sleep "$SHORT_DELAY"
 click_at 640 176
 sleep "$SHORT_DELAY"
-capture "06_after_combat.png"
+capture "07_after_combat.png"
 
 echo "All screenshots saved to ${SCREENSHOTS_DIR}"
 ls -lh "$SCREENSHOTS_DIR/"
