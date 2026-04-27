@@ -436,6 +436,20 @@ func _is_neighbor(current_room, room_id: String) -> bool:
 	return room_graph.get_neighbor_ids(str(current_room.room_id)).has(room_id)
 
 
+func _input(event: InputEvent) -> void:
+	if not visible:
+		return
+	if not (event is InputEventKey):
+		return
+	var key_event := event as InputEventKey
+	if not key_event.pressed or key_event.echo:
+		return
+	if key_event.keycode == KEY_ENTER or key_event.keycode == KEY_KP_ENTER:
+		if not primary_action_button.disabled:
+			get_viewport().set_input_as_handled()
+			_on_primary_action_pressed()
+
+
 func _on_map_room_selected(room_id: String) -> void:
 	_selected_room_id = room_id
 	_refresh_view()

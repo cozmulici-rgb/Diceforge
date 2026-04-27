@@ -55,28 +55,36 @@ press_key() {
     xdotool key "$key"
 }
 
+focus_game() {
+    xdotool search --name "Facetbound" windowfocus --sync 2>/dev/null || true
+    sleep 0.3
+}
+
 capture "01_start_menu.png"
 
 # Trigger the highlighted New Run action from the redesigned start menu.
+focus_game
 press_key Return
 sleep "$STEP_DELAY"
 capture "02_exploration_start.png"
 
-# Select Echo Span on the route map, then commit travel from the left panel.
-# x=416(MapView)+92(padding)+0.5*808(usable); y fixed (map header+padding are pixel-constant).
-# Button rect confirmed via debug: [P:(72,162), S:(278,56)] — center at (211,190).
-click_at 912 199
+# Select Echo Span on the route map (node center at x=912, y≈163), then commit via Enter.
+# The exploration screen handles Return key to fire the primary action button.
+focus_game
+click_at 912 163
 sleep "$SHORT_DELAY"
-click_at 211 190
+press_key Return
 sleep "$STEP_DELAY"
 capture "03_echo_span.png"
 
-# Enter the encounter from the current hostile room.
-click_at 211 190
+# Enter the encounter from the current hostile room via Enter key.
+focus_game
+press_key Return
 sleep "$STEP_DELAY"
 capture "04_combat.png"
 
-# Click Roll Dice (center panel, button row near bottom: x=12+268+12+(886-416)/2+90, y=956-12-30).
+# Click Roll Dice (center panel, button row near bottom).
+focus_game
 click_at 617 914
 sleep "$SHORT_DELAY"
 capture "05_combat_action.png"
@@ -86,6 +94,7 @@ sleep "$STEP_DELAY"
 capture "06_battle_active.png"
 
 # Click Resolve Round, then select the first reward option.
+focus_game
 click_at 833 914
 sleep "$SHORT_DELAY"
 click_at 735 234

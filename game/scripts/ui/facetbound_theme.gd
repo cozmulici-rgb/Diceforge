@@ -35,13 +35,18 @@ static func build() -> Theme:
 
 
 static func _add_fonts(theme: Theme) -> void:
-	var fallback_font: Font = ThemeDB.fallback_font
+	var cinzel := _load_font("res://assets/fonts/Cinzel.ttf")
+	var philosopher := _load_font("res://assets/fonts/Philosopher-Regular.ttf")
+	var philosopher_bold := _load_font("res://assets/fonts/Philosopher-Bold.ttf")
 
-	theme.set_default_font(fallback_font)
+	var body_font: Font = philosopher if philosopher else ThemeDB.fallback_font
+	var display_font: Font = cinzel if cinzel else ThemeDB.fallback_font
+
+	theme.set_default_font(body_font)
 	theme.set_default_font_size(18)
 
 	for type_name in ["Label", "Button", "LineEdit", "OptionButton", "RichTextLabel"]:
-		theme.set_font("font", type_name, fallback_font)
+		theme.set_font("font", type_name, body_font)
 
 	theme.set_font_size("font_size", "Label", 18)
 	theme.set_font_size("font_size", "Button", 20)
@@ -49,16 +54,29 @@ static func _add_fonts(theme: Theme) -> void:
 	theme.set_font_size("font_size", "OptionButton", 18)
 	theme.set_font_size("font_size", "RichTextLabel", 18)
 
-	for label_type in ["FacetTitle", "FacetSubtitle", "FacetSectionLabel", "FacetBodyMuted", "FacetMeta", "FacetDanger", "FacetInfo"]:
-		theme.set_font("font", label_type, fallback_font)
+	theme.set_font("font", "FacetTitle", display_font)
+	for label_type in ["FacetSubtitle", "FacetSectionLabel", "FacetBodyMuted", "FacetMeta", "FacetDanger", "FacetInfo"]:
+		theme.set_font("font", label_type, body_font)
+
+	theme.set_font("font", "FacetSectionLabel", philosopher_bold if philosopher_bold else body_font)
 
 	theme.set_font_size("font_size", "FacetTitle", 40)
 	theme.set_font_size("font_size", "FacetSubtitle", 18)
-	theme.set_font_size("font_size", "FacetSectionLabel", 18)
+	theme.set_font_size("font_size", "FacetSectionLabel", 14)
 	theme.set_font_size("font_size", "FacetBodyMuted", 18)
 	theme.set_font_size("font_size", "FacetMeta", 16)
 	theme.set_font_size("font_size", "FacetDanger", 16)
 	theme.set_font_size("font_size", "FacetInfo", 16)
+
+	theme.set_font("font", "FacetPrimaryButton", philosopher_bold if philosopher_bold else body_font)
+	theme.set_font("font", "FacetSecondaryButton", body_font)
+	theme.set_font("font", "FacetTertiaryButton", body_font)
+
+
+static func _load_font(path: String) -> Font:
+	if ResourceLoader.exists(path):
+		return load(path)
+	return null
 
 
 static func _add_constants(theme: Theme) -> void:
