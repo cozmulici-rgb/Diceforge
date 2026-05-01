@@ -31,6 +31,7 @@ func run() -> Array[String]:
 	var combat_state = controller.begin_encounter(run_session, boss_encounter)
 	if combat_state == null or combat_state is Dictionary:
 		failures.append("begin_encounter should produce combat state for boss encounters")
+		controller.free()
 		return failures
 	controller.combat_state = combat_state
 
@@ -49,6 +50,7 @@ func run() -> Array[String]:
 	var session = coordinator.create_run_session("starter_facetwalker")
 	if session == null or session is Dictionary:
 		failures.append("boss encounter completion test requires a valid run session")
+		controller.free()
 		return failures
 
 	coordinator.current_session.floor_index = 2
@@ -104,4 +106,5 @@ func run() -> Array[String]:
 	if (coordinator.current_session.progression_result.get("new_unlock_ids", []) as Array).is_empty():
 		failures.append("run completion should expose placeholder unlock progression")
 
+	controller.free()
 	return failures

@@ -11,6 +11,15 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1")
 
+[node name="Backdrop" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.0431373, 0.0588235, 0.0784314, 1)
+
 [node name="MarginContainer" type="MarginContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
@@ -18,39 +27,104 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-offset_left = 16.0
-offset_top = 16.0
-offset_right = -16.0
-offset_bottom = -16.0
+offset_left = 72.0
+offset_top = 48.0
+offset_right = -72.0
+offset_bottom = -40.0
 
 [node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 14
 
 [node name="TitleLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
 text = "Forge"
+horizontal_alignment = 1
 
-[node name="DiceLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+[node name="SummaryLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Tune your dice before returning to the run."
+horizontal_alignment = 1
+
+[node name="InfoRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="DicePanel" type="PanelContainer" parent="MarginContainer/VBoxContainer/InfoRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="DiceBox" type="VBoxContainer" parent="MarginContainer/VBoxContainer/InfoRow/DicePanel"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="DiceSectionLabel" type="Label" parent="MarginContainer/VBoxContainer/InfoRow/DicePanel/DiceBox"]
+layout_mode = 2
+text = "Active Dice"
+
+[node name="DiceLabel" type="Label" parent="MarginContainer/VBoxContainer/InfoRow/DicePanel/DiceBox"]
+layout_mode = 2
 text = "Dice"
 autowrap_mode = 3
 
-[node name="InventoryLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+[node name="InventoryPanel" type="PanelContainer" parent="MarginContainer/VBoxContainer/InfoRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="InventoryBox" type="VBoxContainer" parent="MarginContainer/VBoxContainer/InfoRow/InventoryPanel"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="InventorySectionLabel" type="Label" parent="MarginContainer/VBoxContainer/InfoRow/InventoryPanel/InventoryBox"]
+layout_mode = 2
+text = "Forge Stock"
+
+[node name="InventoryLabel" type="Label" parent="MarginContainer/VBoxContainer/InfoRow/InventoryPanel/InventoryBox"]
+layout_mode = 2
 text = "Inventory"
 autowrap_mode = 3
 
-[node name="MutationContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer"]
+[node name="MutationPanel" type="PanelContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="MutationBox" type="VBoxContainer" parent="MarginContainer/VBoxContainer/MutationPanel"]
+layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="PreviewLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+[node name="MutationSectionLabel" type="Label" parent="MarginContainer/VBoxContainer/MutationPanel/MutationBox"]
+layout_mode = 2
+text = "Available Mutations"
+
+[node name="MutationContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/MutationPanel/MutationBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="PreviewPanel" type="PanelContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="PreviewBox" type="VBoxContainer" parent="MarginContainer/VBoxContainer/PreviewPanel"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="PreviewSectionLabel" type="Label" parent="MarginContainer/VBoxContainer/PreviewPanel/PreviewBox"]
+layout_mode = 2
+text = "Preview"
+
+[node name="PreviewLabel" type="Label" parent="MarginContainer/VBoxContainer/PreviewPanel/PreviewBox"]
+layout_mode = 2
 text = "Preview"
 autowrap_mode = 3
 
 [node name="ButtonRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 10
+alignment = 1
 
 [node name="ApplyButton" type="Button" parent="MarginContainer/VBoxContainer/ButtonRow"]
+layout_mode = 2
 text = "Apply"
 
 [node name="DoneButton" type="Button" parent="MarginContainer/VBoxContainer/ButtonRow"]
+layout_mode = 2
 text = "Return To Run"

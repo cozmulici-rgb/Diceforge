@@ -15,6 +15,7 @@ var turn_log: Array
 var pending_player_rolls: Array
 var state: String
 var outcome: String
+var engine_state: Dictionary
 
 
 func _init(data: Dictionary = {}) -> void:
@@ -32,6 +33,7 @@ func _init(data: Dictionary = {}) -> void:
 	pending_player_rolls = (data.get("pending_player_rolls", []) as Array).duplicate(true)
 	state = str(data.get("state", "player_roll"))
 	outcome = str(data.get("outcome", ""))
+	engine_state = (data.get("engine_state", {}) as Dictionary).duplicate(true)
 
 
 func to_dictionary() -> Dictionary:
@@ -50,4 +52,5 @@ func to_dictionary() -> Dictionary:
 		"pending_player_rolls": pending_player_rolls.duplicate(true),
 		"state": state,
 		"outcome": outcome,
+		"engine_state": engine_state.duplicate(true),
 	}

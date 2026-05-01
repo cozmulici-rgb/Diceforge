@@ -1,0 +1,26 @@
+{
+  "id": "starter_cores",
+  "definitions": [
+    {
+      "id": "blank_core",
+      "name": "Blank Core",
+      "family": "neutral",
+      "hooks": {}
+    },
+    {
+      "id": "ember_core",
+      "name": "Ember Core",
+      "family": "attack",
+      "hooks": {
+        "on_roll": {
+          "type": "apply_status",
+          "priority": "triggered",
+          "target": "enemy",
+          "status": "burn",
+          "stacks": 1,
+          "duration": 2
+        }
+      }
+    }
+  ]
+}

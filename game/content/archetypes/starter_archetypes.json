@@ -4,6 +4,9 @@
   "starter_floor_id": "floor_01",
   "player_state": {
     "hp": 30,
+    "max_hp": 30,
+    "energy": 3,
+    "energy_regen": 1,
     "status_effects": []
   },
   "starter_dice": [

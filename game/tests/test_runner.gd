@@ -1,6 +1,15 @@
 extends SceneTree
 
 const TEST_SCRIPTS := [
+	preload("res://tests/test_clamping.gd"),
+	preload("res://tests/test_battle_log.gd"),
+	preload("res://tests/test_hook_dispatcher.gd"),
+	preload("res://tests/test_status_engine.gd"),
+	preload("res://tests/test_dice_resolver.gd"),
+	preload("res://tests/test_effect_resolver.gd"),
+	preload("res://tests/test_enemy_ai.gd"),
+	preload("res://tests/test_combat_engine.gd"),
+	preload("res://tests/test_combat_engine_behavior.gd"),
 	preload("res://tests/test_combat_controller.gd"),
 	preload("res://tests/test_boss_encounter.gd"),
 	preload("res://tests/test_content_catalog.gd"),

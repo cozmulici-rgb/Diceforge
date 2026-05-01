@@ -1,5 +1,7 @@
 extends Control
 
+const FacetboundThemeScript = preload("res://scripts/ui/facetbound_theme.gd")
+
 signal return_to_menu_requested()
 
 @onready var title_label: Label = $MarginContainer/VBoxContainer/TitleLabel
@@ -11,6 +13,7 @@ var _progression_result: Dictionary = {}
 
 
 func _ready() -> void:
+	_apply_theme()
 	return_button.pressed.connect(_on_return_pressed)
 	_render()
 
@@ -53,3 +56,11 @@ func _to_string_array(values: Array) -> Array[String]:
 	for value in values:
 		string_values.append(str(value))
 	return string_values
+
+
+func _apply_theme() -> void:
+	theme = FacetboundThemeScript.build()
+	title_label.theme_type_variation = &"FacetTitle"
+	summary_label.theme_type_variation = &"FacetSubtitle"
+	details_label.theme_type_variation = &"FacetBodyMuted"
+	return_button.theme_type_variation = &"FacetPrimaryButton"

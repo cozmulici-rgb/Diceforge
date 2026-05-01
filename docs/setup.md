@@ -96,6 +96,28 @@ This command runs verification first, then exports:
 - `dist/facetbound.x86_64`
 - `dist/facetbound.pck`
 
+### `make screenshots`
+
+Runs the Docker-based screenshot capture flow:
+
+```bash
+make screenshots
+```
+
+This command:
+
+- starts the game in a virtual X display inside the export container
+- captures a deterministic sequence of UI/runtime screenshots
+- writes images to `dist/screenshots/`
+
+The current capture sequence includes:
+
+- start menu
+- first exploration room
+- encounter-room exploration
+- combat
+- post-input combat frames
+
 ## Manual Verification
 
 New contributors can confirm the local setup with this sequence:
@@ -104,6 +126,7 @@ New contributors can confirm the local setup with this sequence:
 2. Run `make test` and confirm the full Facetbound headless suite passes, including persistence, progression, modifiers, and Daily Void tests.
 3. Run `make verify` and confirm project import, smoke startup, and the shared test harness all succeed.
 4. Run `make export` and confirm both Linux export files appear under `dist/`.
+5. Run `make screenshots` and confirm PNG screenshots appear under `dist/screenshots/`.
 
 ## Daily Void Verification Notes
 
@@ -133,3 +156,7 @@ The export Dockerfile selects the correct Godot Linux binary based on Docker tar
 ### Export succeeds but artifacts are missing
 
 Check that `dist/` is writable on the host and confirm the export command completed without error.
+
+### Screenshot capture produces the wrong UI state
+
+The screenshot pipeline currently uses fixed mouse coordinates and timed delays inside a virtual display. If the UI layout or flow changes, update `scripts/take_screenshots.sh` to match the new button positions or interaction timing.

@@ -22,6 +22,7 @@ var _floors: Dictionary = {}
 var _room_graphs: Dictionary = {}
 var _body_definitions: Dictionary = {}
 var _face_definitions: Dictionary = {}
+var _core_definitions: Dictionary = {}
 var _rune_definitions: Dictionary = {}
 var _encounter_definitions: Dictionary = {}
 var _enemy_definitions: Dictionary = {}
@@ -48,6 +49,7 @@ func ensure_loaded() -> Dictionary:
 	_room_graphs = _load_content_directory(ROOM_DIR)
 	_body_definitions = _load_named_definitions("%s/bodies.json" % DICE_DIR)
 	_face_definitions = _load_named_definitions("%s/faces.json" % DICE_DIR)
+	_core_definitions = _load_named_definitions("%s/cores.json" % DICE_DIR)
 	_rune_definitions = _load_named_definitions("%s/runes.json" % DICE_DIR)
 	_encounter_definitions = _load_named_definitions_directory(ENCOUNTER_DIR)
 	_enemy_definitions = _load_named_definitions_directory(ENEMY_DIR)
@@ -161,6 +163,8 @@ func load_part_definition(id: String) -> Dictionary:
 		return (_body_definitions[id] as Dictionary).duplicate(true)
 	if _face_definitions.has(id):
 		return (_face_definitions[id] as Dictionary).duplicate(true)
+	if _core_definitions.has(id):
+		return (_core_definitions[id] as Dictionary).duplicate(true)
 	if _rune_definitions.has(id):
 		return (_rune_definitions[id] as Dictionary).duplicate(true)
 	return _missing_content("part_definition", id)
@@ -229,6 +233,7 @@ func get_all_content() -> Dictionary:
 		"room_graphs": _room_graphs.duplicate(true),
 		"body_definitions": _body_definitions.duplicate(true),
 		"face_definitions": _face_definitions.duplicate(true),
+		"core_definitions": _core_definitions.duplicate(true),
 		"rune_definitions": _rune_definitions.duplicate(true),
 		"encounter_definitions": _encounter_definitions.duplicate(true),
 		"enemy_definitions": _enemy_definitions.duplicate(true),
@@ -268,6 +273,8 @@ func get_part_definitions(part_type: String) -> Dictionary:
 		return _body_definitions.duplicate(true)
 	if part_type == "face":
 		return _face_definitions.duplicate(true)
+	if part_type == "core":
+		return _core_definitions.duplicate(true)
 	if part_type == "rune":
 		return _rune_definitions.duplicate(true)
 	return {}

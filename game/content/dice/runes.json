@@ -4,12 +4,23 @@
     {
       "id": "blank_rune",
       "name": "Blank Rune",
-      "family": "neutral"
+      "family": "neutral",
+      "hooks": {}
     },
     {
       "id": "ember_rune",
       "name": "Ember Rune",
-      "family": "attack"
+      "family": "attack",
+      "hooks": {
+        "on_resolution": {
+          "type": "apply_status",
+          "priority": "triggered",
+          "target": "enemy",
+          "status": "burn",
+          "stacks": 1,
+          "duration": 2
+        }
+      }
     }
   ]
 }

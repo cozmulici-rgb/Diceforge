@@ -19,12 +19,13 @@ var game_state_coordinator
 func _ready() -> void:
 	content_catalog = ContentCatalogScript.new()
 	game_state_coordinator = GameStateCoordinatorScript.new(content_catalog)
-	hud.show_error("Select an archetype to begin.")
+	hud.clear()
 	_show_start_menu()
 
 
 func _show_start_menu() -> void:
 	_clear_screen_host()
+	hud.clear()
 
 	var start_menu = StartMenuScene.instantiate()
 	screen_host.add_child(start_menu)
@@ -34,7 +35,8 @@ func _show_start_menu() -> void:
 		archetypes,
 		game_state_coordinator.get_continue_run_summary(),
 		game_state_coordinator.last_recovery_message,
-		game_state_coordinator.meta_state.last_daily_void_result
+		game_state_coordinator.meta_state.last_daily_void_result,
+		int(game_state_coordinator.meta_state.echo_shards)
 	)
 	start_menu.run_requested.connect(_on_run_requested)
 	start_menu.daily_void_requested.connect(_on_daily_void_requested)
@@ -43,18 +45,19 @@ func _show_start_menu() -> void:
 
 func _show_exploration(run_session) -> void:
 	_clear_screen_host()
+	hud.clear()
 
 	var exploration_screen = ExplorationScene.instantiate()
 	screen_host.add_child(exploration_screen)
 	exploration_screen.setup(game_state_coordinator, content_catalog, run_session)
 	exploration_screen.session_updated.connect(_on_session_updated)
 	exploration_screen.encounter_started.connect(_on_encounter_started)
-	hud.show_status(run_session)
 	print("Facetbound app root initialized with session %s" % run_session.session_id)
 
 
 func _show_combat(combat_state) -> void:
 	_clear_screen_host()
+	hud.clear()
 
 	var combat_screen = CombatScene.instantiate()
 	screen_host.add_child(combat_screen)
@@ -65,12 +68,12 @@ func _show_combat(combat_state) -> void:
 
 func _show_reward_flow(reward_flow_state: Dictionary) -> void:
 	_clear_screen_host()
+	hud.clear()
 
 	var reward_screen = RewardScene.instantiate()
 	screen_host.add_child(reward_screen)
 	reward_screen.setup(reward_flow_state)
 	reward_screen.reward_selected.connect(_on_reward_selected)
-	hud.show_status(game_state_coordinator.current_session)
 
 
 func _show_forge_flow() -> void:
@@ -82,11 +85,11 @@ func _show_forge_flow() -> void:
 		return
 
 	_clear_screen_host()
+	hud.clear()
 	var forge_screen = ForgeScene.instantiate()
 	screen_host.add_child(forge_screen)
 	forge_screen.setup(game_state_coordinator, forge_state)
 	forge_screen.forge_complete.connect(_on_forge_complete)
-	hud.show_status(game_state_coordinator.current_session)
 
 
 func _show_run_complete(run_session) -> void:
@@ -145,6 +148,9 @@ func _on_daily_void_requested(archetype_id: String) -> void:
 
 
 func _on_session_updated(run_session) -> void:
+	if str(run_session.flags.get("screen_state", "exploration")) == "exploration":
+		hud.clear()
+		return
 	hud.show_status(run_session)
 
 
@@ -153,7 +159,7 @@ func _on_encounter_started(combat_state) -> void:
 
 
 func _on_combat_state_updated(_combat_state) -> void:
-	hud.show_status(game_state_coordinator.current_session)
+	hud.clear()
 
 
 func _on_combat_finished(encounter_result: Dictionary) -> void:

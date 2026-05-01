@@ -39,6 +39,8 @@ func run() -> Array[String]:
 	var modified_state = modified_controller.begin_encounter(modified_session, encounter_definition)
 	if baseline_state is Dictionary or modified_state is Dictionary:
 		failures.append("combat controller should build combat states for modifier registry tests")
+		baseline_controller.free()
+		modified_controller.free()
 		return failures
 
 	if int((modified_state.enemy_state as Dictionary).get("hp", 0)) <= int((baseline_state.enemy_state as Dictionary).get("hp", 0)):
@@ -46,6 +48,8 @@ func run() -> Array[String]:
 	if int(modified_state.player_hp) <= int(baseline_state.player_hp):
 		failures.append("run-scope modifiers should adjust player hp during combat setup")
 
+	baseline_controller.free()
+	modified_controller.free()
 	return failures
 
 

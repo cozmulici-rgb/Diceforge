@@ -1,6 +1,12 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/screens/start_menu_controller.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/start-menu/exports/bg-starfield.png" id="2"]
+[ext_resource type="Texture2D" path="res://assets/start-menu/exports/bg-void-fog.png" id="3"]
+[ext_resource type="Texture2D" path="res://assets/start-menu/exports/bg-rune-circle.png" id="4"]
+[ext_resource type="Texture2D" path="res://assets/start-menu/exports/bg-embers.png" id="5"]
+[ext_resource type="Texture2D" path="res://assets/start-menu/exports/sigil-large.png" id="6"]
+[ext_resource type="Texture2D" path="res://assets/start-menu/exports/sigil-small.png" id="7"]
 
 [node name="StartMenu" type="Control"]
 layout_mode = 3
@@ -11,50 +17,278 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1")
 
-[node name="CenterContainer" type="CenterContainer" parent="."]
+[node name="BackgroundLayers" type="Control" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 
-[node name="PanelContainer" type="PanelContainer" parent="CenterContainer"]
-layout_mode = 2
-size_flags_horizontal = 4
-size_flags_vertical = 4
+[node name="BackdropTint" type="ColorRect" parent="BackgroundLayers"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.024, 0.032, 0.072, 0.92)
 
-[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/PanelContainer"]
+[node name="BgStarfield" type="TextureRect" parent="BackgroundLayers"]
+modulate = Color(0.75, 0.85, 1, 0.55)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("2")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="BgVoidFog" type="TextureRect" parent="BackgroundLayers"]
+modulate = Color(0.58, 0.72, 1, 0.28)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("3")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="BgRuneCircle" type="TextureRect" parent="BackgroundLayers"]
+modulate = Color(0.5, 0.7, 1, 0.07)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("4")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="BgEmbers" type="TextureRect" parent="BackgroundLayers"]
+modulate = Color(0.4, 0.6, 1, 0.06)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("5")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="AmbientDecor" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="SigilLargeRight" type="TextureRect" parent="AmbientDecor"]
+modulate = Color(0.4, 0.7, 1, 0.09)
+layout_mode = 1
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -620.0
+offset_top = -400.0
+offset_right = 220.0
+offset_bottom = 420.0
+grow_horizontal = 0
+texture = ExtResource("6")
+expand_mode = 1
+stretch_mode = 4
+
+[node name="SigilSmallBottomLeft" type="TextureRect" parent="AmbientDecor"]
+modulate = Color(0.45, 0.65, 1, 0.05)
+layout_mode = 1
+anchor_left = 0.0
+anchor_top = 1.0
+anchor_right = 0.0
+anchor_bottom = 1.0
+offset_left = -140.0
+offset_top = -140.0
+offset_right = 260.0
+offset_bottom = 260.0
+grow_vertical = 0
+texture = ExtResource("7")
+expand_mode = 1
+stretch_mode = 4
+
+[node name="DiceCluster" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="ContentColumn" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 0
+offset_left = 68.0
+offset_top = 32.0
+offset_right = 780.0
+offset_bottom = 720.0
+grow_vertical = 1
+theme_override_constants/separation = 0
+
+[node name="KickerRow" type="HBoxContainer" parent="ContentColumn"]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="TitleLabel" type="Label" parent="CenterContainer/PanelContainer/VBoxContainer"]
+[node name="KickerLineLeft" type="ColorRect" parent="ContentColumn/KickerRow"]
+custom_minimum_size = Vector2(40, 1)
 layout_mode = 2
-text = "Facetbound"
-horizontal_alignment = 1
+size_flags_vertical = 4
+color = Color(0.43, 0.75, 1, 0.85)
 
-[node name="SubtitleLabel" type="Label" parent="CenterContainer/PanelContainer/VBoxContainer"]
+[node name="KickerLabel" type="Label" parent="ContentColumn/KickerRow"]
 layout_mode = 2
-text = "Choose a starter archetype to enter the tutorial floor."
-horizontal_alignment = 1
-autowrap_mode = 3
+text = "A  ROGUELIKE  DICE  FORGE"
 
-[node name="ArchetypeOptionButton" type="OptionButton" parent="CenterContainer/PanelContainer/VBoxContainer"]
+[node name="KickerLineRight" type="ColorRect" parent="ContentColumn/KickerRow"]
+custom_minimum_size = Vector2(80, 1)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+color = Color(0.43, 0.75, 1, 0.3)
+
+[node name="TitleKickerSpacer" type="Control" parent="ContentColumn"]
+custom_minimum_size = Vector2(0, 4)
 layout_mode = 2
 
-[node name="SummaryLabel" type="Label" parent="CenterContainer/PanelContainer/VBoxContainer"]
+[node name="TitleLine1" type="Label" parent="ContentColumn"]
 layout_mode = 2
-autowrap_mode = 3
-text = "Starter run details will appear here."
+text = "DICE"
 
-[node name="StartRunButton" type="Button" parent="CenterContainer/PanelContainer/VBoxContainer"]
+[node name="TitleLine2" type="Label" parent="ContentColumn"]
 layout_mode = 2
-text = "Start Run"
+text = "FORGE"
 
-[node name="DailyVoidButton" type="Button" parent="CenterContainer/PanelContainer/VBoxContainer"]
+[node name="SubtitleLabel" type="Label" parent="ContentColumn"]
 layout_mode = 2
-text = "Start Daily Void"
+text = "ECHOES  ·  OF  ·  THE  ·  VOID"
 
-[node name="ContinueRunButton" type="Button" parent="CenterContainer/PanelContainer/VBoxContainer"]
+[node name="MenuSpacer" type="Control" parent="ContentColumn"]
+custom_minimum_size = Vector2(0, 12)
 layout_mode = 2
+
+[node name="MenuList" type="VBoxContainer" parent="ContentColumn"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="ContinueSpacer" type="Control" parent="ContentColumn"]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+
+[node name="ContinueStrip" type="HBoxContainer" parent="ContentColumn"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="ContinueRunButton" type="Button" parent="ContentColumn/ContinueStrip"]
+layout_mode = 2
+size_flags_horizontal = 3
 text = "Continue Run"
+
+[node name="ArchetypeSpacer" type="Control" parent="ContentColumn"]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+
+[node name="ArchetypeStrip" type="HBoxContainer" parent="ContentColumn"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="StarterLabel" type="Label" parent="ContentColumn/ArchetypeStrip"]
+custom_minimum_size = Vector2(96, 0)
+layout_mode = 2
+size_flags_vertical = 4
+text = "STARTER"
+vertical_alignment = 1
+
+[node name="ArchetypeOptionButton" type="OptionButton" parent="ContentColumn/ArchetypeStrip"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="SummaryLabel" type="Label" parent="ContentColumn"]
+layout_mode = 2
+text = "Starter run details will appear here."
+autowrap_mode = 3
+
+[node name="FrameCorners" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="FooterHUD" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 56.0
+offset_top = -56.0
+offset_right = -56.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+
+[node name="FooterLeft" type="HBoxContainer" parent="FooterHUD"]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 0.0
+offset_top = -16.0
+offset_right = 360.0
+offset_bottom = 16.0
+grow_vertical = 2
+theme_override_constants/separation = 8
+
+[node name="FooterCenter" type="Label" parent="FooterHUD"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -240.0
+offset_top = -16.0
+offset_right = 240.0
+offset_bottom = 16.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "\"Every face remembered is a face that bleeds back.\""
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FooterRight" type="HBoxContainer" parent="FooterHUD"]
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -360.0
+offset_top = -16.0
+offset_right = 0.0
+offset_bottom = 16.0
+grow_horizontal = 0
+grow_vertical = 2
+theme_override_constants/separation = 8
+alignment = 2
