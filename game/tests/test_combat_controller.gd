@@ -62,20 +62,12 @@ func run() -> Array[String]:
 	if ((combat_state.engine_state.get("rolled_faces", []) as Array)).size() != 3:
 		failures.append("live controller roll path should advance CombatEngine rolled_faces")
 
-	var player_summary := controller._build_player_summary()
-	if player_summary.find("Energy ") == -1:
-		failures.append("battle screen player summary should expose live engine energy")
-
+	# _build_player_summary / _build_slots_summary / _build_rolls_summary helpers
+	# were removed during the UI refactor (PR #4). Re-add coverage once the new
+	# battle-screen rendering surfaces these strings again.
 	controller.assign_die_to_action(combat_state, "balanced_d6_alpha", "main_attack")
 	controller.assign_die_to_action(combat_state, "balanced_d6_beta", "guard")
 	controller.assign_die_to_action(combat_state, "balanced_d6_gamma", "utility")
-
-	var queue_summary := controller._build_slots_summary()
-	if queue_summary.find("Resolution Queue") == -1:
-		failures.append("battle screen slots panel should preview the resolution queue")
-	var rolls_summary := controller._build_rolls_summary()
-	if rolls_summary.find("[Damage | cost 0]") == -1:
-		failures.append("battle screen rolls panel should expose effect and energy cost")
 
 	var player_result = controller.resolve_player_turn(combat_state)
 	if not player_result.get("ok", false):
@@ -138,8 +130,7 @@ func run() -> Array[String]:
 	else:
 		if skipped_state.state != "enemy_turn":
 			failures.append("battle screen should enter enemy_turn state when player turn is skipped")
-		if skipped_controller._build_rolls_summary().find("Press resolve to continue.") == -1:
-			failures.append("battle screen should instruct the player to resolve the pending enemy turn")
+		# _build_rolls_summary skipped-turn assertion removed alongside the helper itself.
 
 	controller.free()
 	skipped_controller.free()
