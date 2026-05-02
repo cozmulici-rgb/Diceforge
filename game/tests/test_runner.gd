@@ -22,6 +22,7 @@ const TEST_SCRIPT_PATHS := [
 	"res://tests/test_forge_assembly.gd",
 	"res://tests/test_meta_progression.gd",
 	"res://tests/test_modifier_registry.gd",
+	"res://tests/test_named_run_saves.gd",
 	"res://tests/test_persistence_service.gd",
 	"res://tests/test_reward_flow.gd",
 	"res://tests/test_run_session.gd",

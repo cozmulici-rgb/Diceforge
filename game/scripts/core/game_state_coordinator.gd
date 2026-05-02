@@ -664,6 +664,51 @@ func _migrate_legacy_active_run_slot_if_needed() -> void:
 	persistence_service.delete_run_state(_LEGACY_ACTIVE_SLOT_ID)
 
 
+func list_resumable_runs() -> Array:
+	var result: Array = []
+	for slot in list_run_slots():
+		var summary: Dictionary = slot
+		var slot_id: String = str(summary.get("slot_id", ""))
+		if slot_id == "" or slot_id.begins_with("daily_"):
+			continue
+		if bool(summary.get("is_corrupt", false)):
+			# Surface corrupt entries so the popup can offer Delete-only on them.
+			result.append(summary.duplicate(true))
+			continue
+		result.append(summary.duplicate(true))
+	result.sort_custom(func(a, b):
+		return int((a as Dictionary).get("updated_at_unix", 0)) > int((b as Dictionary).get("updated_at_unix", 0)))
+	return result
+
+
+func rename_run(slot_id: String, new_name: String) -> Dictionary:
+	var trimmed: String = new_name.strip_edges()
+	if trimmed.length() == 0:
+		return {"ok": false, "error": "empty_name"}
+	if trimmed.length() > 64:
+		return {"ok": false, "error": "name_too_long"}
+	var load_result = persistence_service.load_run_state(slot_id)
+	if not load_result.get("ok", false):
+		return load_result
+	var data: Dictionary = (load_result.get("data", {}) as Dictionary).duplicate(true)
+	data["display_name"] = trimmed
+	data["updated_at_unix"] = Time.get_unix_time_from_system()
+	var save_result = persistence_service.save_run_state(slot_id, data)
+	if not save_result.get("ok", false):
+		return save_result
+	if current_session != null and str(current_session.slot_id) == slot_id:
+		current_session.display_name = trimmed
+	return {"ok": true, "slot_id": slot_id, "display_name": trimmed}
+
+
+func delete_run(slot_id: String) -> Dictionary:
+	if slot_id == "":
+		return {"ok": false, "error": "missing_slot_id"}
+	if current_session != null and not current_session.run_complete and str(current_session.slot_id) == slot_id:
+		return {"ok": false, "error": "active_run_locked"}
+	return persistence_service.delete_run_state(slot_id)
+
+
 func list_run_slots() -> Array:
 	return persistence_service.list_run_slots()
 
