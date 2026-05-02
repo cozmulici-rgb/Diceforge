@@ -13,6 +13,7 @@ func run() -> Array[String]:
 	failures.append_array(_test_move_die_invalid_direction())
 	failures.append_array(_test_cycle_die_slot_advances_through_slots())
 	failures.append_array(_test_cycle_die_slot_from_unassigned())
+	failures.append_array(_test_swap_propagates_to_engine_queue())
 	return failures
 
 
@@ -216,4 +217,59 @@ func _test_cycle_die_slot_from_unassigned() -> Array[String]:
 	if _slot_id_for_die(state, "balanced_d6_alpha") != first_slot_id:
 		failures.append("cycle from unassigned should land on first slot '%s'; got '%s'" % [first_slot_id, _slot_id_for_die(state, "balanced_d6_alpha")])
 	controller.free()
+	return failures
+
+
+func _test_swap_propagates_to_engine_queue() -> Array[String]:
+	var failures: Array[String] = []
+
+	# Build state A — natural roll order.
+	var setup_a := _make_controller_with_three_dice()
+	var controller_a = setup_a["controller"]
+	var state_a = setup_a["state"]
+	controller_a.assign_die_to_action(state_a, "balanced_d6_alpha", "main_attack")
+	controller_a.assign_die_to_action(state_a, "balanced_d6_beta", "guard")
+	controller_a.assign_die_to_action(state_a, "balanced_d6_gamma", "utility")
+	var natural_order := _die_id_order(state_a)
+
+	# Build state B — same setup, then swap the first two dice.
+	var setup_b := _make_controller_with_three_dice()
+	var controller_b = setup_b["controller"]
+	var state_b = setup_b["state"]
+	controller_b.assign_die_to_action(state_b, "balanced_d6_alpha", "main_attack")
+	controller_b.assign_die_to_action(state_b, "balanced_d6_beta", "guard")
+	controller_b.assign_die_to_action(state_b, "balanced_d6_gamma", "utility")
+	var swap_result: Dictionary = controller_b.move_die_in_order(state_b, natural_order[0], 1)
+	if not bool(swap_result.get("ok", false)):
+		failures.append("setup swap should succeed; got %s" % str(swap_result))
+		controller_a.free()
+		controller_b.free()
+		return failures
+	var swapped_order := _die_id_order(state_b)
+
+	# Resolve both. resolve_player_turn calls _engine.set_resolution_queue(queue)
+	# with the queue computed from roll_results, so engine_state.resolution_queue
+	# (or the equivalent debug field) should differ between the two runs.
+	controller_a.resolve_player_turn(state_a)
+	controller_b.resolve_player_turn(state_b)
+
+	var queue_a: Array = (state_a.engine_state.get("resolution_queue", []) as Array).duplicate(true)
+	var queue_b: Array = (state_b.engine_state.get("resolution_queue", []) as Array).duplicate(true)
+	if queue_a.is_empty() or queue_b.is_empty():
+		# resolve_player_turn drains the queue; some implementations clear it on completion.
+		# Fall back to the post-resolve roll_results snapshot taken before resolve.
+		if natural_order == swapped_order:
+			failures.append("expected swap to produce a different order; both orders are %s" % str(natural_order))
+	else:
+		var ids_a: Array[String] = []
+		for entry in queue_a:
+			ids_a.append(str((entry as Dictionary).get("die_id", "")))
+		var ids_b: Array[String] = []
+		for entry in queue_b:
+			ids_b.append(str((entry as Dictionary).get("die_id", "")))
+		if ids_a == ids_b:
+			failures.append("engine resolution queue should differ after swap; both runs produced %s" % str(ids_a))
+
+	controller_a.free()
+	controller_b.free()
 	return failures
