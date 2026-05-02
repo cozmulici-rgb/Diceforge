@@ -7,6 +7,7 @@ const TEST_SCRIPT_PATHS := [
 	"res://tests/test_status_engine.gd",
 	"res://tests/test_dice_resolver.gd",
 	"res://tests/test_effect_resolver.gd",
+	"res://tests/test_escape_to_main_menu.gd",
 	"res://tests/test_enemy_ai.gd",
 	"res://tests/test_combat_engine.gd",
 	"res://tests/test_combat_engine_behavior.gd",

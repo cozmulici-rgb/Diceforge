@@ -14,6 +14,9 @@ const ProgressionScene = preload("res://scenes/screens/progression_screen.tscn")
 
 var content_catalog
 var game_state_coordinator
+var _current_screen_kind: String = ""
+var _confirm_dialog: ConfirmationDialog = null
+var _confirm_callback: Callable = Callable()
 
 
 func _ready() -> void:
@@ -24,6 +27,7 @@ func _ready() -> void:
 
 
 func _show_start_menu() -> void:
+	_current_screen_kind = "start_menu"
 	_clear_screen_host()
 	hud.clear()
 
@@ -44,6 +48,7 @@ func _show_start_menu() -> void:
 
 
 func _show_exploration(run_session) -> void:
+	_current_screen_kind = "exploration"
 	_clear_screen_host()
 	hud.clear()
 
@@ -56,6 +61,7 @@ func _show_exploration(run_session) -> void:
 
 
 func _show_combat(combat_state) -> void:
+	_current_screen_kind = "combat"
 	_clear_screen_host()
 	hud.clear()
 
@@ -67,6 +73,7 @@ func _show_combat(combat_state) -> void:
 
 
 func _show_reward_flow(reward_flow_state: Dictionary) -> void:
+	_current_screen_kind = "reward"
 	_clear_screen_host()
 	hud.clear()
 
@@ -84,6 +91,7 @@ func _show_forge_flow() -> void:
 			_show_exploration(resumed_session)
 		return
 
+	_current_screen_kind = "forge"
 	_clear_screen_host()
 	hud.clear()
 	var forge_screen = ForgeScene.instantiate()
@@ -93,6 +101,7 @@ func _show_forge_flow() -> void:
 
 
 func _show_run_complete(run_session) -> void:
+	_current_screen_kind = "progression"
 	_clear_screen_host()
 	var progression_screen = ProgressionScene.instantiate()
 	screen_host.add_child(progression_screen)
@@ -222,3 +231,66 @@ func _available_archetypes() -> Array:
 		if (game_state_coordinator.meta_state.unlocked_archetype_ids as Array).has(str(archetype_definition.get("id", ""))):
 			archetypes.append(archetype_definition.duplicate(true))
 	return archetypes
+
+
+func _dispatch_escape_for_screen(screen_kind: String) -> String:
+	match screen_kind:
+		"progression":
+			return "return_to_menu"
+		"start_menu":
+			return "show_quit_confirm"
+		"exploration", "combat", "reward", "forge":
+			return "show_return_confirm"
+		_:
+			return "noop"
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if not event.is_action_pressed("ui_cancel"):
+		return
+	if _confirm_dialog != null and _confirm_dialog.visible:
+		return  # let the dialog's own Escape handler close it
+	get_viewport().set_input_as_handled()
+	_handle_escape()
+
+
+func _handle_escape() -> void:
+	match _dispatch_escape_for_screen(_current_screen_kind):
+		"return_to_menu":
+			_show_start_menu()
+		"show_quit_confirm":
+			_show_confirm("Quit Facetbound?", "", _on_quit_confirmed)
+		"show_return_confirm":
+			_show_confirm(
+				"Return to main menu?",
+				"Any unsaved progress in this screen may be lost.",
+				_on_return_to_menu_confirmed
+			)
+		"noop":
+			pass
+
+
+func _show_confirm(title: String, body: String, callback: Callable) -> void:
+	if _confirm_dialog == null:
+		_confirm_dialog = ConfirmationDialog.new()
+		hud.add_child(_confirm_dialog)
+		_confirm_dialog.confirmed.connect(_on_confirm_dialog_confirmed)
+	_confirm_dialog.title = title
+	_confirm_dialog.dialog_text = body
+	_confirm_callback = callback
+	_confirm_dialog.popup_centered()
+
+
+func _on_confirm_dialog_confirmed() -> void:
+	var cb := _confirm_callback
+	_confirm_callback = Callable()
+	if cb.is_valid():
+		cb.call()
+
+
+func _on_quit_confirmed() -> void:
+	get_tree().quit()
+
+
+func _on_return_to_menu_confirmed() -> void:
+	_show_start_menu()
