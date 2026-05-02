@@ -553,13 +553,57 @@ func _make_die_card(roll: Dictionary) -> Control:
 	cost_lbl.theme_type_variation = &"FacetInfo"
 	vbox.add_child(cost_lbl)
 
+	var control_row := HBoxContainer.new()
+	control_row.add_theme_constant_override("separation", 4)
+
+	var die_id := str(roll.get("die_id", ""))
+	var rolls: Array = combat_state.roll_results as Array
+	var roll_index := -1
+	for index in range(rolls.size()):
+		if str((rolls[index] as Dictionary).get("die_id", "")) == die_id:
+			roll_index = index
+			break
+	var is_assignment_phase := str(combat_state.state) == "player_assignment"
+
+	var left_button := Button.new()
+	left_button.text = "◀"
+	left_button.custom_minimum_size = Vector2(28, 24)
+	left_button.disabled = (not is_assignment_phase) or roll_index <= 0
+	left_button.pressed.connect(func() -> void:
+		move_die_in_order(combat_state, die_id, -1)
+		combat_state_updated.emit(combat_state)
+		_render()
+	)
+	control_row.add_child(left_button)
+
+	var slot_pill := Button.new()
 	if is_assigned:
-		var slot_lbl := Label.new()
-		slot_lbl.text = "→ %s" % _format_assigned_slot(assigned_slot_id)
-		slot_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		slot_lbl.theme_type_variation = &"FacetMeta"
-		slot_lbl.add_theme_color_override("font_color", FacetboundThemeScript.ACCENT_GOLD)
-		vbox.add_child(slot_lbl)
+		slot_pill.text = "→ %s" % _format_assigned_slot(assigned_slot_id)
+	else:
+		slot_pill.text = "→ Assign"
+	slot_pill.flat = true
+	slot_pill.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	slot_pill.add_theme_color_override("font_color", FacetboundThemeScript.ACCENT_GOLD)
+	slot_pill.disabled = not is_assignment_phase
+	slot_pill.pressed.connect(func() -> void:
+		cycle_die_slot(combat_state, die_id)
+		combat_state_updated.emit(combat_state)
+		_render()
+	)
+	control_row.add_child(slot_pill)
+
+	var right_button := Button.new()
+	right_button.text = "▶"
+	right_button.custom_minimum_size = Vector2(28, 24)
+	right_button.disabled = (not is_assignment_phase) or roll_index < 0 or roll_index >= rolls.size() - 1
+	right_button.pressed.connect(func() -> void:
+		move_die_in_order(combat_state, die_id, 1)
+		combat_state_updated.emit(combat_state)
+		_render()
+	)
+	control_row.add_child(right_button)
+
+	vbox.add_child(control_row)
 
 	return card
 
