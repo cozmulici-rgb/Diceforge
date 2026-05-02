@@ -28,3 +28,27 @@ services:
       GODOT_EXPORT_PRESET: Linux/X11
       GODOT_EXPORT_PATH: /workspace/dist/facetbound.x86_64
     command: bash
+
+  gui:
+    build:
+      context: .
+      dockerfile: docker/export/Dockerfile
+      args:
+        GODOT_VERSION: ${GODOT_VERSION:-4.3-stable}
+        INSTALL_EXPORT_TEMPLATES: 0
+    image: facetbound-gui:${GODOT_VERSION:-4.3-stable}
+    working_dir: /workspace
+    volumes:
+      - .:/workspace
+    environment:
+      GODOT_PROJECT_PATH: /workspace/game
+      GODOT_MAIN_SCENE: res://scenes/app_root.tscn
+      DISPLAY_NUM: :99
+      SCREEN_GEOMETRY: 1470x956x24
+      HTTP_PORT: 6080
+      VNC_PORT: 5900
+    ports:
+      - "6080:6080"
+    stdin_open: true
+    tty: true
+    command: bash /workspace/scripts/run-browser-game.sh

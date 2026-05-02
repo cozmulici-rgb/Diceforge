@@ -23,17 +23,49 @@
       "id": "floor_02_fight",
       "name": "Guardwalk",
       "type": "encounter",
-      "description": "A last standard fight blocks the direct approach.",
+      "description": "The direct ascent begins with a guard lane that refuses a soft opener.",
       "position": [320, 300],
-      "encounter_id": "tutorial_slime"
+      "encounter_id": "tutorial_slime",
+      "combat_map_id": "map-f02-01",
+      "combat_map_name": "Guardwalk",
+      "combat_map_theme": "Outer parapet with exposed edges and a fast first clash.",
+      "combat_map_summary": "Immediate-threat arena that keeps the final floor's pacing sharp."
     },
     {
       "id": "floor_02_boss",
       "name": "Warden Core",
       "type": "boss",
-      "description": "The final boss anchors the run's completion gate.",
-      "position": [520, 220],
-      "encounter_id": "final_warden"
+      "description": "The apex opens into the final chamber where the Warden anchors the run's completion gate.",
+      "position": [760, 220],
+      "encounter_id": "final_warden",
+      "combat_map_id": "map-f02-boss",
+      "combat_map_name": "Warden Core",
+      "combat_map_theme": "Singular heartline arena with no cover and total commitment.",
+      "combat_map_summary": "Final boss map with a clean silhouette and one exposed decisive lane."
+    },
+    {
+      "id": "floor_02_causeway",
+      "name": "Mirror Causeway",
+      "type": "encounter",
+      "description": "The shrine route folds back into a mirrored bridge where the last patrol manifests.",
+      "position": [520, 140],
+      "encounter_id": "tutorial_slime",
+      "combat_map_id": "map-f02-02",
+      "combat_map_name": "Mirror Causeway",
+      "combat_map_theme": "Reflective lane suspended over the apex basin.",
+      "combat_map_summary": "A branch payoff fight that translates shrine tempo into renewed pressure."
+    },
+    {
+      "id": "floor_02_crucible",
+      "name": "Crown Crucible",
+      "type": "encounter",
+      "description": "Both ascent routes lock into a final proving arena before the Warden chamber.",
+      "position": [520, 300],
+      "encounter_id": "tutorial_slime",
+      "combat_map_id": "map-f02-03",
+      "combat_map_name": "Crown Crucible",
+      "combat_map_theme": "Compressed proving ring with no dead corners and a bright center.",
+      "combat_map_summary": "Last standard combat map used to tighten resources before the end-run boss."
     }
   ],
   "links": [
@@ -47,10 +79,18 @@
     },
     {
       "from": "floor_02_event",
-      "to": "floor_02_boss"
+      "to": "floor_02_causeway"
     },
     {
       "from": "floor_02_fight",
+      "to": "floor_02_crucible"
+    },
+    {
+      "from": "floor_02_causeway",
+      "to": "floor_02_crucible"
+    },
+    {
+      "from": "floor_02_crucible",
       "to": "floor_02_boss"
     }
   ]

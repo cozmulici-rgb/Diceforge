@@ -3,6 +3,7 @@ FROM ubuntu:24.04
 
 ARG GODOT_VERSION
 ARG TARGETARCH
+ARG INSTALL_EXPORT_TEMPLATES=1
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV GODOT_VERSION=${GODOT_VERSION}
@@ -24,9 +25,13 @@ RUN apt-get update \
         libxinerama1 \
         libxrandr2 \
         make \
+        novnc \
+        openbox \
         scrot \
         unzip \
+        websockify \
         xdotool \
+        x11vnc \
         xvfb \
         xz-utils \
     && rm -rf /var/lib/apt/lists/*
@@ -45,17 +50,20 @@ RUN set -eux; \
     mv "/opt/godot/Godot_v${GODOT_VERSION}_linux.${godot_arch}" /opt/godot/godot; \
     chmod +x /opt/godot/godot; \
     ln -s /opt/godot/godot /usr/local/bin/godot; \
-    curl -fsSL -o /tmp/export_templates.tpz "https://downloads.godotengine.org/?version=${version_number}&flavor=${version_flavor}&slug=export_templates.tpz&platform=templates"; \
-    mkdir -p /tmp/export-templates; \
-    unzip -q /tmp/export_templates.tpz -d /tmp/export-templates; \
-    version_dir="$(printf '%s' "${GODOT_VERSION}" | sed 's/-/./')"; \
-    mkdir -p "/root/.local/share/godot/export_templates/${version_dir}"; \
-    if [ -d /tmp/export-templates/templates ]; then \
-        mv /tmp/export-templates/templates/* "/root/.local/share/godot/export_templates/${version_dir}/"; \
-    else \
-        mv /tmp/export-templates/* "/root/.local/share/godot/export_templates/${version_dir}/"; \
+    if [ "${INSTALL_EXPORT_TEMPLATES}" = "1" ]; then \
+        curl -fsSL -o /tmp/export_templates.tpz "https://downloads.godotengine.org/?version=${version_number}&flavor=${version_flavor}&slug=export_templates.tpz&platform=templates"; \
+        mkdir -p /tmp/export-templates; \
+        unzip -q /tmp/export_templates.tpz -d /tmp/export-templates; \
+        version_dir="$(printf '%s' "${GODOT_VERSION}" | sed 's/-/./')"; \
+        mkdir -p "/root/.local/share/godot/export_templates/${version_dir}"; \
+        if [ -d /tmp/export-templates/templates ]; then \
+            mv /tmp/export-templates/templates/* "/root/.local/share/godot/export_templates/${version_dir}/"; \
+        else \
+            mv /tmp/export-templates/* "/root/.local/share/godot/export_templates/${version_dir}/"; \
+        fi; \
+        rm -rf /tmp/export_templates.tpz /tmp/export-templates; \
     fi; \
-    rm -rf /tmp/godot.zip /tmp/export_templates.tpz /tmp/export-templates
+    rm -rf /tmp/godot.zip
 
 WORKDIR /workspace
 

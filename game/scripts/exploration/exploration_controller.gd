@@ -19,6 +19,7 @@ const DANGER := Color("d28b7c")
 const ROOM_TYPE_COLORS := {
 	"start": Color(0.58, 0.9, 0.82),
 	"encounter": ACCENT_BRIGHT,
+	"event": Color(0.72, 0.62, 0.96),
 	"shop": Color(0.66, 0.85, 0.55),
 	"boss": DANGER,
 }
@@ -38,6 +39,9 @@ signal encounter_started(combat_state)
 @onready var selected_header_label: Label = $MainLayout/SidebarPanel/SidebarMargin/SidebarContent/SelectedHeaderLabel
 @onready var selected_room_label: Label = $MainLayout/SidebarPanel/SidebarMargin/SidebarContent/SelectedRoomLabel
 @onready var selection_meta_label: Label = $MainLayout/SidebarPanel/SidebarMargin/SidebarContent/SelectionMetaLabel
+@onready var combat_map_header_label: Label = $MainLayout/SidebarPanel/SidebarMargin/SidebarContent/CombatMapHeaderLabel
+@onready var combat_map_name_label: Label = $MainLayout/SidebarPanel/SidebarMargin/SidebarContent/CombatMapNameLabel
+@onready var combat_map_summary_label: Label = $MainLayout/SidebarPanel/SidebarMargin/SidebarContent/CombatMapSummaryLabel
 @onready var primary_action_button: Button = $MainLayout/SidebarPanel/SidebarMargin/SidebarContent/PrimaryActionButton
 @onready var encounter_status_label: Label = $MainLayout/SidebarPanel/SidebarMargin/SidebarContent/EncounterStatusLabel
 @onready var legend_header_label: Label = $MainLayout/SidebarPanel/SidebarMargin/SidebarContent/LegendHeaderLabel
@@ -120,6 +124,14 @@ func _style_scene() -> void:
 	selection_meta_label.add_theme_font_size_override("font_size", 13)
 	selection_meta_label.add_theme_color_override("font_color", TEXT_DIM)
 	selection_meta_label.clip_text = true
+	combat_map_header_label.add_theme_font_size_override("font_size", 12)
+	combat_map_header_label.add_theme_color_override("font_color", Color(ACCENT_BRIGHT.r, ACCENT_BRIGHT.g, ACCENT_BRIGHT.b, 0.9))
+	combat_map_name_label.add_theme_font_size_override("font_size", 18)
+	combat_map_name_label.add_theme_color_override("font_color", TEXT_PRIMARY)
+	combat_map_name_label.clip_text = true
+	combat_map_summary_label.add_theme_font_size_override("font_size", 13)
+	combat_map_summary_label.add_theme_color_override("font_color", TEXT_DIM)
+	combat_map_summary_label.clip_text = true
 
 	encounter_status_label.add_theme_font_size_override("font_size", 12)
 	encounter_status_label.add_theme_color_override("font_color", TEXT_DIM)
@@ -169,6 +181,7 @@ func _panel_stylebox(bg: Color, border: Color, border_width: int = 2) -> StyleBo
 func _build_legend() -> void:
 	_style_legend_chip($MainLayout/SidebarPanel/SidebarMargin/SidebarContent/LegendRow/LegendStart as PanelContainer, ROOM_TYPE_COLORS["start"])
 	_style_legend_chip($MainLayout/SidebarPanel/SidebarMargin/SidebarContent/LegendRow/LegendFight as PanelContainer, ROOM_TYPE_COLORS["encounter"])
+	_style_legend_chip($MainLayout/SidebarPanel/SidebarMargin/SidebarContent/LegendRow/LegendEvent as PanelContainer, ROOM_TYPE_COLORS["event"])
 	_style_legend_chip($MainLayout/SidebarPanel/SidebarMargin/SidebarContent/LegendRow/LegendShop as PanelContainer, ROOM_TYPE_COLORS["shop"])
 	_style_legend_chip($MainLayout/SidebarPanel/SidebarMargin/SidebarContent/LegendRow/LegendBoss as PanelContainer, ROOM_TYPE_COLORS["boss"])
 
@@ -333,9 +346,10 @@ func _refresh_view() -> void:
 	selected_room_label.text = str(selected_room.display_name).to_upper()
 	selected_room_label.add_theme_color_override("font_color", _room_color(selected_room))
 	selection_meta_label.text = _selected_room_summary(selected_room, current_room, is_paused)
+	_refresh_combat_map_panel(selected_room)
 
 	map_title_label.text = "FLOOR  %02d  ROUTE  MAP" % int(run_session.floor_index)
-	map_hint_label.text = "CURRENT  NODE  GLOWS  GOLD"
+	map_hint_label.text = "%d  COMBAT  MAPS  CHARTED" % _count_combat_maps()
 
 	map_view.set_graph(room_graph, str(current_room.room_id), is_paused)
 	map_view.set_highlighted_room(_selected_room_id)
@@ -378,6 +392,45 @@ func _selected_room_summary(selected_room, current_room, is_paused: bool) -> Str
 	if str(selected_room.encounter_id) != "":
 		body += "\nThreat signature: %s" % str(selected_room.encounter_id).to_upper()
 	return body
+
+
+func _refresh_combat_map_panel(selected_room) -> void:
+	if _has_combat_map(selected_room):
+		combat_map_name_label.text = str(selected_room.combat_map_name).to_upper()
+		var details: Array[String] = []
+		if str(selected_room.combat_map_id) != "":
+			details.append("Chart ID %s" % str(selected_room.combat_map_id).to_upper())
+		if str(selected_room.combat_map_theme) != "":
+			details.append(str(selected_room.combat_map_theme))
+		if str(selected_room.combat_map_summary) != "":
+			details.append(str(selected_room.combat_map_summary))
+		combat_map_summary_label.text = "\n".join(details)
+		return
+
+	combat_map_name_label.text = "NO COMBAT MAP PLANNED"
+	if str(selected_room.room_type) == "shop":
+		combat_map_summary_label.text = "Broker node. Use this branch to reset tempo before the next hostile chamber."
+	elif str(selected_room.room_type) == "event":
+		combat_map_summary_label.text = "Event node. This stop changes the run state without opening a combat arena."
+	else:
+		combat_map_summary_label.text = "Traversal anchor. Move deeper into the route graph to lock a combat arena."
+
+
+func _count_combat_maps() -> int:
+	if room_graph == null:
+		return 0
+	var count := 0
+	for room_id in room_graph.rooms.keys():
+		var room_state = room_graph.get_room(str(room_id))
+		if _has_combat_map(room_state):
+			count += 1
+	return count
+
+
+func _has_combat_map(room_state) -> bool:
+	if room_state == null:
+		return false
+	return str(room_state.combat_map_name) != ""
 
 
 func _refresh_primary_action(current_room, selected_room, is_paused: bool) -> void:
@@ -508,6 +561,8 @@ func _format_room_type(room_type: String) -> String:
 			return "Anchor"
 		"encounter":
 			return "Hostile"
+		"event":
+			return "Event"
 		"boss":
 			return "Boss"
 		"shop":

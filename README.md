@@ -100,12 +100,30 @@ godot --path game res://scenes/app_root.tscn
   Opens the interactive development container with the repository mounted at `/workspace`.
 - `make verify`
   Runs headless Godot validation against the project in `game/`, including the deterministic gameplay test harness.
+- `make gui`
+  Runs the game in Docker with a browser-viewable noVNC session at `http://localhost:6080/vnc.html`.
 - `make test`
   Runs the deterministic Godot-native gameplay tests headlessly in the export container.
 - `make export`
   Re-runs verification and exports the Linux desktop build into `dist/`.
 - `make screenshots`
   Runs the Docker-based screenshot capture flow and saves image output into `dist/screenshots/`.
+
+## Browser Play From Docker
+
+If you cannot install Godot or a desktop X server locally, you can still view the game through your browser:
+
+```bash
+make gui
+```
+
+Then open:
+
+```text
+http://localhost:6080/vnc.html
+```
+
+This launches Godot inside Docker under `Xvfb`, publishes the virtual display through `x11vnc`, and serves it to the browser with `noVNC`.
 
 ## Current Feature Set
 

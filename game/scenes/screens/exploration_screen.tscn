@@ -183,6 +183,26 @@ autowrap_mode = 3
 custom_minimum_size = Vector2(0, 16)
 layout_mode = 2
 
+[node name="CombatMapHeaderLabel" type="Label" parent="MainLayout/SidebarPanel/SidebarMargin/SidebarContent"]
+layout_mode = 2
+text = "COMBAT  MAP"
+
+[node name="CombatMapNameLabel" type="Label" parent="MainLayout/SidebarPanel/SidebarMargin/SidebarContent"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "No combat map planned for this node."
+autowrap_mode = 3
+
+[node name="CombatMapSummaryLabel" type="Label" parent="MainLayout/SidebarPanel/SidebarMargin/SidebarContent"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Encounter arenas and route notes appear here."
+autowrap_mode = 3
+
+[node name="CombatMapSpacer" type="Control" parent="MainLayout/SidebarPanel/SidebarMargin/SidebarContent"]
+custom_minimum_size = Vector2(0, 16)
+layout_mode = 2
+
 [node name="PrimaryActionButton" type="Button" parent="MainLayout/SidebarPanel/SidebarMargin/SidebarContent"]
 layout_mode = 2
 size_flags_horizontal = 3
@@ -223,6 +243,13 @@ layout_mode = 2
 [node name="Label" type="Label" parent="MainLayout/SidebarPanel/SidebarMargin/SidebarContent/LegendRow/LegendFight"]
 layout_mode = 2
 text = "FIGHT"
+
+[node name="LegendEvent" type="PanelContainer" parent="MainLayout/SidebarPanel/SidebarMargin/SidebarContent/LegendRow"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="MainLayout/SidebarPanel/SidebarMargin/SidebarContent/LegendRow/LegendEvent"]
+layout_mode = 2
+text = "EVENT"
 
 [node name="LegendShop" type="PanelContainer" parent="MainLayout/SidebarPanel/SidebarMargin/SidebarContent/LegendRow"]
 layout_mode = 2
