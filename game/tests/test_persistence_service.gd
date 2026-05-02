@@ -44,8 +44,8 @@ func run() -> Array[String]:
 	if corrupt_result.get("ok", true):
 		failures.append("schema-incompatible run saves should be rejected safely")
 
-	var delete_result = service.delete_corrupt_run_state("corrupt_slot")
+	var delete_result = service.delete_run_state("corrupt_slot")
 	if not delete_result.get("ok", false):
-		failures.append("delete_corrupt_run_state should remove an invalid save slot")
+		failures.append("delete_run_state should remove an invalid save slot")
 
 	return failures

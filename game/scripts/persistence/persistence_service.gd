@@ -56,7 +56,7 @@ func load_meta_state() -> Dictionary:
 	return {"ok": true, "data": payload.get("data", {})}
 
 
-func delete_corrupt_run_state(slot_id: String) -> Dictionary:
+func delete_run_state(slot_id: String) -> Dictionary:
 	var path := _run_slot_path(slot_id)
 	if not FileAccess.file_exists(path):
 		return {"ok": true}
@@ -87,6 +87,7 @@ func list_run_slots() -> Array:
 					"slot_id": slot_id,
 					"session_id": str(data.get("session_id", "")),
 					"archetype_id": str(data.get("archetype_id", "")),
+					"display_name": str(data.get("display_name", "")),
 					"floor_index": int(data.get("floor_index", 0)),
 					"room_id": str(data.get("current_room_id", "")),
 					"updated_at_unix": int(data.get("updated_at_unix", Time.get_unix_time_from_system())),
