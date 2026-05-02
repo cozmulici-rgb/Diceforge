@@ -13,6 +13,7 @@ func run() -> Array[String]:
 	failures.append_array(_test_move_die_invalid_direction())
 	failures.append_array(_test_cycle_die_slot_advances_through_slots())
 	failures.append_array(_test_cycle_die_slot_from_unassigned())
+	failures.append_array(_test_cycle_die_slot_restores_on_rejection())
 	failures.append_array(_test_swap_propagates_to_engine_queue())
 	return failures
 
@@ -216,6 +217,66 @@ func _test_cycle_die_slot_from_unassigned() -> Array[String]:
 		failures.append("cycle_die_slot from unassigned should succeed; got %s" % str(result))
 	if _slot_id_for_die(state, "balanced_d6_alpha") != first_slot_id:
 		failures.append("cycle from unassigned should land on first slot '%s'; got '%s'" % [first_slot_id, _slot_id_for_die(state, "balanced_d6_alpha")])
+	controller.free()
+	return failures
+
+
+func _make_controller_with_strict_slots() -> Dictionary:
+	# Same dice as _make_controller_with_three_dice but with slot families
+	# matching the live encounter content rules — so cycling balanced_d6_alpha
+	# (face=strike, family=attack) past the main_attack slot triggers
+	# slot_family_mismatch on the next slot.
+	var catalog = ContentCatalogScript.new()
+	var controller = CombatControllerScript.new()
+	controller.content_catalog = catalog
+	var run_session = RunSessionScript.new({
+		"current_room_id": "tutorial_hall",
+		"player_state": {"hp": 30, "status_effects": []},
+		"active_dice": [
+			{
+				"id": "balanced_d6_alpha",
+				"label": "Balanced D6",
+				"body_id": "standard_d6",
+				"face_set": ["strike", "guard", "focus", "strike", "guard", "surge"],
+			},
+		],
+		"action_slots": [
+			{"slot_id": "main_attack", "display_name": "Main Attack", "allowed_families": ["attack"], "min_assignments": 1, "assigned_die_ids": []},
+			{"slot_id": "guard", "display_name": "Guard", "allowed_families": ["defense"], "min_assignments": 0, "assigned_die_ids": []},
+		],
+	})
+	var encounter_definition = {
+		"id": "custom_training_fight",
+		"name": "Custom Training Fight",
+		"enemy_id": "slime_echo",
+		"player_rolls": [4],
+	}
+	var combat_state = controller.begin_encounter(run_session, encounter_definition)
+	controller.combat_state = combat_state
+	controller.roll_active_dice(combat_state)
+	return {"controller": controller, "state": combat_state}
+
+
+func _test_cycle_die_slot_restores_on_rejection() -> Array[String]:
+	var failures: Array[String] = []
+	var setup := _make_controller_with_strict_slots()
+	var controller = setup["controller"]
+	var state = setup["state"]
+
+	# Force the die into main_attack so cycle's next-slot is the strict guard.
+	controller.assign_die_to_action(state, "balanced_d6_alpha", "main_attack")
+	if _slot_id_for_die(state, "balanced_d6_alpha") != "main_attack":
+		failures.append("setup: die should be on main_attack before cycling")
+		controller.free()
+		return failures
+
+	# Cycling forward targets guard, which only accepts defense — should reject.
+	# The die must remain on main_attack rather than ending up unassigned.
+	var result: Dictionary = controller.cycle_die_slot(state, "balanced_d6_alpha")
+	if bool(result.get("ok", true)):
+		failures.append("cycle into incompatible slot should report failure; got %s" % str(result))
+	if _slot_id_for_die(state, "balanced_d6_alpha") != "main_attack":
+		failures.append("rejected cycle should leave die on previous slot 'main_attack'; got '%s'" % _slot_id_for_die(state, "balanced_d6_alpha"))
 	controller.free()
 	return failures
 

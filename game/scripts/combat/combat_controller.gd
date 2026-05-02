@@ -234,7 +234,16 @@ func cycle_die_slot(state, die_id: String) -> Dictionary:
 		assigned.erase(die_id)
 		slot_dict["assigned_die_ids"] = assigned
 
-	return assign_die_to_action(state, die_id, next_slot_id)
+	var assign_result := assign_die_to_action(state, die_id, next_slot_id) as Dictionary
+	if not bool(assign_result.get("ok", false)) and current_slot_id != "":
+		# Per spec §10: if the next slot rejects, the cycle stays on the
+		# previous slot — restore the assignment we cleared above.
+		var restore_result := assign_die_to_action(state, die_id, current_slot_id) as Dictionary
+		if not bool(restore_result.get("ok", false)):
+			# Restoration failed too (rare — slot constraints changed mid-call).
+			# Surface the original rejection so the UI can react.
+			return assign_result
+	return assign_result
 
 
 func resolve_player_turn(state) -> Dictionary:
