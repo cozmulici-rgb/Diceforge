@@ -294,6 +294,19 @@ texture = ExtResource("6")
 expand_mode = 1
 stretch_mode = 4
 
+[node name="ShardRow" type="HBoxContainer" parent="RootMargin/MainRow/RightPanel/PlayerVBox"]
+layout_mode = 2
+theme_override_constants/separation = 6
+alignment = 1
+
+[node name="ShardIcon" type="Label" parent="RootMargin/MainRow/RightPanel/PlayerVBox/ShardRow"]
+layout_mode = 2
+text = "◇"
+
+[node name="ShardCountLabel" type="Label" parent="RootMargin/MainRow/RightPanel/PlayerVBox/ShardRow"]
+layout_mode = 2
+text = "0 Echo Shards"
+
 [node name="PlayerHpVBox" type="VBoxContainer" parent="RootMargin/MainRow/RightPanel/PlayerVBox"]
 layout_mode = 2
 theme_override_constants/separation = 4

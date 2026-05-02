@@ -44,6 +44,8 @@ signal combat_state_updated(combat_state)
 
 # Right panel — player
 @onready var _player_header: Label = $RootMargin/MainRow/RightPanel/PlayerVBox/PlayerHeaderLabel
+@onready var _shard_icon: Label = $RootMargin/MainRow/RightPanel/PlayerVBox/ShardRow/ShardIcon
+@onready var _shard_count_label: Label = $RootMargin/MainRow/RightPanel/PlayerVBox/ShardRow/ShardCountLabel
 @onready var _player_hp_label: Label = $RootMargin/MainRow/RightPanel/PlayerVBox/PlayerHpVBox/PlayerHpRow/PlayerHpLabel
 @onready var _player_block_badge: Label = $RootMargin/MainRow/RightPanel/PlayerVBox/PlayerHpVBox/PlayerHpRow/PlayerBlockBadge
 @onready var _player_hp_bar: ProgressBar = $RootMargin/MainRow/RightPanel/PlayerVBox/PlayerHpVBox/PlayerHpBar
@@ -62,6 +64,7 @@ var dice_model = DiceModelScript.new()
 var combat_state = null
 var boss_phase_controller = BossPhaseControllerScript.new()
 var _engine = null
+var _meta_shard_total: int = 0
 
 
 func _ready() -> void:
@@ -74,9 +77,10 @@ func _ready() -> void:
 	_render()
 
 
-func setup(catalog, state) -> void:
+func setup(catalog, state, meta_shard_total: int = 0) -> void:
 	content_catalog = catalog
 	combat_state = state
+	_meta_shard_total = meta_shard_total
 	if combat_state != null and (combat_state.engine_state as Dictionary).size() > 0:
 		_engine = CombatEngineScript.new(content_catalog)
 		_engine.load_state(combat_state.engine_state as Dictionary)
@@ -433,6 +437,8 @@ func _render() -> void:
 	_skip_label.text = skip_cond if skip_cond != "" else "—"
 
 	# Player stats
+	if _shard_count_label != null:
+		_shard_count_label.text = "%d Echo Shards" % _meta_shard_total
 	var player_hp := int(combat_state.player_hp)
 	var player_max_hp := int(engine_player.get("max_hp", max(player_hp, 1)))
 	_player_hp_label.text = "%d / %d" % [player_hp, player_max_hp]
@@ -858,6 +864,11 @@ func _apply_theme() -> void:
 	var energy_icon: Label = get_node_or_null("RootMargin/MainRow/RightPanel/PlayerVBox/PlayerEnergyRow/EnergyIcon")
 	if energy_icon != null:
 		energy_icon.add_theme_color_override("font_color", FacetboundThemeScript.ACCENT_CYAN)
+
+	if _shard_icon != null:
+		_shard_icon.add_theme_color_override("font_color", FacetboundThemeScript.ACCENT_GOLD)
+	if _shard_count_label != null:
+		_shard_count_label.theme_type_variation = &"FacetMeta"
 
 	# Progress bars
 	if _enemy_hp_bar != null:
