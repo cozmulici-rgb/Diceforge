@@ -199,6 +199,44 @@ func move_die_in_order(state, die_id: String, direction: int) -> Dictionary:
 	return {"ok": true, "combat_state": state}
 
 
+func cycle_die_slot(state, die_id: String) -> Dictionary:
+	var rolls: Array = state.roll_results as Array
+	var current_slot_id := ""
+	var found := false
+	for roll in rolls:
+		if str((roll as Dictionary).get("die_id", "")) == die_id:
+			current_slot_id = str((roll as Dictionary).get("assigned_slot_id", ""))
+			found = true
+			break
+	if not found:
+		return {"ok": false, "error": "missing_die"}
+	var slots: Array = state.action_slots as Array
+	if slots.is_empty():
+		return {"ok": false, "error": "no_slots"}
+	var current_index := -1
+	for index in range(slots.size()):
+		if str((slots[index] as Dictionary).get("slot_id", "")) == current_slot_id:
+			current_index = index
+			break
+	var next_index := (current_index + 1) % slots.size()
+	var next_slot_id := str((slots[next_index] as Dictionary).get("slot_id", ""))
+
+	# Clear the existing assignment so dice_model.assign_die_to_action does not
+	# reject the re-assignment with die_already_assigned.
+	for roll in rolls:
+		var entry: Dictionary = roll as Dictionary
+		if str(entry.get("die_id", "")) == die_id:
+			entry["assigned_slot_id"] = ""
+			break
+	for slot in slots:
+		var slot_dict: Dictionary = slot as Dictionary
+		var assigned: Array = slot_dict.get("assigned_die_ids", []) as Array
+		assigned.erase(die_id)
+		slot_dict["assigned_die_ids"] = assigned
+
+	return assign_die_to_action(state, die_id, next_slot_id)
+
+
 func resolve_player_turn(state) -> Dictionary:
 	if _engine == null:
 		return {"ok": false, "error": "missing_combat_engine"}
