@@ -801,7 +801,7 @@ func _refresh_combat_log() -> void:
 	for child in _combat_log_list.get_children():
 		child.queue_free()
 
-	var log_lines: Array = combat_state.turn_log as Array
+	var log_lines: Array = _build_combat_log_lines()
 	var recent := log_lines.slice(max(log_lines.size() - 14, 0), log_lines.size())
 	for line in recent:
 		var lbl := Label.new()
@@ -812,6 +812,48 @@ func _refresh_combat_log() -> void:
 		_combat_log_list.add_child(lbl)
 
 	call_deferred("_scroll_log_to_bottom")
+
+
+func _build_combat_log_lines() -> Array:
+	if _engine != null:
+		var entries: Array = _engine.get_log().get_entries()
+		if not entries.is_empty():
+			var lines: Array = []
+			for entry in entries:
+				lines.append(_format_battle_log_entry(entry as Dictionary))
+			return lines
+	return (combat_state.turn_log as Array).duplicate(true)
+
+
+func _format_battle_log_entry(entry: Dictionary) -> String:
+	match str(entry.get("step_kind", "")):
+		"battle_start":
+			return "Battle initialized."
+		"roll":
+			return "%s rolled %d on %s." % [
+				str(entry.get("die_id", "die")).to_upper(),
+				int(entry.get("rolled_value", 0)),
+				str(entry.get("resolved_face", "face")).to_upper(),
+			]
+		"resolution":
+			var modifiers: Array = entry.get("modifiers_applied", []) as Array
+			var modifier_text := ""
+			if not modifiers.is_empty():
+				modifier_text = " [%s]" % ", ".join(modifiers)
+			return "%s resolved %s: %s%s." % [
+				str(entry.get("die_id", "die")).to_upper(),
+				str(entry.get("resolved_face", "face")).to_upper(),
+				str(entry.get("outcome", "resolved")),
+				modifier_text,
+			]
+		"enemy_action":
+			return "Enemy %s: %s." % [
+				str(entry.get("resolved_face", "Action")),
+				str(entry.get("outcome", "resolved")),
+			]
+		"phase_transition":
+			return "Enemy phase advanced."
+	return str(entry.get("outcome", "combat event"))
 
 
 func _scroll_log_to_bottom() -> void:

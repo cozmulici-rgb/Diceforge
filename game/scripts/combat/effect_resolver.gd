@@ -14,20 +14,41 @@ func resolve_face(face: Dictionary, rolled_value: int, player: Dictionary, enemy
 	var updated_player := player.duplicate(true)
 	var updated_enemy := enemy.duplicate(true)
 	var updated_modifiers := _prune_consumed_modifiers(temporary_modifiers)
+	var effect_summary := {}
 
 	match effect:
 		"damage":
 			var bonus := _consume_damage_modifier(updated_modifiers)
 			var total_damage := rolled_value * value + bonus
+			var enemy_before := updated_enemy.duplicate(true)
 			updated_enemy = _clamping.apply_damage_to_entity(updated_enemy, total_damage)
+			effect_summary = _damage_summary(enemy_before, updated_enemy, total_damage, bonus, "enemy")
 
 		"block":
-			updated_player["block"] = _clamping.clamp_block(int(updated_player.get("block", 0)) + (rolled_value * value))
+			var block_before := int(updated_player.get("block", 0))
+			var added_block := rolled_value * value
+			updated_player["block"] = _clamping.clamp_block(block_before + added_block)
+			effect_summary = {
+				"target": "player",
+				"effect": "block",
+				"block_gained": added_block,
+				"block_before": block_before,
+				"block_after": int(updated_player.get("block", 0)),
+			}
 
 		"heal":
+			var hp_before := int(updated_player.get("hp", 0))
 			var heal_amount := value
 			var max_hp := int(updated_player.get("max_hp", updated_player.get("hp", 0)))
-			updated_player["hp"] = _clamping.clamp_hp(int(updated_player.get("hp", 0)) + heal_amount, max_hp)
+			updated_player["hp"] = _clamping.clamp_hp(hp_before + heal_amount, max_hp)
+			effect_summary = {
+				"target": "player",
+				"effect": "heal",
+				"heal_requested": heal_amount,
+				"heal_applied": int(updated_player.get("hp", 0)) - hp_before,
+				"hp_before": hp_before,
+				"hp_after": int(updated_player.get("hp", 0)),
+			}
 
 		"burn", "poison", "freeze":
 			var statuses := (updated_enemy.get("statuses", []) as Array).duplicate(true)
@@ -38,6 +59,12 @@ func resolve_face(face: Dictionary, rolled_value: int, player: Dictionary, enemy
 				"timing": _status_timing_for(effect),
 			})
 			updated_enemy["statuses"] = statuses
+			effect_summary = {
+				"target": "enemy",
+				"effect": effect,
+				"stacks": value,
+				"duration": int(face.get("duration", 1)),
+			}
 
 		"amplify":
 			updated_modifiers.append({
@@ -45,18 +72,36 @@ func resolve_face(face: Dictionary, rolled_value: int, player: Dictionary, enemy
 				"bonus": value,
 				"consumed": false,
 			})
+			effect_summary = {
+				"target": "player",
+				"effect": "amplify",
+				"bonus_added": value,
+			}
 
 		"reroll":
-			pass
+			effect_summary = {
+				"target": "player",
+				"effect": "reroll",
+				"reroll_count": value,
+			}
 
 		"utility":
 			if str(face.get("utility_kind", "")) == "block":
-				updated_player["block"] = _clamping.clamp_block(int(updated_player.get("block", 0)) + value)
+				var utility_block_before := int(updated_player.get("block", 0))
+				updated_player["block"] = _clamping.clamp_block(utility_block_before + value)
+				effect_summary = {
+					"target": "player",
+					"effect": "utility_block",
+					"block_gained": value,
+					"block_before": utility_block_before,
+					"block_after": int(updated_player.get("block", 0)),
+				}
 
 	return {
 		"player": updated_player,
 		"enemy": updated_enemy,
 		"temporary_modifiers": updated_modifiers,
+		"effect_summary": effect_summary,
 	}
 
 
@@ -89,3 +134,22 @@ func _status_timing_for(effect: String) -> String:
 			return "enemy_turn_start"
 		_:
 			return "player_turn_end"
+
+
+func _damage_summary(before_entity: Dictionary, after_entity: Dictionary, raw_damage: int, bonus: int, target: String) -> Dictionary:
+	var block_before := int(before_entity.get("block", 0))
+	var block_after := int(after_entity.get("block", 0))
+	var hp_before := int(before_entity.get("hp", 0))
+	var hp_after := int(after_entity.get("hp", 0))
+	return {
+		"target": target,
+		"effect": "damage",
+		"raw_damage": raw_damage,
+		"bonus_applied": bonus,
+		"absorbed_by_block": maxi(block_before - block_after, 0),
+		"hp_damage": maxi(hp_before - hp_after, 0),
+		"block_before": block_before,
+		"block_after": block_after,
+		"hp_before": hp_before,
+		"hp_after": hp_after,
+	}
