@@ -14,6 +14,7 @@ const ProgressionScene = preload("res://scenes/screens/progression_screen.tscn")
 
 var content_catalog
 var game_state_coordinator
+var _current_screen_kind: String = ""
 
 
 func _ready() -> void:
@@ -222,3 +223,15 @@ func _available_archetypes() -> Array:
 		if (game_state_coordinator.meta_state.unlocked_archetype_ids as Array).has(str(archetype_definition.get("id", ""))):
 			archetypes.append(archetype_definition.duplicate(true))
 	return archetypes
+
+
+func _dispatch_escape_for_screen(screen_kind: String) -> String:
+	match screen_kind:
+		"progression":
+			return "return_to_menu"
+		"start_menu":
+			return "show_quit_confirm"
+		"exploration", "combat", "reward", "forge":
+			return "show_return_confirm"
+		_:
+			return "noop"
