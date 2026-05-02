@@ -487,7 +487,7 @@ func _make_die_card(roll: Dictionary) -> Control:
 	var is_assigned := assigned_slot_id != ""
 
 	var card := PanelContainer.new()
-	card.custom_minimum_size = Vector2(118, 155)
+	card.custom_minimum_size = Vector2(118, 195)
 
 	var card_style := StyleBoxFlat.new()
 	card_style.bg_color = Color("10161d")
