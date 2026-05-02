@@ -16,7 +16,11 @@
       "type": "encounter",
       "description": "A narrow hall where the first hostile echo manifests.",
       "position": [456, 220],
-      "encounter_id": "tutorial_slime"
+      "encounter_id": "tutorial_slime",
+      "combat_map_id": "map-tut-01",
+      "combat_map_name": "Shiver Hall",
+      "combat_map_theme": "Tight frost corridor with a single forward push lane.",
+      "combat_map_summary": "Teach the route-to-combat handoff with minimal branching and immediate threat contact."
     }
   ],
   "links": [

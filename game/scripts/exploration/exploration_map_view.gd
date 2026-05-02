@@ -13,6 +13,7 @@ const TEXT_MUTED := Color(0.51, 0.58, 0.65)
 const ROOM_COLORS := {
 	"start": Color(0.58, 0.9, 0.82),
 	"encounter": Color(0.43, 0.75, 1.0),
+	"event": Color(0.72, 0.62, 0.96),
 	"shop": Color(0.66, 0.85, 0.55),
 	"boss": Color(0.84, 0.54, 0.48),
 }

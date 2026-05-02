@@ -59,6 +59,26 @@ This command checks:
 
 `make verify` is the minimum integrity gate for repository changes.
 
+### `make gui`
+
+Runs the game in Docker and exposes it through a browser session:
+
+```bash
+make gui
+```
+
+Then open:
+
+```text
+http://localhost:6080/vnc.html
+```
+
+This command:
+
+- starts the game in a virtual X display inside the GUI container
+- publishes that display over VNC inside the container
+- serves a noVNC browser client on port `6080`
+
 ### `make test`
 
 Runs the deterministic gameplay harness directly:
@@ -127,6 +147,7 @@ New contributors can confirm the local setup with this sequence:
 3. Run `make verify` and confirm project import, smoke startup, and the shared test harness all succeed.
 4. Run `make export` and confirm both Linux export files appear under `dist/`.
 5. Run `make screenshots` and confirm PNG screenshots appear under `dist/screenshots/`.
+6. Optionally run `make gui` and confirm the game appears at `http://localhost:6080/vnc.html`.
 
 ## Daily Void Verification Notes
 

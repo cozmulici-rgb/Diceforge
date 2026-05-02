@@ -7,6 +7,10 @@ var room_type: String
 var description: String
 var encounter_id: String
 var reward_source_id: String
+var combat_map_id: String
+var combat_map_name: String
+var combat_map_theme: String
+var combat_map_summary: String
 var position: Vector2
 var revealed: bool
 var completed: bool
@@ -20,6 +24,10 @@ func _init(data: Dictionary = {}) -> void:
 	description = str(data.get("description", ""))
 	encounter_id = str(data.get("encounter_id", ""))
 	reward_source_id = str(data.get("reward_source_id", ""))
+	combat_map_id = str(data.get("combat_map_id", ""))
+	combat_map_name = str(data.get("combat_map_name", ""))
+	combat_map_theme = str(data.get("combat_map_theme", ""))
+	combat_map_summary = str(data.get("combat_map_summary", ""))
 	position = _parse_position(data.get("position", [0, 0]))
 	revealed = bool(data.get("revealed", false))
 	completed = bool(data.get("completed", false))
@@ -34,6 +42,10 @@ func to_dictionary() -> Dictionary:
 		"description": description,
 		"encounter_id": encounter_id,
 		"reward_source_id": reward_source_id,
+		"combat_map_id": combat_map_id,
+		"combat_map_name": combat_map_name,
+		"combat_map_theme": combat_map_theme,
+		"combat_map_summary": combat_map_summary,
 		"position": [position.x, position.y],
 		"revealed": revealed,
 		"completed": completed,
