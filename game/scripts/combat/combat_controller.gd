@@ -179,6 +179,26 @@ func assign_die_to_action(state, die_id: String, action_slot_id: String) -> Dict
 	return {"ok": true, "combat_state": state}
 
 
+func move_die_in_order(state, die_id: String, direction: int) -> Dictionary:
+	if direction != -1 and direction != 1:
+		return {"ok": false, "error": "invalid_direction"}
+	var rolls: Array = state.roll_results as Array
+	var current_index := -1
+	for index in range(rolls.size()):
+		if str((rolls[index] as Dictionary).get("die_id", "")) == die_id:
+			current_index = index
+			break
+	if current_index == -1:
+		return {"ok": false, "error": "missing_die"}
+	var target_index := current_index + direction
+	if target_index < 0 or target_index >= rolls.size():
+		return {"ok": false, "error": "out_of_bounds"}
+	var swapped = rolls[current_index]
+	rolls[current_index] = rolls[target_index]
+	rolls[target_index] = swapped
+	return {"ok": true, "combat_state": state}
+
+
 func resolve_player_turn(state) -> Dictionary:
 	if _engine == null:
 		return {"ok": false, "error": "missing_combat_engine"}
