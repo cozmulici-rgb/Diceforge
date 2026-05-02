@@ -97,6 +97,33 @@ func run() -> Array[String]:
 	if migrated_coordinator.persistence_service.run_slot_exists("active_run"):
 		failures.append("legacy active_run.json must be removed after migration")
 
+	# Run-end deletes only the active slot.
+	_clear_test_dir()
+	coordinator = GameStateCoordinatorScript.new(catalog)
+	coordinator.persistence_service = PersistenceServiceScript.new(catalog, TEST_BASE_PATH)
+	var run_a = coordinator.create_run_session("starter_facetwalker")
+	if run_a == null or run_a is Dictionary:
+		failures.append("isolation test: run A should be created")
+		return failures
+	var run_a_slot: String = str(run_a.slot_id)
+	var run_b = coordinator.create_run_session("starter_facetwalker")
+	if run_b == null or run_b is Dictionary:
+		failures.append("isolation test: run B should be created")
+		return failures
+	var run_b_slot: String = str(run_b.slot_id)
+	# Re-load run A as the active session.
+	coordinator.load_run_session(run_a_slot)
+	var defeat_result := {
+		"outcome": "defeat",
+		"player_hp_after": 0,
+		"room_id": str(coordinator.current_session.current_room_id),
+	}
+	coordinator.apply_encounter_result(defeat_result)
+	if coordinator.persistence_service.run_slot_exists(run_a_slot):
+		failures.append("defeat must remove the active run's slot")
+	if not coordinator.persistence_service.run_slot_exists(run_b_slot):
+		failures.append("defeat must not affect other runs' slots")
+
 	return failures
 
 
