@@ -41,6 +41,10 @@ func validate_run_state(payload: Dictionary, content_catalog = null) -> Dictiona
 	if int(payload.get("schema_version", -1)) != RUN_SCHEMA_VERSION:
 		errors.append("run_state schema_version is unsupported")
 
+	var trimmed_display_name: String = str(payload.get("display_name", "")).strip_edges()
+	if trimmed_display_name.length() == 0 or trimmed_display_name.length() > 64:
+		errors.append("run_state display_name must be 1–64 characters after trimming")
+
 	if content_catalog == null:
 		errors.append("content_catalog is required for run_state validation")
 		return {"ok": false, "errors": errors}

@@ -72,6 +72,11 @@ func run() -> Array[String]:
 		failures.append("delete_run must refuse to delete the active session's slot")
 
 	# Daily Void uses a daily_ slot and stays out of list_resumable_runs.
+	var slots_before_daily: Array = coordinator.persistence_service.list_run_slots()
+	var non_daily_before: Array = []
+	for entry in slots_before_daily:
+		if not str((entry as Dictionary).get("slot_id", "")).begins_with("daily_"):
+			non_daily_before.append(str((entry as Dictionary).get("slot_id", "")))
 	var daily = coordinator.create_daily_void_session("starter_facetwalker", "2026-05-02")
 	if daily == null or daily is Dictionary:
 		failures.append("daily void session should be created")
@@ -82,6 +87,15 @@ func run() -> Array[String]:
 		for entry in resumable_after_daily:
 			if str((entry as Dictionary).get("slot_id", "")).begins_with("daily_"):
 				failures.append("list_resumable_runs must exclude daily_ slots")
+		# Verify the inner-call's temp standard slot was cleaned up — no new
+		# non-daily files appeared on disk relative to the pre-daily snapshot.
+		var slots_after_daily: Array = coordinator.persistence_service.list_run_slots()
+		var non_daily_after: Array = []
+		for entry in slots_after_daily:
+			if not str((entry as Dictionary).get("slot_id", "")).begins_with("daily_"):
+				non_daily_after.append(str((entry as Dictionary).get("slot_id", "")))
+		if non_daily_after.size() != non_daily_before.size():
+			failures.append("creating a daily run must not leak the inner standard-slot file")
 
 	# Legacy migration: write a legacy active_run.json and reinit the coordinator.
 	var legacy_payload: Dictionary = first.to_dictionary()
@@ -96,6 +110,37 @@ func run() -> Array[String]:
 	migrated_coordinator._migrate_legacy_active_run_slot_if_needed()
 	if migrated_coordinator.persistence_service.run_slot_exists("active_run"):
 		failures.append("legacy active_run.json must be removed after migration")
+
+	# Legacy migration failure path: a pre-feature save missing the new fields.
+	var bad_legacy_payload: Dictionary = {
+		"schema_version": 2,
+		"session_id": "legacy_session",
+		"archetype_id": "starter_facetwalker",
+		"floor_index": 1,
+		"current_room_id": "floor_01_start",
+		"room_graph_id": "floor_01_rooms",
+		"player_state": {"hp": 30},
+		"active_dice": [],
+		"inventory": {},
+		"mode_id": "standard",
+		"seed_id": "",
+		"numeric_seed": 0,
+		"daily_void_config": {},
+		"score_summary": {},
+	}
+	# Write directly via JSON to bypass schema validation (simulates pre-feature save).
+	var bad_legacy_path := ProjectSettings.globalize_path("%s/runs/active_run.json" % TEST_BASE_PATH)
+	var bad_file := FileAccess.open(bad_legacy_path, FileAccess.WRITE)
+	bad_file.store_string(JSON.stringify(bad_legacy_payload))
+	bad_file = null
+
+	var failure_coordinator = GameStateCoordinatorScript.new(catalog)
+	failure_coordinator.persistence_service = PersistenceServiceScript.new(catalog, TEST_BASE_PATH)
+	failure_coordinator._migrate_legacy_active_run_slot_if_needed()
+	if failure_coordinator.persistence_service.run_slot_exists("active_run"):
+		failures.append("legacy file missing new fields must be deleted by migration")
+	if str(failure_coordinator.last_recovery_message) == "":
+		failures.append("legacy migration failure path must set last_recovery_message")
 
 	# Run-end deletes only the active slot.
 	_clear_test_dir()

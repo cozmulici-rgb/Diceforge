@@ -712,19 +712,3 @@ func delete_run(slot_id: String) -> Dictionary:
 func list_run_slots() -> Array:
 	return persistence_service.list_run_slots()
 
-
-func get_continue_run_summary() -> Dictionary:
-	var best: Dictionary = {}
-	var best_unix: int = -1
-	for run_slot in list_run_slots():
-		var summary: Dictionary = run_slot
-		var slot_id: String = str(summary.get("slot_id", ""))
-		if slot_id == "" or slot_id.begins_with("daily_"):
-			continue
-		if bool(summary.get("is_corrupt", false)):
-			continue
-		var updated: int = int(summary.get("updated_at_unix", 0))
-		if updated > best_unix:
-			best_unix = updated
-			best = summary
-	return best.duplicate(true)

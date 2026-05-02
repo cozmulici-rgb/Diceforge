@@ -98,6 +98,13 @@ func _make_row(summary: Dictionary) -> Control:
 		line_edit.text_submitted.connect(func(value: String):
 			_editing_slot_id = ""
 			rename_requested.emit(slot_id, value))
+		line_edit.gui_input.connect(func(event: InputEvent):
+			if event is InputEventKey:
+				var key_event := event as InputEventKey
+				if key_event.pressed and not key_event.echo and key_event.keycode == KEY_ESCAPE:
+					_editing_slot_id = ""
+					line_edit.get_viewport().set_input_as_handled()
+					_rebuild())
 		info.add_child(line_edit)
 		line_edit.grab_focus.call_deferred()
 	else:
