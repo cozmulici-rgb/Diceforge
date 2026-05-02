@@ -31,6 +31,16 @@ func run() -> Array[String]:
 		failures.append("begin_encounter should produce a stub encounter state")
 		return failures
 
+	var blocked_move = coordinator.enter_room("floor_01_gallery")
+	if blocked_move.get("ok", false):
+		failures.append("leaving an unresolved encounter room should be blocked")
+	if str(blocked_move.get("error", "")) != "encounter_unresolved":
+		failures.append("expected encounter_unresolved error, got: %s" % str(blocked_move.get("error", "")))
+	if str(blocked_move.get("from_room_id", "")) != "floor_01_fight":
+		failures.append("encounter_unresolved error should report the source room")
+	if coordinator.current_session.current_room_id != "floor_01_fight":
+		failures.append("blocked enter_room must not mutate current_room_id")
+
 	if encounter_result.get("state", "") != "combat_active":
 		failures.append("begin_encounter should return the combat_active state")
 
@@ -54,6 +64,17 @@ func run() -> Array[String]:
 	if resolved_session == null or resolved_session is Dictionary:
 		failures.append("apply_encounter_result should preserve the run session")
 		return failures
+
+	var post_clear_room_state: Dictionary = coordinator.current_session.room_states.get("floor_01_fight", {})
+	if not bool(post_clear_room_state.get("completed", false)):
+		failures.append("victory should mark the encounter room as completed")
+	var allowed_move = coordinator.enter_room("floor_01_gallery")
+	if not allowed_move.get("ok", false):
+		failures.append("after resolving the encounter the same transition should be allowed: %s" % str(allowed_move.get("error", "")))
+	if coordinator.current_session.current_room_id != "floor_01_gallery":
+		failures.append("after the unblocked transition current_room_id should advance")
+	# Restore expected state for the rest of the test.
+	coordinator.current_session.current_room_id = "floor_01_fight"
 
 	if str(coordinator.current_session.flags.get("screen_state", "")) != "reward":
 		failures.append("a victory should route the run into the reward screen state")

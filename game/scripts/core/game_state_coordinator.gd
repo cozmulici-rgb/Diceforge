@@ -173,6 +173,17 @@ func enter_room(room_id: String) -> Dictionary:
 			"to_room_id": room_id,
 		}
 
+	if current_room_id != room_id:
+		var current_room_definition = _get_room_definition(room_graph, current_room_id)
+		var current_room_state: Dictionary = current_session.room_states.get(current_room_id, {})
+		if str(current_room_definition.get("encounter_id", "")) != "" and not bool(current_room_state.get("completed", false)):
+			return {
+				"ok": false,
+				"error": "encounter_unresolved",
+				"from_room_id": current_room_id,
+				"to_room_id": room_id,
+			}
+
 	current_session.current_room_id = room_id
 	var room_history: Array = current_session.flags.get("room_history", [])
 	room_history.append(room_id)
