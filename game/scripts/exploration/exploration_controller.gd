@@ -453,6 +453,11 @@ func _refresh_primary_action(current_room, selected_room, is_paused: bool) -> vo
 		primary_action_button.text = "No Encounter In Current Room"
 		return
 
+	if str(current_room.encounter_id) != "" and not current_room.completed:
+		primary_action_button.disabled = true
+		primary_action_button.text = "Resolve Current Encounter First"
+		return
+
 	if _is_neighbor(current_room, selected_id):
 		primary_action_button.text = "Travel To  ·  %s" % str(selected_room.display_name).to_upper()
 		return
