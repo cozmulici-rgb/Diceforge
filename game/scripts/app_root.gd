@@ -61,7 +61,7 @@ func _show_combat(combat_state) -> void:
 
 	var combat_screen = CombatScene.instantiate()
 	screen_host.add_child(combat_screen)
-	combat_screen.setup(content_catalog, combat_state)
+	combat_screen.setup(content_catalog, combat_state, int(game_state_coordinator.meta_state.echo_shards))
 	combat_screen.combat_state_updated.connect(_on_combat_state_updated)
 	combat_screen.combat_finished.connect(_on_combat_finished)
 

@@ -28,6 +28,7 @@ func run() -> Array[String]:
 	})
 
 	var boss_encounter = catalog.load_encounter("floor_01_overseer")
+	boss_encounter["player_rolls"] = [4, 4, 4, 4, 4, 4]
 	var combat_state = controller.begin_encounter(run_session, boss_encounter)
 	if combat_state == null or combat_state is Dictionary:
 		failures.append("begin_encounter should produce combat state for boss encounters")
