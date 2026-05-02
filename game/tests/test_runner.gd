@@ -1,29 +1,32 @@
 extends SceneTree
 
-const TEST_SCRIPTS := [
-	preload("res://tests/test_clamping.gd"),
-	preload("res://tests/test_battle_log.gd"),
-	preload("res://tests/test_hook_dispatcher.gd"),
-	preload("res://tests/test_status_engine.gd"),
-	preload("res://tests/test_dice_resolver.gd"),
-	preload("res://tests/test_effect_resolver.gd"),
-	preload("res://tests/test_enemy_ai.gd"),
-	preload("res://tests/test_combat_engine.gd"),
-	preload("res://tests/test_combat_engine_behavior.gd"),
-	preload("res://tests/test_combat_controller.gd"),
-	preload("res://tests/test_boss_encounter.gd"),
-	preload("res://tests/test_content_catalog.gd"),
-	preload("res://tests/test_daily_void_mode.gd"),
-	preload("res://tests/test_dice_model.gd"),
-	preload("res://tests/test_dungeon_generator.gd"),
-	preload("res://tests/test_exploration_flow.gd"),
-	preload("res://tests/test_forge_assembly.gd"),
-	preload("res://tests/test_meta_progression.gd"),
-	preload("res://tests/test_modifier_registry.gd"),
-	preload("res://tests/test_persistence_service.gd"),
-	preload("res://tests/test_reward_flow.gd"),
-	preload("res://tests/test_run_session.gd"),
+const TEST_SCRIPT_PATHS := [
+	"res://tests/test_clamping.gd",
+	"res://tests/test_battle_log.gd",
+	"res://tests/test_hook_dispatcher.gd",
+	"res://tests/test_status_engine.gd",
+	"res://tests/test_dice_resolver.gd",
+	"res://tests/test_effect_resolver.gd",
+	"res://tests/test_enemy_ai.gd",
+	"res://tests/test_combat_engine.gd",
+	"res://tests/test_combat_engine_behavior.gd",
+	"res://tests/test_combat_controller.gd",
+	"res://tests/test_combat_dice_reorder.gd",
+	"res://tests/test_boss_encounter.gd",
+	"res://tests/test_content_catalog.gd",
+	"res://tests/test_daily_void_mode.gd",
+	"res://tests/test_dice_model.gd",
+	"res://tests/test_dungeon_generator.gd",
+	"res://tests/test_exploration_flow.gd",
+	"res://tests/test_forge_assembly.gd",
+	"res://tests/test_meta_progression.gd",
+	"res://tests/test_modifier_registry.gd",
+	"res://tests/test_persistence_service.gd",
+	"res://tests/test_reward_flow.gd",
+	"res://tests/test_run_session.gd",
 ]
+
+const PER_TEST_TIMEOUT_MS := 30000
 
 var _failure_count := 0
 
@@ -31,13 +34,39 @@ var _failure_count := 0
 func _initialize() -> void:
 	print("Running Facetbound headless tests")
 
-	for script in TEST_SCRIPTS:
+	for path in TEST_SCRIPT_PATHS:
+		var test_name: String = path.get_file().get_basename()
+		var script := load(path) as GDScript
+		if script == null:
+			_failure_count += 1
+			push_error("FAIL %s: failed to load script (parse error or missing file)" % test_name)
+			continue
+		if not script.can_instantiate():
+			_failure_count += 1
+			push_error("FAIL %s: script cannot be instantiated (compile error)" % test_name)
+			continue
+
 		var test_case = script.new()
-		var test_name = script.resource_path.get_file().get_basename()
+		if test_case == null:
+			_failure_count += 1
+			push_error("FAIL %s: script.new() returned null" % test_name)
+			continue
+		if not test_case.has_method("run"):
+			_failure_count += 1
+			push_error("FAIL %s: missing run() method" % test_name)
+			continue
+
+		var started_ms: int = Time.get_ticks_msec()
 		var failures: Array = test_case.run()
+		var elapsed_ms: int = Time.get_ticks_msec() - started_ms
+
+		if elapsed_ms > PER_TEST_TIMEOUT_MS:
+			_failure_count += 1
+			push_error("FAIL %s: exceeded soft timeout (%d ms > %d ms)" % [test_name, elapsed_ms, PER_TEST_TIMEOUT_MS])
+			continue
 
 		if failures.is_empty():
-			print("PASS %s" % test_name)
+			print("PASS %s (%d ms)" % [test_name, elapsed_ms])
 			continue
 
 		for failure in failures:

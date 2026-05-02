@@ -179,6 +179,73 @@ func assign_die_to_action(state, die_id: String, action_slot_id: String) -> Dict
 	return {"ok": true, "combat_state": state}
 
 
+func move_die_in_order(state, die_id: String, direction: int) -> Dictionary:
+	if direction != -1 and direction != 1:
+		return {"ok": false, "error": "invalid_direction"}
+	var rolls: Array = state.roll_results as Array
+	var current_index := -1
+	for index in range(rolls.size()):
+		if str((rolls[index] as Dictionary).get("die_id", "")) == die_id:
+			current_index = index
+			break
+	if current_index == -1:
+		return {"ok": false, "error": "missing_die"}
+	var target_index := current_index + direction
+	if target_index < 0 or target_index >= rolls.size():
+		return {"ok": false, "error": "out_of_bounds"}
+	var swapped = rolls[current_index]
+	rolls[current_index] = rolls[target_index]
+	rolls[target_index] = swapped
+	return {"ok": true, "combat_state": state}
+
+
+func cycle_die_slot(state, die_id: String) -> Dictionary:
+	var rolls: Array = state.roll_results as Array
+	var current_slot_id := ""
+	var found := false
+	for roll in rolls:
+		if str((roll as Dictionary).get("die_id", "")) == die_id:
+			current_slot_id = str((roll as Dictionary).get("assigned_slot_id", ""))
+			found = true
+			break
+	if not found:
+		return {"ok": false, "error": "missing_die"}
+	var slots: Array = state.action_slots as Array
+	if slots.is_empty():
+		return {"ok": false, "error": "no_slots"}
+	var current_index := -1
+	for index in range(slots.size()):
+		if str((slots[index] as Dictionary).get("slot_id", "")) == current_slot_id:
+			current_index = index
+			break
+	var next_index := (current_index + 1) % slots.size()
+	var next_slot_id := str((slots[next_index] as Dictionary).get("slot_id", ""))
+
+	# Clear the existing assignment so dice_model.assign_die_to_action does not
+	# reject the re-assignment with die_already_assigned.
+	for roll in rolls:
+		var entry: Dictionary = roll as Dictionary
+		if str(entry.get("die_id", "")) == die_id:
+			entry["assigned_slot_id"] = ""
+			break
+	for slot in slots:
+		var slot_dict: Dictionary = slot as Dictionary
+		var assigned: Array = slot_dict.get("assigned_die_ids", []) as Array
+		assigned.erase(die_id)
+		slot_dict["assigned_die_ids"] = assigned
+
+	var assign_result := assign_die_to_action(state, die_id, next_slot_id) as Dictionary
+	if not bool(assign_result.get("ok", false)) and current_slot_id != "":
+		# Per spec §10: if the next slot rejects, the cycle stays on the
+		# previous slot — restore the assignment we cleared above.
+		var restore_result := assign_die_to_action(state, die_id, current_slot_id) as Dictionary
+		if not bool(restore_result.get("ok", false)):
+			# Restoration failed too (rare — slot constraints changed mid-call).
+			# Surface the original rejection so the UI can react.
+			return assign_result
+	return assign_result
+
+
 func resolve_player_turn(state) -> Dictionary:
 	if _engine == null:
 		return {"ok": false, "error": "missing_combat_engine"}
@@ -429,7 +496,7 @@ func _make_die_card(roll: Dictionary) -> Control:
 	var is_assigned := assigned_slot_id != ""
 
 	var card := PanelContainer.new()
-	card.custom_minimum_size = Vector2(118, 155)
+	card.custom_minimum_size = Vector2(118, 195)
 
 	var card_style := StyleBoxFlat.new()
 	card_style.bg_color = Color("10161d")
@@ -495,13 +562,57 @@ func _make_die_card(roll: Dictionary) -> Control:
 	cost_lbl.theme_type_variation = &"FacetInfo"
 	vbox.add_child(cost_lbl)
 
+	var control_row := HBoxContainer.new()
+	control_row.add_theme_constant_override("separation", 4)
+
+	var die_id := str(roll.get("die_id", ""))
+	var rolls: Array = combat_state.roll_results as Array
+	var roll_index := -1
+	for index in range(rolls.size()):
+		if str((rolls[index] as Dictionary).get("die_id", "")) == die_id:
+			roll_index = index
+			break
+	var is_assignment_phase := str(combat_state.state) == "player_assignment"
+
+	var left_button := Button.new()
+	left_button.text = "◀"
+	left_button.custom_minimum_size = Vector2(28, 24)
+	left_button.disabled = (not is_assignment_phase) or roll_index <= 0
+	left_button.pressed.connect(func() -> void:
+		move_die_in_order(combat_state, die_id, -1)
+		combat_state_updated.emit(combat_state)
+		_render()
+	)
+	control_row.add_child(left_button)
+
+	var slot_pill := Button.new()
 	if is_assigned:
-		var slot_lbl := Label.new()
-		slot_lbl.text = "→ %s" % _format_assigned_slot(assigned_slot_id)
-		slot_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		slot_lbl.theme_type_variation = &"FacetMeta"
-		slot_lbl.add_theme_color_override("font_color", FacetboundThemeScript.ACCENT_GOLD)
-		vbox.add_child(slot_lbl)
+		slot_pill.text = "→ %s" % _format_assigned_slot(assigned_slot_id)
+	else:
+		slot_pill.text = "→ Assign"
+	slot_pill.flat = true
+	slot_pill.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	slot_pill.add_theme_color_override("font_color", FacetboundThemeScript.ACCENT_GOLD)
+	slot_pill.disabled = not is_assignment_phase
+	slot_pill.pressed.connect(func() -> void:
+		cycle_die_slot(combat_state, die_id)
+		combat_state_updated.emit(combat_state)
+		_render()
+	)
+	control_row.add_child(slot_pill)
+
+	var right_button := Button.new()
+	right_button.text = "▶"
+	right_button.custom_minimum_size = Vector2(28, 24)
+	right_button.disabled = (not is_assignment_phase) or roll_index < 0 or roll_index >= rolls.size() - 1
+	right_button.pressed.connect(func() -> void:
+		move_die_in_order(combat_state, die_id, 1)
+		combat_state_updated.emit(combat_state)
+		_render()
+	)
+	control_row.add_child(right_button)
+
+	vbox.add_child(control_row)
 
 	return card
 
