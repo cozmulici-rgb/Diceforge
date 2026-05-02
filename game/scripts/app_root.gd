@@ -8,6 +8,7 @@ const CombatScene = preload("res://scenes/screens/combat_screen.tscn")
 const RewardScene = preload("res://scenes/screens/reward_screen.tscn")
 const ForgeScene = preload("res://scenes/screens/forge_screen.tscn")
 const ProgressionScene = preload("res://scenes/screens/progression_screen.tscn")
+const ContinueRunsDialogScript = preload("res://scripts/screens/continue_runs_dialog.gd")
 
 @onready var hud = $HUD
 @onready var screen_host = $ScreenHost
@@ -17,6 +18,7 @@ var game_state_coordinator
 var _current_screen_kind: String = ""
 var _confirm_dialog: ConfirmationDialog = null
 var _confirm_callback: Callable = Callable()
+var _continue_runs_dialog = null
 
 
 func _ready() -> void:
@@ -133,8 +135,43 @@ func _on_run_requested(archetype_id: String) -> void:
 
 
 func _on_continue_runs_requested() -> void:
-	# Filled in by Task 7 — instantiates the Continue popup.
-	pass
+	if _continue_runs_dialog == null:
+		_continue_runs_dialog = ContinueRunsDialogScript.new()
+		hud.add_child(_continue_runs_dialog)
+		_continue_runs_dialog.resume_requested.connect(_on_continue_resume_requested)
+		_continue_runs_dialog.rename_requested.connect(_on_continue_rename_requested)
+		_continue_runs_dialog.delete_requested.connect(_on_continue_delete_requested)
+	_continue_runs_dialog.configure(game_state_coordinator.list_resumable_runs())
+	_continue_runs_dialog.popup_centered()
+
+
+func _on_continue_resume_requested(slot_id: String) -> void:
+	var load_result = game_state_coordinator.load_run_session(slot_id)
+	if not load_result.get("ok", false):
+		hud.show_error("Continue failed. Safe defaults restored.")
+		_show_start_menu()
+		return
+	_show_exploration(load_result.get("run_session"))
+
+
+func _on_continue_rename_requested(slot_id: String, new_name: String) -> void:
+	var result = game_state_coordinator.rename_run(slot_id, new_name)
+	if not result.get("ok", false):
+		hud.show_error("Rename failed.")
+	_refresh_continue_dialog()
+
+
+func _on_continue_delete_requested(slot_id: String) -> void:
+	var result = game_state_coordinator.delete_run(slot_id)
+	if not result.get("ok", false):
+		hud.show_error("Delete failed.")
+	_refresh_continue_dialog()
+
+
+func _refresh_continue_dialog() -> void:
+	if _continue_runs_dialog == null:
+		return
+	_continue_runs_dialog.configure(game_state_coordinator.list_resumable_runs())
 
 
 func _on_daily_void_requested(archetype_id: String) -> void:
