@@ -103,6 +103,10 @@ func _ensure_directories() -> void:
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("%s/runs" % base_path))
 
 
+func run_slot_exists(slot_id: String) -> bool:
+	return FileAccess.file_exists(_run_slot_path(slot_id))
+
+
 func _run_slot_path(slot_id: String) -> String:
 	return "%s/runs/%s.json" % [base_path, slot_id]
 

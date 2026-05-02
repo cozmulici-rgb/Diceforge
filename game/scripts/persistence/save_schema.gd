@@ -7,6 +7,8 @@ const META_SCHEMA_VERSION := 2
 const REQUIRED_RUN_FIELDS := [
 	"schema_version",
 	"session_id",
+	"slot_id",
+	"display_name",
 	"archetype_id",
 	"floor_index",
 	"current_room_id",
