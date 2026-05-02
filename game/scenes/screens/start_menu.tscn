@@ -188,19 +188,6 @@ layout_mode = 2
 layout_mode = 2
 theme_override_constants/separation = 0
 
-[node name="ContinueSpacer" type="Control" parent="ContentColumn"]
-custom_minimum_size = Vector2(0, 10)
-layout_mode = 2
-
-[node name="ContinueStrip" type="HBoxContainer" parent="ContentColumn"]
-layout_mode = 2
-theme_override_constants/separation = 14
-
-[node name="ContinueRunButton" type="Button" parent="ContentColumn/ContinueStrip"]
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Continue Run"
-
 [node name="ArchetypeSpacer" type="Control" parent="ContentColumn"]
 custom_minimum_size = Vector2(0, 10)
 layout_mode = 2

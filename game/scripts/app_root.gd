@@ -37,14 +37,14 @@ func _show_start_menu() -> void:
 	var archetypes: Array = _available_archetypes()
 	start_menu.configure(
 		archetypes,
-		game_state_coordinator.get_continue_run_summary(),
+		game_state_coordinator.list_resumable_runs(),
 		game_state_coordinator.last_recovery_message,
 		game_state_coordinator.meta_state.last_daily_void_result,
 		int(game_state_coordinator.meta_state.echo_shards)
 	)
 	start_menu.run_requested.connect(_on_run_requested)
 	start_menu.daily_void_requested.connect(_on_daily_void_requested)
-	start_menu.continue_requested.connect(_on_continue_requested)
+	start_menu.continue_runs_requested.connect(_on_continue_runs_requested)
 
 
 func _show_exploration(run_session) -> void:
@@ -132,13 +132,9 @@ func _on_run_requested(archetype_id: String) -> void:
 	push_error("App root failed to create run: %s" % message)
 
 
-func _on_continue_requested(slot_id: String) -> void:
-	var load_result = game_state_coordinator.load_run_session(slot_id)
-	if not load_result.get("ok", false):
-		hud.show_error("Continue failed. Safe defaults restored.")
-		_show_start_menu()
-		return
-	_show_exploration(load_result.get("run_session"))
+func _on_continue_runs_requested() -> void:
+	# Filled in by Task 7 — instantiates the Continue popup.
+	pass
 
 
 func _on_daily_void_requested(archetype_id: String) -> void:
