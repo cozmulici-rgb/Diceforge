@@ -7,6 +7,8 @@ const META_SCHEMA_VERSION := 2
 const REQUIRED_RUN_FIELDS := [
 	"schema_version",
 	"session_id",
+	"slot_id",
+	"display_name",
 	"archetype_id",
 	"floor_index",
 	"current_room_id",
@@ -38,6 +40,10 @@ func validate_run_state(payload: Dictionary, content_catalog = null) -> Dictiona
 	errors.append_array(_validate_required_fields(payload, REQUIRED_RUN_FIELDS, "run_state"))
 	if int(payload.get("schema_version", -1)) != RUN_SCHEMA_VERSION:
 		errors.append("run_state schema_version is unsupported")
+
+	var trimmed_display_name: String = str(payload.get("display_name", "")).strip_edges()
+	if trimmed_display_name.length() == 0 or trimmed_display_name.length() > 64:
+		errors.append("run_state display_name must be 1–64 characters after trimming")
 
 	if content_catalog == null:
 		errors.append("content_catalog is required for run_state validation")

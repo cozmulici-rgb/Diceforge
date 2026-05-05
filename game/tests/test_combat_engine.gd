@@ -4,6 +4,23 @@ const ContentCatalogScript = preload("res://scripts/content/content_catalog.gd")
 const CombatEngineScript = preload("res://scripts/combat/combat_engine.gd")
 
 
+class FakeRng:
+	extends RefCounted
+
+	var _values: Array = []
+	var _index: int = 0
+
+	func _init(values: Array = []) -> void:
+		_values = values.duplicate(true)
+
+	func randi_range(minimum: int, maximum: int) -> int:
+		if _values.is_empty():
+			return minimum
+		var value := int(_values[min(_index, _values.size() - 1)])
+		_index += 1
+		return clampi(value, minimum, maximum)
+
+
 func run() -> Array[String]:
 	var failures: Array[String] = []
 	var catalog = ContentCatalogScript.new()
@@ -91,6 +108,18 @@ func run() -> Array[String]:
 		failures.append("turn_index should increment after enemy turn")
 	if (engine.get_log().get_entries() as Array).is_empty():
 		failures.append("BattleLog should contain entries")
+
+	var preview_rolls: Array = engine.build_enemy_rolls({"action": "attack", "damage": 3, "label": "Gel Strike"}, 1, 3, FakeRng.new([1, 4, 6]))
+	if preview_rolls.size() != 3:
+		failures.append("enemy roll builder should return three preview rolls")
+	else:
+		var values: Array[int] = []
+		for entry in preview_rolls:
+			values.append(int((entry as Dictionary).get("rolled_value", 0)))
+		if values != [1, 4, 6]:
+			failures.append("enemy roll builder should preserve the RNG sequence; got %s" % str(values))
+		if str(((preview_rolls[0] as Dictionary).get("die_label", ""))) != "Enemy Die 1":
+			failures.append("enemy roll builder should label rolls by position")
 
 	var engine3 = CombatEngineScript.new(catalog)
 	engine3.initialize_battle({

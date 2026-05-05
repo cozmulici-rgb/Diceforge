@@ -39,7 +39,7 @@ const FLESH_PIP := Color(1.0, 0.34, 0.4)
 
 signal run_requested(archetype_id: String)
 signal daily_void_requested(archetype_id: String)
-signal continue_requested(slot_id: String)
+signal continue_runs_requested()
 
 @onready var kicker_label: Label = $ContentColumn/KickerRow/KickerLabel
 @onready var kicker_line_left: ColorRect = $ContentColumn/KickerRow/KickerLineLeft
@@ -51,9 +51,6 @@ signal continue_requested(slot_id: String)
 @onready var archetype_options: OptionButton = $ContentColumn/ArchetypeStrip/ArchetypeOptionButton
 @onready var starter_label: Label = $ContentColumn/ArchetypeStrip/StarterLabel
 @onready var summary_label: Label = $ContentColumn/SummaryLabel
-@onready var continue_spacer: Control = $ContentColumn/ContinueSpacer
-@onready var continue_strip: HBoxContainer = $ContentColumn/ContinueStrip
-@onready var continue_button: Button = $ContentColumn/ContinueStrip/ContinueRunButton
 @onready var dice_cluster: Control = $DiceCluster
 @onready var frame_corners: Control = $FrameCorners
 @onready var footer_left: HBoxContainer = $FooterHUD/FooterLeft
@@ -62,6 +59,7 @@ signal continue_requested(slot_id: String)
 
 const MENU_ITEMS := [
 	{"id": "new-run", "label": "New Run", "hint": "Enter the Void Labyrinth", "hotkey": "↵", "accent": true, "enabled": true},
+	{"id": "continue", "label": "Continue", "hint": "Resume a saved run", "hotkey": "R", "accent": false, "enabled": false},
 	{"id": "archetypes", "label": "Archetypes", "hint": "Choose your Facetwalker", "hotkey": "A", "accent": false, "enabled": true},
 	{"id": "forge", "label": "Eternal Forge", "hint": "Spend Echo Shards", "hotkey": "F", "accent": false, "enabled": false},
 	{"id": "daily", "label": "Daily Void", "hint": "Seeded challenge run", "hotkey": "D", "accent": false, "enabled": true},
@@ -84,7 +82,7 @@ const DICE_LAYOUT := [
 ]
 
 var _archetypes: Array = []
-var _continue_summary: Dictionary = {}
+var _resumable_summaries: Array = []
 var _recovery_message := ""
 var _last_daily_void_result: Dictionary = {}
 var _shards_count := 0
@@ -100,10 +98,6 @@ func _ready() -> void:
 	_build_footer_hud()
 	_style_archetype_strip()
 	archetype_options.item_selected.connect(_on_archetype_selected)
-	continue_button.pressed.connect(_on_continue_pressed)
-
-	continue_spacer.visible = false
-	continue_strip.visible = false
 
 	if _archetypes.is_empty():
 		summary_label.text = "No starter archetypes are available."
@@ -115,7 +109,6 @@ func _apply_theme() -> void:
 	theme = FacetboundThemeScript.build()
 	archetype_options.theme_type_variation = &"FacetOptionButton"
 	summary_label.theme_type_variation = &"FacetBodyMuted"
-	continue_button.theme_type_variation = &"FacetTertiaryButton"
 
 
 func _style_title_block() -> void:
@@ -139,9 +132,9 @@ func _style_title_block() -> void:
 	subtitle_label.add_theme_color_override("font_color", TEXT_MUTED)
 
 
-func configure(archetypes: Array, continue_summary: Dictionary = {}, recovery_message: String = "", last_daily_void_result: Dictionary = {}, shards_count: int = 0) -> void:
+func configure(archetypes: Array, resumable_summaries: Array = [], recovery_message: String = "", last_daily_void_result: Dictionary = {}, shards_count: int = 0) -> void:
 	_archetypes = archetypes.duplicate(true)
-	_continue_summary = continue_summary.duplicate(true)
+	_resumable_summaries = resumable_summaries.duplicate(true)
 	_recovery_message = recovery_message
 	_last_daily_void_result = last_daily_void_result.duplicate(true)
 	_shards_count = shards_count
@@ -154,14 +147,9 @@ func configure(archetypes: Array, continue_summary: Dictionary = {}, recovery_me
 		archetype_options.add_item(str(archetype.get("name", archetype.get("id", "Unknown"))), index)
 
 	var has_archetypes := not _archetypes.is_empty()
-	var continue_available := not _continue_summary.is_empty()
-	var continue_enabled := continue_available and not bool(_continue_summary.get("is_corrupt", false))
-
 	_set_menu_row_enabled("new-run", has_archetypes)
 	_set_menu_row_enabled("daily", has_archetypes)
-	continue_button.disabled = not continue_enabled
-	continue_spacer.visible = continue_available
-	continue_strip.visible = continue_available
+	_set_menu_row_enabled("continue", _resumable_summaries.size() > 0)
 
 	_refresh_shards()
 	_update_summary()
@@ -637,6 +625,8 @@ func _on_menu_pressed(id: String) -> void:
 	match id:
 		"new-run":
 			_trigger_run()
+		"continue":
+			continue_runs_requested.emit()
 		"archetypes":
 			archetype_options.grab_focus()
 			if _archetypes.size() > 1:
@@ -663,12 +653,6 @@ func _trigger_daily_void() -> void:
 	daily_void_requested.emit(str(selected.get("id", "")))
 
 
-func _on_continue_pressed() -> void:
-	if _continue_summary.is_empty():
-		return
-	continue_requested.emit(str(_continue_summary.get("slot_id", "")))
-
-
 func _get_selected_archetype() -> Dictionary:
 	if _archetypes.is_empty():
 		return {}
@@ -690,11 +674,8 @@ func _update_summary() -> void:
 		str((selected.get("player_state", {}) as Dictionary).get("hp", 0)),
 		(selected.get("starter_dice", []) as Array).size(),
 	])
-	if not _continue_summary.is_empty():
-		parts.append("Resume: floor %d · room %s" % [
-			int(_continue_summary.get("floor_index", 0)),
-			str(_continue_summary.get("room_id", "")),
-		])
+	if _resumable_summaries.size() > 0:
+		parts.append("%d saved run(s) available — open Continue to resume." % _resumable_summaries.size())
 	if _recovery_message != "":
 		parts.append("Recovery: %s" % _recovery_message)
 	if not _last_daily_void_result.is_empty():
@@ -722,6 +703,7 @@ func _input(event: InputEvent) -> void:
 	var key_to_id := {
 		KEY_ENTER: "new-run",
 		KEY_KP_ENTER: "new-run",
+		KEY_R: "continue",
 		KEY_A: "archetypes",
 		KEY_F: "forge",
 		KEY_D: "daily",

@@ -4,6 +4,8 @@ extends RefCounted
 const SCHEMA_VERSION := 2
 
 var session_id: String
+var slot_id: String
+var display_name: String
 var archetype_id: String
 var floor_index: int
 var current_room_id: String
@@ -29,6 +31,8 @@ var progression_result: Dictionary
 
 func _init(data: Dictionary = {}) -> void:
 	session_id = str(data.get("session_id", ""))
+	slot_id = str(data.get("slot_id", ""))
+	display_name = str(data.get("display_name", ""))
 	archetype_id = str(data.get("archetype_id", ""))
 	floor_index = int(data.get("floor_index", 1))
 	current_room_id = str(data.get("current_room_id", ""))
@@ -56,6 +60,8 @@ func to_dictionary() -> Dictionary:
 	return {
 		"schema_version": SCHEMA_VERSION,
 		"session_id": session_id,
+		"slot_id": slot_id,
+		"display_name": display_name,
 		"archetype_id": archetype_id,
 		"floor_index": floor_index,
 		"current_room_id": current_room_id,

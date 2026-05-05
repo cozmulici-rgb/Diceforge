@@ -8,7 +8,7 @@ var _clamping := ClampingScript.new()
 var _status_engine := StatusEngineScript.new()
 
 
-func select_action(enemy_state: Dictionary, turn_index: int) -> Dictionary:
+func select_action(enemy_state: Dictionary, turn_index: int, rng: RandomNumberGenerator = null) -> Dictionary:
 	var pattern := (enemy_state.get("ai_pattern", []) as Array).duplicate(true)
 	if pattern.is_empty():
 		return {
@@ -16,7 +16,10 @@ func select_action(enemy_state: Dictionary, turn_index: int) -> Dictionary:
 			"damage": int(enemy_state.get("intent_damage", 0)),
 			"label": str(enemy_state.get("intent_label", "Strike")),
 		}
-	var index := (maxi(turn_index, 1) - 1) % pattern.size()
+	if rng == null:
+		rng = RandomNumberGenerator.new()
+		rng.randomize()
+	var index := rng.randi_range(0, pattern.size() - 1)
 	return (pattern[index] as Dictionary).duplicate(true)
 
 

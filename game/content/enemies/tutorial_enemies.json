@@ -4,8 +4,8 @@
     {
       "id": "slime_echo",
       "name": "Slime Echo",
-      "hp": 8,
-      "max_hp": 8,
+      "hp": 26,
+      "max_hp": 26,
       "starting_block": 0,
       "intent": "Gel Strike",
       "damage": 3,
