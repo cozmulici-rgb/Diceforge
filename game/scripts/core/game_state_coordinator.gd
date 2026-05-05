@@ -30,12 +30,13 @@ var last_recovery_message := ""
 const _LEGACY_ACTIVE_SLOT_ID := "active_run"
 
 
-func _init(catalog) -> void:
+func _init(catalog, base_path_override: String = "") -> void:
 	content_catalog = catalog
 	_reward_controller = RewardControllerScript.new(catalog)
 	_forge_assembly_system = ForgeAssemblySystemScript.new(catalog)
 	_dungeon_generator = DungeonGeneratorScript.new(catalog)
-	persistence_service = PersistenceServiceScript.new(catalog)
+	var storage_base_path := base_path_override if base_path_override != "" else "user://facetbound"
+	persistence_service = PersistenceServiceScript.new(catalog, storage_base_path)
 	meta_progression_controller = MetaProgressionControllerScript.new(catalog)
 	daily_void_mode_adapter = DailyVoidModeAdapterScript.new(catalog)
 	modifier_registry = ModifierRegistryScript.new(catalog)

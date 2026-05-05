@@ -3,12 +3,16 @@ extends RefCounted
 const ContentCatalogScript = preload("res://scripts/content/content_catalog.gd")
 const CombatControllerScript = preload("res://scripts/combat/combat_controller.gd")
 const GameStateCoordinatorScript = preload("res://scripts/core/game_state_coordinator.gd")
+const PersistenceServiceScript = preload("res://scripts/persistence/persistence_service.gd")
 const RunSessionScript = preload("res://scripts/core/run_session.gd")
+
+const _TEST_BASE_PATH := "user://facetbound_test_boss"
 
 
 func run() -> Array[String]:
 	var failures: Array[String] = []
 	var catalog = ContentCatalogScript.new()
+	PersistenceServiceScript.new(catalog, _TEST_BASE_PATH).delete_meta_state()
 	var controller = CombatControllerScript.new()
 	controller.content_catalog = catalog
 
@@ -47,7 +51,7 @@ func run() -> Array[String]:
 	if bool(boss_result.get("run_complete", false)):
 		failures.append("the first floor boss should not mark the entire run complete")
 
-	var coordinator = GameStateCoordinatorScript.new(catalog)
+	var coordinator = GameStateCoordinatorScript.new(catalog, "user://facetbound_test_boss")
 	var session = coordinator.create_run_session("starter_facetwalker")
 	if session == null or session is Dictionary:
 		failures.append("boss encounter completion test requires a valid run session")

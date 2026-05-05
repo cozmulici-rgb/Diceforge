@@ -63,6 +63,13 @@ func delete_run_state(slot_id: String) -> Dictionary:
 	return {"ok": DirAccess.remove_absolute(ProjectSettings.globalize_path(path)) == OK}
 
 
+func delete_meta_state() -> Dictionary:
+	var path := _meta_state_path()
+	if not FileAccess.file_exists(path):
+		return {"ok": true}
+	return {"ok": DirAccess.remove_absolute(ProjectSettings.globalize_path(path)) == OK}
+
+
 func list_run_slots() -> Array:
 	_ensure_directories()
 	var summaries: Array = []
