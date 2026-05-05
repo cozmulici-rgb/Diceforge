@@ -68,6 +68,11 @@ func run() -> Array[String]:
 	var post_clear_room_state: Dictionary = coordinator.current_session.room_states.get("floor_01_fight", {})
 	if not bool(post_clear_room_state.get("completed", false)):
 		failures.append("victory should mark the encounter room as completed")
+	var repeated_encounter = coordinator.begin_encounter("tutorial_slime")
+	if repeated_encounter.get("ok", false):
+		failures.append("completed encounter rooms should not allow the same battle to start again")
+	if str(repeated_encounter.get("error", "")) != "room_already_completed":
+		failures.append("completed encounter rooms should return room_already_completed, got: %s" % str(repeated_encounter.get("error", "")))
 	var allowed_move = coordinator.enter_room("floor_01_gallery")
 	if not allowed_move.get("ok", false):
 		failures.append("after resolving the encounter the same transition should be allowed: %s" % str(allowed_move.get("error", "")))

@@ -341,7 +341,7 @@ func _refresh_view() -> void:
 	room_name_label.text = str(current_room.display_name).to_upper()
 	subtitle_label.text = "FLOOR  ·  %02d  ·  %s" % [int(run_session.floor_index), "CLEARED" if current_room.completed else "ACTIVE"]
 	room_meta_label.text = _current_room_summary(current_room)
-	encounter_status_label.text = str(run_session.flags.get("encounter_status", "Select a connected node to travel, or commit the current room to combat."))
+	encounter_status_label.text = _encounter_status_text(current_room, selected_room, is_paused)
 
 	selected_room_label.text = str(selected_room.display_name).to_upper()
 	selected_room_label.add_theme_color_override("font_color", _room_color(selected_room))
@@ -446,8 +446,12 @@ func _refresh_primary_action(current_room, selected_room, is_paused: bool) -> vo
 		return
 
 	if selected_id == current_id:
-		if str(current_room.encounter_id) != "":
+		if str(current_room.encounter_id) != "" and not current_room.completed:
 			primary_action_button.text = "Enter Encounter  ·  %s" % str(current_room.encounter_id).to_upper()
+			return
+		if current_room.completed:
+			primary_action_button.disabled = true
+			primary_action_button.text = "Encounter Cleared"
 			return
 		primary_action_button.disabled = true
 		primary_action_button.text = "No Encounter In Current Room"
@@ -488,6 +492,14 @@ func _refresh_footer(current_room, selected_room, is_paused: bool) -> void:
 
 func _room_color(room_state) -> Color:
 	return ROOM_TYPE_COLORS.get(str(room_state.room_type), TEXT_PRIMARY)
+
+
+func _encounter_status_text(current_room, selected_room, is_paused: bool) -> String:
+	if is_paused:
+		return str(run_session.flags.get("encounter_status", "Combat is in progress."))
+	if str(selected_room.room_id) == str(current_room.room_id) and current_room.completed and str(current_room.encounter_id) != "":
+		return "Encounter cleared. This room cannot be challenged again."
+	return str(run_session.flags.get("encounter_status", "Select a connected node to travel, or commit the current room to combat."))
 
 
 func _is_neighbor(current_room, room_id: String) -> bool:

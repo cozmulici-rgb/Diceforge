@@ -230,6 +230,9 @@ func begin_encounter(encounter_id: String) -> Dictionary:
 	var expected_encounter_id: String = str(current_room.get("encounter_id", ""))
 	if expected_encounter_id == "":
 		return {"ok": false, "error": "room_has_no_encounter"}
+	var current_room_state: Dictionary = current_session.room_states.get(str(current_session.current_room_id), {})
+	if bool(current_room_state.get("completed", false)):
+		return {"ok": false, "error": "room_already_completed"}
 	if encounter_id != expected_encounter_id:
 		return {
 			"ok": false,
@@ -711,4 +714,3 @@ func delete_run(slot_id: String) -> Dictionary:
 
 func list_run_slots() -> Array:
 	return persistence_service.list_run_slots()
-
