@@ -1,6 +1,7 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/combat/combat_controller.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/combat/dice_roll_overlay.gd" id="8"]
 [ext_resource type="Texture2D" path="res://assets/combat/exports/bg-combat-void-dais-v1.png" id="2"]
 [ext_resource type="Texture2D" path="res://assets/combat/exports/bg-combat-void-fog-v1.png" id="3"]
 [ext_resource type="Texture2D" path="res://assets/combat/exports/overlay-combat-runes-v1.png" id="4"]
@@ -408,3 +409,7 @@ horizontal_scroll_mode = 0
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 3
+
+[node name="DiceRollOverlay" type="CanvasLayer" parent="."]
+layer = 10
+script = ExtResource("8")
