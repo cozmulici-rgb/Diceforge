@@ -47,13 +47,14 @@ func _build_scene() -> void:
 	_viewport.transparent_bg = true
 	vp_container.add_child(_viewport)
 
-	# Camera close so dice fill the strip.
-	# Pitch -35° from (0, 2, 3): centre-ray hits floor at z≈0.14;
-	# bottom frustum hits z≈1.97 — spawn at z=1.0 lands in the lower half.
+	# Narrow FOV (telephoto) prevents perspective distortion on the wide strip.
+	# Vertical FOV 25° → horizontal ~103° instead of ~142° at FOV 55°.
+	# Pitch -28° from (0, 3, 5.5): centre-ray hits floor at z≈0; bottom frustum
+	# at z≈2 — dice at z=1 land in the lower half with minimal foreshortening.
 	var camera := Camera3D.new()
-	camera.position = Vector3(0.0, 2.0, 3.0)
-	camera.rotation_degrees = Vector3(-35.0, 0.0, 0.0)
-	camera.fov = 55.0
+	camera.position = Vector3(0.0, 3.0, 5.5)
+	camera.rotation_degrees = Vector3(-28.0, 0.0, 0.0)
+	camera.fov = 25.0
 	_viewport.add_child(camera)
 
 	var sun := DirectionalLight3D.new()
