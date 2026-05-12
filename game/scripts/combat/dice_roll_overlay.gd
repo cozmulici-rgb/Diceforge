@@ -3,21 +3,29 @@ extends CanvasLayer
 
 signal roll_complete
 
-const SETTLE_THRESHOLD  := 0.06
-const SETTLE_DURATION   := 0.7
-const DISPLAY_HOLD      := 1.4
-const STRIP_HEIGHT      := 260.0
-# GLB meshes from dice-box are ~0.18 Godot units native;
-# scale the visual node to make them fill the strip nicely.
-const DIE_VISUAL_SCALE  := 5.0
+const SETTLE_THRESHOLD   := 0.06
+const SETTLE_DURATION    := 0.7
+const DISPLAY_HOLD       := 1.4
 # Collision half-extents (Godot physics units, independent of visual scale).
 const DIE_COLLISION_HALF := 0.45
 
+# Tuneable at runtime — read by the debug tuner scene.
+var strip_height: float      = 260.0
+var die_visual_scale: float  = 5.0
+var spawn_y: float           = 4.0
+var spawn_z: float           = 1.0
+
+# Exposed so the debug tuner can modify them live.
+var camera: Camera3D
+
+var _vp_container: SubViewportContainer
 var _viewport: SubViewport
 var _die_bodies: Array = []
 var _settle_timer := 0.0
 var _settled := false
 var _rng := RandomNumberGenerator.new()
+var _lin_vel_scale: float = 1.0
+var _ang_vel_scale: float = 12.0
 
 
 func _ready() -> void:
@@ -33,25 +41,24 @@ func _build_scene() -> void:
 	# use absolute pixel coordinates derived from the actual viewport size instead.
 	var screen := get_viewport().get_visible_rect().size
 	var strip_w := screen.x
-	var strip_y := screen.y - STRIP_HEIGHT
 
-	var vp_container := SubViewportContainer.new()
-	vp_container.position = Vector2(0.0, strip_y)
-	vp_container.size     = Vector2(strip_w, STRIP_HEIGHT)
-	vp_container.stretch  = true
-	add_child(vp_container)
+	_vp_container = SubViewportContainer.new()
+	_vp_container.position = Vector2(0.0, screen.y - strip_height)
+	_vp_container.size     = Vector2(strip_w, strip_height)
+	_vp_container.stretch  = true
+	add_child(_vp_container)
 
 	_viewport = SubViewport.new()
-	_viewport.size = Vector2i(int(strip_w), int(STRIP_HEIGHT))
+	_viewport.size = Vector2i(int(strip_w), int(strip_height))
 	_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	_viewport.transparent_bg = true
-	vp_container.add_child(_viewport)
+	_vp_container.add_child(_viewport)
 
 	# Narrow FOV (telephoto) prevents perspective distortion on the wide strip.
 	# Vertical FOV 25° → horizontal ~103° instead of ~142° at FOV 55°.
 	# Pitch -28° from (0, 3, 5.5): centre-ray hits floor at z≈0; bottom frustum
 	# at z≈2 — dice at z=1 land in the lower half with minimal foreshortening.
-	var camera := Camera3D.new()
+	camera = Camera3D.new()
 	camera.position = Vector3(0.0, 3.0, 5.5)
 	camera.rotation_degrees = Vector3(-28.0, 0.0, 0.0)
 	camera.fov = 25.0
@@ -109,28 +116,28 @@ func start_roll(roll_data: Array) -> void:
 		var body_id := str(entry.get("body_id", "standard_d6"))
 		var sides   := _sides_from_body_id(body_id)
 		var x_pos   := _spread_x(i, count)
-		# z=1.0 puts the landing zone in the lower half of the viewport
-		var start   := Vector3(x_pos, 4.0 + _rng.randf_range(0.0, 1.0), 1.0 + _rng.randf_range(-0.3, 0.3))
+		var start_pos := Vector3(x_pos, spawn_y + _rng.randf_range(0.0, 1.0), spawn_z + _rng.randf_range(-0.3, 0.3))
 
-		var rigid := _spawn_die(sides, start)
+		var rigid := _spawn_die(sides, start_pos)
 		_viewport.add_child(rigid)
 
 		rigid.linear_velocity = Vector3(
 			_rng.randf_range(-1.0, 1.0),
 			_rng.randf_range(-0.5, 0.0),
 			_rng.randf_range(-0.5, 0.5)
-		)
+		) * _lin_vel_scale
 		rigid.angular_velocity = Vector3(
-			_rng.randf_range(-12.0, 12.0),
-			_rng.randf_range(-12.0, 12.0),
-			_rng.randf_range(-12.0, 12.0)
-		)
+			_rng.randf_range(-1.0, 1.0),
+			_rng.randf_range(-1.0, 1.0),
+			_rng.randf_range(-1.0, 1.0)
+		) * _ang_vel_scale
 
 		_die_bodies.append({
 			"rigid_body":   rigid,
 			"die_id":       str(entry.get("die_id", "")),
 			"rolled_value": int(entry.get("rolled_value", 1)),
 			"face_label":   str(entry.get("face_label", "")),
+			"visual_node":  rigid.get_child(rigid.get_child_count() - 1),
 		})
 
 	show()
@@ -153,12 +160,12 @@ func trigger_reroll(die_id: String, new_value: int) -> void:
 			_rng.randf_range(-1.0, 1.0),
 			4.0,
 			_rng.randf_range(-0.5, 0.5)
-		)
+		) * _lin_vel_scale
 		rb.angular_velocity = Vector3(
-			_rng.randf_range(-14.0, 14.0),
-			_rng.randf_range(-14.0, 14.0),
-			_rng.randf_range(-14.0, 14.0)
-		)
+			_rng.randf_range(-1.0, 1.0),
+			_rng.randf_range(-1.0, 1.0),
+			_rng.randf_range(-1.0, 1.0)
+		) * _ang_vel_scale
 		_settled = false
 		_settle_timer = 0.0
 		break
@@ -240,7 +247,7 @@ func _spawn_die(sides: int, position: Vector3) -> RigidBody3D:
 		var packed := load(mesh_path) as PackedScene
 		if packed != null:
 			var visual := packed.instantiate()
-			visual.scale = Vector3(DIE_VISUAL_SCALE, DIE_VISUAL_SCALE, DIE_VISUAL_SCALE)
+			visual.scale = Vector3(die_visual_scale, die_visual_scale, die_visual_scale)
 			body.add_child(visual)
 			return body
 
@@ -283,6 +290,14 @@ func _spread_x(index: int, total: int) -> float:
 	var spacing := minf(2.2, 9.0 / float(total - 1))
 	var span := float(total - 1) * spacing
 	return -span / 2.0 + index * spacing
+
+
+func resize_strip(new_height: float) -> void:
+	strip_height = new_height
+	var screen := get_viewport().get_visible_rect().size
+	_vp_container.position.y = screen.y - new_height
+	_vp_container.size.y = new_height
+	_viewport.size.y = int(new_height)
 
 
 func _sides_from_body_id(body_id: String) -> int:
