@@ -3,11 +3,15 @@ extends CanvasLayer
 
 signal roll_complete
 
-const SETTLE_THRESHOLD := 0.06
-const SETTLE_DURATION  := 0.7
-const DISPLAY_HOLD     := 1.4
-const STRIP_HEIGHT     := 260.0
-const DIE_SCALE        := 1.4
+const SETTLE_THRESHOLD  := 0.06
+const SETTLE_DURATION   := 0.7
+const DISPLAY_HOLD      := 1.4
+const STRIP_HEIGHT      := 260.0
+# GLB meshes from dice-box are ~0.18 Godot units native;
+# scale the visual node to make them fill the strip nicely.
+const DIE_VISUAL_SCALE  := 5.0
+# Collision half-extents (Godot physics units, independent of visual scale).
+const DIE_COLLISION_HALF := 0.45
 
 var _viewport: SubViewport
 var _die_bodies: Array = []
@@ -25,25 +29,29 @@ func _ready() -> void:
 
 
 func _build_scene() -> void:
+	# Anchors do not constrain a SubViewportContainer inside a CanvasLayer correctly —
+	# use absolute pixel coordinates derived from the actual viewport size instead.
+	var screen := get_viewport().get_visible_rect().size
+	var strip_w := screen.x
+	var strip_y := screen.y - STRIP_HEIGHT
+
 	var vp_container := SubViewportContainer.new()
-	vp_container.set_anchor_and_offset(SIDE_LEFT,   0.0,  0.0)
-	vp_container.set_anchor_and_offset(SIDE_RIGHT,  1.0,  0.0)
-	vp_container.set_anchor_and_offset(SIDE_TOP,    1.0, -STRIP_HEIGHT)
-	vp_container.set_anchor_and_offset(SIDE_BOTTOM, 1.0,  0.0)
-	vp_container.stretch = true
+	vp_container.position = Vector2(0.0, strip_y)
+	vp_container.size     = Vector2(strip_w, STRIP_HEIGHT)
+	vp_container.stretch  = true
 	add_child(vp_container)
 
 	_viewport = SubViewport.new()
-	_viewport.size = Vector2i(1280, int(STRIP_HEIGHT))
+	_viewport.size = Vector2i(int(strip_w), int(STRIP_HEIGHT))
 	_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	_viewport.transparent_bg = true
 	vp_container.add_child(_viewport)
 
-	# Camera aimed so the landing zone (z≈1.5) falls in the lower third of the strip.
-	# Pitch -35° from (0, 3, 5): centre-ray hits floor at z ≈ 0.7;
-	# bottom frustum edge hits floor at z ≈ 3.4 — dice at z=1.5 land in the lower half.
+	# Camera close so dice fill the strip.
+	# Pitch -35° from (0, 2, 3): centre-ray hits floor at z≈0.14;
+	# bottom frustum hits z≈1.97 — spawn at z=1.0 lands in the lower half.
 	var camera := Camera3D.new()
-	camera.position = Vector3(0.0, 3.0, 5.0)
+	camera.position = Vector3(0.0, 2.0, 3.0)
 	camera.rotation_degrees = Vector3(-35.0, 0.0, 0.0)
 	camera.fov = 55.0
 	_viewport.add_child(camera)
@@ -67,7 +75,7 @@ func _build_scene() -> void:
 	world_env.environment = env
 	_viewport.add_child(world_env)
 
-	# Invisible physics floor — no MeshInstance3D
+	# Invisible physics floor
 	var floor_body := StaticBody3D.new()
 	var floor_col := CollisionShape3D.new()
 	var floor_box := BoxShape3D.new()
@@ -76,6 +84,16 @@ func _build_scene() -> void:
 	floor_col.position.y = -0.1
 	floor_body.add_child(floor_col)
 	_viewport.add_child(floor_body)
+
+	# Invisible rear wall — keeps dice from rolling too close to camera and appearing huge
+	var wall_body := StaticBody3D.new()
+	var wall_col := CollisionShape3D.new()
+	var wall_box := BoxShape3D.new()
+	wall_box.size = Vector3(40.0, 10.0, 0.2)
+	wall_col.shape = wall_box
+	wall_body.position = Vector3(0.0, 2.0, 1.75)
+	wall_body.add_child(wall_col)
+	_viewport.add_child(wall_body)
 
 
 func start_roll(roll_data: Array) -> void:
@@ -90,8 +108,8 @@ func start_roll(roll_data: Array) -> void:
 		var body_id := str(entry.get("body_id", "standard_d6"))
 		var sides   := _sides_from_body_id(body_id)
 		var x_pos   := _spread_x(i, count)
-		# z=1.5 puts the landing zone in the lower half of the viewport
-		var start   := Vector3(x_pos, 5.0 + _rng.randf_range(0.0, 1.2), 1.5 + _rng.randf_range(-0.4, 0.4))
+		# z=1.0 puts the landing zone in the lower half of the viewport
+		var start   := Vector3(x_pos, 4.0 + _rng.randf_range(0.0, 1.0), 1.0 + _rng.randf_range(-0.3, 0.3))
 
 		var rigid := _spawn_die(sides, start)
 		_viewport.add_child(rigid)
@@ -221,14 +239,14 @@ func _spawn_die(sides: int, position: Vector3) -> RigidBody3D:
 		var packed := load(mesh_path) as PackedScene
 		if packed != null:
 			var visual := packed.instantiate()
-			visual.scale = Vector3(DIE_SCALE, DIE_SCALE, DIE_SCALE)
+			visual.scale = Vector3(DIE_VISUAL_SCALE, DIE_VISUAL_SCALE, DIE_VISUAL_SCALE)
 			body.add_child(visual)
 			return body
 
-	# Fallback: coloured box
+	# Fallback: coloured box sized to match the collision shape
 	var mi := MeshInstance3D.new()
 	var bm := BoxMesh.new()
-	bm.size = Vector3(0.9, 0.9, 0.9) * DIE_SCALE
+	bm.size = Vector3(1.0, 1.0, 1.0) * DIE_COLLISION_HALF * 2.0
 	mi.mesh = bm
 	var mat := StandardMaterial3D.new()
 	mat.albedo_color = Color(0.18, 0.36, 0.72)
@@ -240,23 +258,14 @@ func _spawn_die(sides: int, position: Vector3) -> RigidBody3D:
 
 
 func _collision_shape_for(sides: int) -> Shape3D:
-	var s := DIE_SCALE
 	match sides:
-		4:
+		4, 8, 10, 12, 20:
 			var sh := SphereShape3D.new()
-			sh.radius = 0.52 * s
-			return sh
-		8, 10, 12:
-			var sh := SphereShape3D.new()
-			sh.radius = 0.56 * s
-			return sh
-		20:
-			var sh := SphereShape3D.new()
-			sh.radius = 0.60 * s
+			sh.radius = DIE_COLLISION_HALF
 			return sh
 		_:  # d6 and unknown
 			var sh := BoxShape3D.new()
-			sh.size = Vector3(0.9, 0.9, 0.9) * s
+			sh.size = Vector3(1.0, 1.0, 1.0) * DIE_COLLISION_HALF * 2.0
 			return sh
 
 
