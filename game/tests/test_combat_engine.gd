@@ -101,6 +101,15 @@ func run() -> Array[String]:
 	if str(engine2.check_battle_end().get("result", "")) != "ongoing":
 		failures.append("battle should continue after non-lethal player turn")
 	engine2.run_enemy_turn()
+	var enemy_entries := (engine2.get_log().get_entries().filter(func(entry: Dictionary) -> bool:
+		return str(entry.get("step_kind", "")) == "enemy_action"
+	) as Array)
+	if enemy_entries.is_empty():
+		failures.append("enemy turns should be recorded in the battle log")
+	else:
+		var enemy_summary: Dictionary = ((enemy_entries[-1] as Dictionary).get("effect_summary", {}) as Dictionary).duplicate(true)
+		if int(enemy_summary.get("raw_damage", -1)) != 10 or int(enemy_summary.get("hp_damage", -1)) != 2 or int(enemy_summary.get("absorbed_by_block", -1)) != 1:
+			failures.append("enemy action logs should explain raw damage, absorbed block, and hp loss")
 	engine2.end_enemy_turn()
 	if str(engine2.check_battle_end().get("result", "")) != "defeat":
 		failures.append("enemy turn should defeat the player")

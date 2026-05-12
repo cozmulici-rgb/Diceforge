@@ -154,10 +154,13 @@ func run_resolution_loop() -> Dictionary:
 		enemy = (pre_resolution.get("enemy", enemy) as Dictionary).duplicate(true)
 		temporary_modifiers = (pre_resolution.get("temporary_modifiers", temporary_modifiers) as Array).duplicate(true)
 
+		var player_before_resolution := player.duplicate(true)
+		var enemy_before_resolution := enemy.duplicate(true)
 		var resolution := _effect_resolver.resolve_face(entry, int(entry.get("rolled_value", 0)), player, enemy, temporary_modifiers, {})
 		player = (resolution.get("player", player) as Dictionary).duplicate(true)
 		enemy = (resolution.get("enemy", enemy) as Dictionary).duplicate(true)
 		temporary_modifiers = (resolution.get("temporary_modifiers", temporary_modifiers) as Array).duplicate(true)
+		var effect_summary: Dictionary = (resolution.get("effect_summary", {}) as Dictionary).duplicate(true)
 		player["energy"] = _clamping.clamp_energy(int(player.get("energy", 0)) - energy_cost)
 
 		if str(entry.get("effect", "")) == "reroll":
@@ -169,6 +172,7 @@ func run_resolution_loop() -> Dictionary:
 					queue = (reroll_result.get("rolled_faces", queue) as Array).duplicate(true)
 					var rerolled_entry := _find_queue_entry(queue, str(target_id))
 					_record_roll_entry(rerolled_entry, _step_index_for_entry(before_entry))
+			effect_summary["reroll_count"] = targets.size()
 
 		var on_resolution := _apply_hooks_for_die(entry, "on_resolution", player, enemy, temporary_modifiers)
 		player = (on_resolution.get("player", player) as Dictionary).duplicate(true)
@@ -184,8 +188,9 @@ func run_resolution_loop() -> Dictionary:
 			"family": str(entry.get("face_family", "")),
 			"effect": str(entry.get("effect", "")),
 			"base_value": int(entry.get("rolled_value", 0)) * int(entry.get("value", 1)),
-			"modifiers_applied": [],
-			"outcome": "resolved",
+			"modifiers_applied": _collect_resolution_modifiers(entry, effect_summary),
+			"outcome": _describe_resolution_outcome(entry, effect_summary, player_before_resolution, enemy_before_resolution, player, enemy),
+			"effect_summary": effect_summary,
 			"rerolled_from": null,
 		})
 
@@ -293,7 +298,9 @@ func resolve_prepared_enemy_turn() -> void:
 
 	var player: Dictionary = (_state.get("player", {}) as Dictionary).duplicate(true)
 	var enemy: Dictionary = (_state.get("enemy", {}) as Dictionary).duplicate(true)
+	var player_before_action := player.duplicate(true)
 	player = _enemy_ai.resolve_action(action, player, {})
+	var enemy_effect_summary := _build_enemy_action_summary(action, player_before_action, player)
 	_state["player"] = player
 	_state["enemy"] = enemy
 	_state["phase"] = "enemy_action"
@@ -307,7 +314,8 @@ func resolve_prepared_enemy_turn() -> void:
 		"effect": str(action.get("action", "")),
 		"base_value": int(action.get("damage", 0)),
 		"modifiers_applied": [],
-		"outcome": "enemy_resolved",
+		"outcome": _describe_enemy_action(action, enemy_effect_summary),
+		"effect_summary": enemy_effect_summary,
 		"rerolled_from": null,
 	})
 
@@ -601,3 +609,105 @@ func _has_skip_status(statuses: Array) -> bool:
 		if (str(item.get("id", "")) == "freeze" or str(item.get("id", "")) == "stun") and int(item.get("stacks", 0)) > 0:
 			return true
 	return false
+
+
+func _collect_resolution_modifiers(entry: Dictionary, effect_summary: Dictionary) -> Array:
+	var modifiers: Array = []
+	if str(entry.get("effect", "")) == "damage":
+		var bonus_applied := int(effect_summary.get("bonus_applied", 0))
+		if bonus_applied != 0:
+			modifiers.append("+%d amplify" % bonus_applied)
+	return modifiers
+
+
+func _describe_resolution_outcome(entry: Dictionary, effect_summary: Dictionary, player_before: Dictionary, enemy_before: Dictionary, player_after: Dictionary, enemy_after: Dictionary) -> String:
+	match str(entry.get("effect", "")):
+		"damage":
+			return "%d raw, %d blocked, %d hp dealt" % [
+				int(effect_summary.get("raw_damage", 0)),
+				int(effect_summary.get("absorbed_by_block", 0)),
+				int(effect_summary.get("hp_damage", 0)),
+			]
+		"block":
+			return "%d block gained (%d -> %d)" % [
+				int(effect_summary.get("block_gained", 0)),
+				int(effect_summary.get("block_before", int(player_before.get("block", 0)))),
+				int(effect_summary.get("block_after", int(player_after.get("block", 0)))),
+			]
+		"heal":
+			return "%d hp restored (%d -> %d)" % [
+				int(effect_summary.get("heal_applied", 0)),
+				int(effect_summary.get("hp_before", int(player_before.get("hp", 0)))),
+				int(effect_summary.get("hp_after", int(player_after.get("hp", 0)))),
+			]
+		"burn", "poison", "freeze":
+			return "%s applied: %d stack(s), %d turn(s)" % [
+				str(effect_summary.get("effect", str(entry.get("effect", "")))),
+				int(effect_summary.get("stacks", 0)),
+				int(effect_summary.get("duration", 0)),
+			]
+		"amplify":
+			return "prepared +%d bonus damage" % int(effect_summary.get("bonus_added", 0))
+		"reroll":
+			return "queued %d reroll target(s)" % int(effect_summary.get("reroll_count", 0))
+		"utility":
+			if str(entry.get("utility_kind", "")) == "block":
+				return "%d utility block gained (%d -> %d)" % [
+					int(effect_summary.get("block_gained", 0)),
+					int(effect_summary.get("block_before", int(player_before.get("block", 0)))),
+					int(effect_summary.get("block_after", int(player_after.get("block", 0)))),
+				]
+	return "resolved"
+
+
+func _build_enemy_action_summary(action: Dictionary, player_before: Dictionary, player_after: Dictionary) -> Dictionary:
+	var action_name := str(action.get("action", "attack"))
+	if action_name == "attack":
+		return _effect_resolver._damage_summary(player_before, player_after, int(action.get("damage", 0)), 0, "player")
+	if action_name == "multi_hit":
+		var hits := maxi(int(action.get("hits", 1)), 1)
+		var damage_per_hit := int(action.get("damage_per_hit", action.get("damage", 0)))
+		var raw_damage := hits * damage_per_hit
+		var summary := _effect_resolver._damage_summary(player_before, player_after, raw_damage, 0, "player")
+		summary["hits"] = hits
+		summary["damage_per_hit"] = damage_per_hit
+		summary["effect"] = "multi_hit"
+		return summary
+	if action_name == "debuff":
+		return {
+			"target": "player",
+			"effect": "debuff",
+			"status": str(action.get("status", "poison")),
+			"stacks": int(action.get("stacks", 1)),
+			"duration": int(action.get("duration", 1)),
+		}
+	return {
+		"target": "player",
+		"effect": action_name,
+	}
+
+
+func _describe_enemy_action(action: Dictionary, effect_summary: Dictionary) -> String:
+	match str(action.get("action", "attack")):
+		"attack":
+			return "%d raw, %d blocked, %d hp lost" % [
+				int(effect_summary.get("raw_damage", 0)),
+				int(effect_summary.get("absorbed_by_block", 0)),
+				int(effect_summary.get("hp_damage", 0)),
+			]
+		"multi_hit":
+			return "%d hits x %d, %d blocked, %d hp lost" % [
+				int(effect_summary.get("hits", 1)),
+				int(effect_summary.get("damage_per_hit", 0)),
+				int(effect_summary.get("absorbed_by_block", 0)),
+				int(effect_summary.get("hp_damage", 0)),
+			]
+		"debuff":
+			return "%s applied: %d stack(s), %d turn(s)" % [
+				str(effect_summary.get("status", "debuff")),
+				int(effect_summary.get("stacks", 0)),
+				int(effect_summary.get("duration", 0)),
+			]
+	return "enemy_resolved"
+
+
