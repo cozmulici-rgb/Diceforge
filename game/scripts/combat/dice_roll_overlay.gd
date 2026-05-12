@@ -6,6 +6,8 @@ signal roll_complete
 const SETTLE_THRESHOLD := 0.06
 const SETTLE_DURATION  := 0.7
 const DISPLAY_HOLD     := 1.4
+const STRIP_HEIGHT     := 260.0
+const DIE_SCALE        := 2.0
 
 var _viewport: SubViewport
 var _die_bodies: Array = []
@@ -23,35 +25,36 @@ func _ready() -> void:
 
 
 func _build_scene() -> void:
-	var bg := ColorRect.new()
-	bg.color = Color(0.0, 0.0, 0.0, 0.78)
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(bg)
-
+	# Bottom strip only — no dark overlay over the whole screen
 	var vp_container := SubViewportContainer.new()
-	vp_container.set_anchors_preset(Control.PRESET_FULL_RECT)
+	vp_container.set_anchor_and_offset(SIDE_LEFT,   0.0,  0.0)
+	vp_container.set_anchor_and_offset(SIDE_RIGHT,  1.0,  0.0)
+	vp_container.set_anchor_and_offset(SIDE_TOP,    1.0, -STRIP_HEIGHT)
+	vp_container.set_anchor_and_offset(SIDE_BOTTOM, 1.0,  0.0)
 	vp_container.stretch = true
 	add_child(vp_container)
 
 	_viewport = SubViewport.new()
-	_viewport.size = Vector2i(1280, 720)
+	_viewport.size = Vector2i(1280, int(STRIP_HEIGHT))
 	_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	_viewport.transparent_bg = true
 	vp_container.add_child(_viewport)
 
+	# Camera close and low so dice fill the strip
 	var camera := Camera3D.new()
-	camera.position = Vector3(0.0, 7.0, 9.0)
-	camera.rotation_degrees = Vector3(-38.0, 0.0, 0.0)
+	camera.position = Vector3(0.0, 2.8, 4.2)
+	camera.rotation_degrees = Vector3(-34.0, 0.0, 0.0)
+	camera.fov = 62.0
 	_viewport.add_child(camera)
 
 	var sun := DirectionalLight3D.new()
 	sun.rotation_degrees = Vector3(-50.0, 30.0, 0.0)
-	sun.light_energy = 1.6
+	sun.light_energy = 1.8
 	_viewport.add_child(sun)
 
 	var fill := DirectionalLight3D.new()
 	fill.rotation_degrees = Vector3(-20.0, -130.0, 0.0)
-	fill.light_energy = 0.4
+	fill.light_energy = 0.5
 	fill.shadow_enabled = false
 	_viewport.add_child(fill)
 
@@ -59,26 +62,18 @@ func _build_scene() -> void:
 	var env := Environment.new()
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	env.ambient_light_color = Color(0.25, 0.28, 0.38)
-	env.ambient_light_energy = 0.9
+	env.ambient_light_energy = 1.0
 	world_env.environment = env
 	_viewport.add_child(world_env)
 
+	# Invisible collision floor — no MeshInstance3D
 	var floor_body := StaticBody3D.new()
 	var floor_col := CollisionShape3D.new()
 	var floor_box := BoxShape3D.new()
-	floor_box.size = Vector3(30.0, 0.2, 30.0)
+	floor_box.size = Vector3(40.0, 0.2, 40.0)
 	floor_col.shape = floor_box
 	floor_col.position.y = -0.1
 	floor_body.add_child(floor_col)
-	var floor_mesh := MeshInstance3D.new()
-	var plane := PlaneMesh.new()
-	plane.size = Vector2(30.0, 30.0)
-	floor_mesh.mesh = plane
-	var floor_mat := StandardMaterial3D.new()
-	floor_mat.albedo_color = Color(0.06, 0.08, 0.12)
-	floor_mat.roughness = 0.9
-	floor_mesh.material_override = floor_mat
-	floor_body.add_child(floor_mesh)
 	_viewport.add_child(floor_body)
 
 
@@ -94,15 +89,15 @@ func start_roll(roll_data: Array) -> void:
 		var body_id := str(entry.get("body_id", "standard_d6"))
 		var sides   := _sides_from_body_id(body_id)
 		var x_pos   := _spread_x(i, count)
-		var start   := Vector3(x_pos, 5.0 + _rng.randf_range(0.0, 1.5), _rng.randf_range(-0.5, 0.5))
+		var start   := Vector3(x_pos, 5.0 + _rng.randf_range(0.0, 1.5), _rng.randf_range(-0.3, 0.3))
 
 		var rigid := _spawn_die(sides, start)
 		_viewport.add_child(rigid)
 
 		rigid.linear_velocity = Vector3(
-			_rng.randf_range(-1.5, 1.5),
-			_rng.randf_range(-0.5, 0.5),
-			_rng.randf_range(-1.0, 1.0)
+			_rng.randf_range(-1.0, 1.0),
+			_rng.randf_range(-0.5, 0.0),
+			_rng.randf_range(-0.8, 0.8)
 		)
 		rigid.angular_velocity = Vector3(
 			_rng.randf_range(-12.0, 12.0),
@@ -111,10 +106,10 @@ func start_roll(roll_data: Array) -> void:
 		)
 
 		_die_bodies.append({
-			"rigid_body":  rigid,
-			"die_id":      str(entry.get("die_id", "")),
+			"rigid_body":   rigid,
+			"die_id":       str(entry.get("die_id", "")),
 			"rolled_value": int(entry.get("rolled_value", 1)),
-			"face_label":  str(entry.get("face_label", "")),
+			"face_label":   str(entry.get("face_label", "")),
 		})
 
 	show()
@@ -134,9 +129,9 @@ func trigger_reroll(die_id: String, new_value: int) -> void:
 				child.queue_free()
 		rb.freeze = false
 		rb.linear_velocity = Vector3(
-			_rng.randf_range(-2.0, 2.0),
+			_rng.randf_range(-1.5, 1.5),
 			4.0,
-			_rng.randf_range(-1.0, 1.0)
+			_rng.randf_range(-0.8, 0.8)
 		)
 		rb.angular_velocity = Vector3(
 			_rng.randf_range(-14.0, 14.0),
@@ -193,13 +188,13 @@ func _show_result_labels() -> void:
 			continue
 		var lbl := Label3D.new()
 		lbl.text = str(int(entry["rolled_value"]))
-		lbl.font_size = 72
-		lbl.modulate = Color(1.0, 0.88, 0.25)
-		lbl.outline_size = 6
-		lbl.outline_modulate = Color(0.0, 0.0, 0.0, 0.9)
+		lbl.font_size = 80
+		lbl.modulate = Color(1.0, 0.9, 0.2)
+		lbl.outline_size = 8
+		lbl.outline_modulate = Color(0.0, 0.0, 0.0, 0.95)
 		lbl.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 		lbl.no_depth_test = true
-		lbl.position = Vector3(0.0, 1.0, 0.0)
+		lbl.position = Vector3(0.0, 1.2, 0.0)
 		rb.add_child(lbl)
 
 
@@ -224,13 +219,14 @@ func _spawn_die(sides: int, position: Vector3) -> RigidBody3D:
 		var packed := load(mesh_path) as PackedScene
 		if packed != null:
 			var visual := packed.instantiate()
+			visual.scale = Vector3(DIE_SCALE, DIE_SCALE, DIE_SCALE)
 			body.add_child(visual)
 			return body
 
-	# Fallback: solid-colour box
+	# Fallback: coloured box at 2× size
 	var mi := MeshInstance3D.new()
 	var bm := BoxMesh.new()
-	bm.size = Vector3(0.9, 0.9, 0.9)
+	bm.size = Vector3(0.9, 0.9, 0.9) * DIE_SCALE
 	mi.mesh = bm
 	var mat := StandardMaterial3D.new()
 	mat.albedo_color = Color(0.18, 0.36, 0.72)
@@ -242,38 +238,39 @@ func _spawn_die(sides: int, position: Vector3) -> RigidBody3D:
 
 
 func _collision_shape_for(sides: int) -> Shape3D:
+	var s := DIE_SCALE
 	match sides:
 		4:
-			# Rough tetrahedron approximation via sphere
-			var s := SphereShape3D.new()
-			s.radius = 0.52
-			return s
+			var sh := SphereShape3D.new()
+			sh.radius = 0.52 * s
+			return sh
 		8, 10, 12:
-			var s := SphereShape3D.new()
-			s.radius = 0.56
-			return s
+			var sh := SphereShape3D.new()
+			sh.radius = 0.56 * s
+			return sh
 		20:
-			var s := SphereShape3D.new()
-			s.radius = 0.60
-			return s
+			var sh := SphereShape3D.new()
+			sh.radius = 0.60 * s
+			return sh
 		_:  # d6 and unknown
-			var s := BoxShape3D.new()
-			s.size = Vector3(0.9, 0.9, 0.9)
-			return s
+			var sh := BoxShape3D.new()
+			sh.size = Vector3(0.9, 0.9, 0.9) * s
+			return sh
 
 
 func _make_physics_material() -> PhysicsMaterial:
 	var mat := PhysicsMaterial.new()
-	mat.bounce = 0.28
-	mat.friction = 0.7
+	mat.bounce = 0.25
+	mat.friction = 0.75
 	return mat
 
 
 func _spread_x(index: int, total: int) -> float:
 	if total <= 1:
 		return 0.0
-	var span := float(total - 1) * 1.8
-	return -span / 2.0 + index * 1.8
+	var spacing := minf(2.8, 10.0 / float(total - 1))
+	var span := float(total - 1) * spacing
+	return -span / 2.0 + index * spacing
 
 
 func _sides_from_body_id(body_id: String) -> int:
