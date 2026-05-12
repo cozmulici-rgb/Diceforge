@@ -170,6 +170,7 @@ func run_resolution_loop() -> Dictionary:
 					queue = (reroll_result.get("rolled_faces", queue) as Array).duplicate(true)
 					var rerolled_entry := _find_queue_entry(queue, str(target_id))
 					_record_roll_entry(rerolled_entry, _step_index_for_entry(before_entry))
+			effect_summary["reroll_count"] = targets.size()
 
 		var on_resolution := _apply_hooks_for_die(entry, "on_resolution", player, enemy, temporary_modifiers)
 		player = (on_resolution.get("player", player) as Dictionary).duplicate(true)
@@ -594,12 +595,12 @@ func _describe_resolution_outcome(entry: Dictionary, effect_summary: Dictionary,
 func _build_enemy_action_summary(action: Dictionary, player_before: Dictionary, player_after: Dictionary) -> Dictionary:
 	var action_name := str(action.get("action", "attack"))
 	if action_name == "attack":
-		return _damage_summary(player_before, player_after, int(action.get("damage", 0)), 0, "player")
+		return _effect_resolver._damage_summary(player_before, player_after, int(action.get("damage", 0)), 0, "player")
 	if action_name == "multi_hit":
 		var hits := maxi(int(action.get("hits", 1)), 1)
 		var damage_per_hit := int(action.get("damage_per_hit", action.get("damage", 0)))
 		var raw_damage := hits * damage_per_hit
-		var summary := _damage_summary(player_before, player_after, raw_damage, 0, "player")
+		var summary := _effect_resolver._damage_summary(player_before, player_after, raw_damage, 0, "player")
 		summary["hits"] = hits
 		summary["damage_per_hit"] = damage_per_hit
 		summary["effect"] = "multi_hit"
@@ -642,20 +643,3 @@ func _describe_enemy_action(action: Dictionary, effect_summary: Dictionary) -> S
 	return "enemy_resolved"
 
 
-func _damage_summary(before_entity: Dictionary, after_entity: Dictionary, raw_damage: int, bonus: int, target: String) -> Dictionary:
-	var block_before := int(before_entity.get("block", 0))
-	var block_after := int(after_entity.get("block", 0))
-	var hp_before := int(before_entity.get("hp", 0))
-	var hp_after := int(after_entity.get("hp", 0))
-	return {
-		"target": target,
-		"effect": "damage",
-		"raw_damage": raw_damage,
-		"bonus_applied": bonus,
-		"absorbed_by_block": maxi(block_before - block_after, 0),
-		"hp_damage": maxi(hp_before - hp_after, 0),
-		"block_before": block_before,
-		"block_after": block_after,
-		"hp_before": hp_before,
-		"hp_after": hp_after,
-	}

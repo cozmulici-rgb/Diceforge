@@ -19,10 +19,11 @@ func resolve_face(face: Dictionary, rolled_value: int, player: Dictionary, enemy
 	match effect:
 		"damage":
 			var bonus := _consume_damage_modifier(updated_modifiers)
-			var total_damage := rolled_value * value + bonus
+			var base_damage := rolled_value * value
+			var total_damage := base_damage + bonus
 			var enemy_before := updated_enemy.duplicate(true)
 			updated_enemy = _clamping.apply_damage_to_entity(updated_enemy, total_damage)
-			effect_summary = _damage_summary(enemy_before, updated_enemy, total_damage, bonus, "enemy")
+			effect_summary = _damage_summary(enemy_before, updated_enemy, base_damage, bonus, "enemy")
 
 		"block":
 			var block_before := int(updated_player.get("block", 0))
