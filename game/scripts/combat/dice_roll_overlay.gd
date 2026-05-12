@@ -7,7 +7,7 @@ const SETTLE_THRESHOLD := 0.06
 const SETTLE_DURATION  := 0.7
 const DISPLAY_HOLD     := 1.4
 const STRIP_HEIGHT     := 260.0
-const DIE_SCALE        := 2.0
+const DIE_SCALE        := 1.4
 
 var _viewport: SubViewport
 var _die_bodies: Array = []
@@ -25,7 +25,6 @@ func _ready() -> void:
 
 
 func _build_scene() -> void:
-	# Bottom strip only — no dark overlay over the whole screen
 	var vp_container := SubViewportContainer.new()
 	vp_container.set_anchor_and_offset(SIDE_LEFT,   0.0,  0.0)
 	vp_container.set_anchor_and_offset(SIDE_RIGHT,  1.0,  0.0)
@@ -40,11 +39,13 @@ func _build_scene() -> void:
 	_viewport.transparent_bg = true
 	vp_container.add_child(_viewport)
 
-	# Camera close and low so dice fill the strip
+	# Camera aimed so the landing zone (z≈1.5) falls in the lower third of the strip.
+	# Pitch -35° from (0, 3, 5): centre-ray hits floor at z ≈ 0.7;
+	# bottom frustum edge hits floor at z ≈ 3.4 — dice at z=1.5 land in the lower half.
 	var camera := Camera3D.new()
-	camera.position = Vector3(0.0, 2.8, 4.2)
-	camera.rotation_degrees = Vector3(-34.0, 0.0, 0.0)
-	camera.fov = 62.0
+	camera.position = Vector3(0.0, 3.0, 5.0)
+	camera.rotation_degrees = Vector3(-35.0, 0.0, 0.0)
+	camera.fov = 55.0
 	_viewport.add_child(camera)
 
 	var sun := DirectionalLight3D.new()
@@ -66,7 +67,7 @@ func _build_scene() -> void:
 	world_env.environment = env
 	_viewport.add_child(world_env)
 
-	# Invisible collision floor — no MeshInstance3D
+	# Invisible physics floor — no MeshInstance3D
 	var floor_body := StaticBody3D.new()
 	var floor_col := CollisionShape3D.new()
 	var floor_box := BoxShape3D.new()
@@ -89,7 +90,8 @@ func start_roll(roll_data: Array) -> void:
 		var body_id := str(entry.get("body_id", "standard_d6"))
 		var sides   := _sides_from_body_id(body_id)
 		var x_pos   := _spread_x(i, count)
-		var start   := Vector3(x_pos, 5.0 + _rng.randf_range(0.0, 1.5), _rng.randf_range(-0.3, 0.3))
+		# z=1.5 puts the landing zone in the lower half of the viewport
+		var start   := Vector3(x_pos, 5.0 + _rng.randf_range(0.0, 1.2), 1.5 + _rng.randf_range(-0.4, 0.4))
 
 		var rigid := _spawn_die(sides, start)
 		_viewport.add_child(rigid)
@@ -97,7 +99,7 @@ func start_roll(roll_data: Array) -> void:
 		rigid.linear_velocity = Vector3(
 			_rng.randf_range(-1.0, 1.0),
 			_rng.randf_range(-0.5, 0.0),
-			_rng.randf_range(-0.8, 0.8)
+			_rng.randf_range(-0.5, 0.5)
 		)
 		rigid.angular_velocity = Vector3(
 			_rng.randf_range(-12.0, 12.0),
@@ -129,9 +131,9 @@ func trigger_reroll(die_id: String, new_value: int) -> void:
 				child.queue_free()
 		rb.freeze = false
 		rb.linear_velocity = Vector3(
-			_rng.randf_range(-1.5, 1.5),
+			_rng.randf_range(-1.0, 1.0),
 			4.0,
-			_rng.randf_range(-0.8, 0.8)
+			_rng.randf_range(-0.5, 0.5)
 		)
 		rb.angular_velocity = Vector3(
 			_rng.randf_range(-14.0, 14.0),
@@ -194,7 +196,7 @@ func _show_result_labels() -> void:
 		lbl.outline_modulate = Color(0.0, 0.0, 0.0, 0.95)
 		lbl.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 		lbl.no_depth_test = true
-		lbl.position = Vector3(0.0, 1.2, 0.0)
+		lbl.position = Vector3(0.0, 1.0, 0.0)
 		rb.add_child(lbl)
 
 
@@ -223,7 +225,7 @@ func _spawn_die(sides: int, position: Vector3) -> RigidBody3D:
 			body.add_child(visual)
 			return body
 
-	# Fallback: coloured box at 2× size
+	# Fallback: coloured box
 	var mi := MeshInstance3D.new()
 	var bm := BoxMesh.new()
 	bm.size = Vector3(0.9, 0.9, 0.9) * DIE_SCALE
@@ -268,7 +270,7 @@ func _make_physics_material() -> PhysicsMaterial:
 func _spread_x(index: int, total: int) -> float:
 	if total <= 1:
 		return 0.0
-	var spacing := minf(2.8, 10.0 / float(total - 1))
+	var spacing := minf(2.2, 9.0 / float(total - 1))
 	var span := float(total - 1) * spacing
 	return -span / 2.0 + index * spacing
 
