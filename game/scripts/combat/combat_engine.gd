@@ -56,6 +56,8 @@ func initialize_battle(player_data: Dictionary, enemy_def: Dictionary) -> Dictio
 		"dice_pool": (player_data.get("dice_pool", []) as Array).duplicate(true),
 		"rolled_faces": [],
 		"resolution_queue": [],
+		"enemy_rolls": [],
+		"pending_enemy_action": {},
 		"used_dice": [],
 		"temporary_modifiers": [],
 		"player_skip_turn": false,
@@ -251,8 +253,12 @@ func check_battle_end() -> Dictionary:
 
 
 func run_enemy_turn() -> void:
+	prepare_enemy_turn()
+	resolve_prepared_enemy_turn()
+
+
+func prepare_enemy_turn() -> void:
 	var enemy: Dictionary = (_state.get("enemy", {}) as Dictionary).duplicate(true)
-	var player: Dictionary = (_state.get("player", {}) as Dictionary).duplicate(true)
 	enemy["block"] = 0
 
 	var had_skip_status := _has_skip_status(enemy.get("statuses", []) as Array)
@@ -263,11 +269,35 @@ func run_enemy_turn() -> void:
 	_state["phase"] = "enemy_turn_start"
 	_state["enemy"] = enemy
 	_state["enemy_skip_turn"] = had_skip_status
+	_state["enemy_rolls"] = []
+	_state["pending_enemy_action"] = {}
 
 	if had_skip_status:
 		return
 
 	var action := _enemy_ai.select_action(enemy, int(_state.get("turn_index", 1)))
+	var enemy_roll_rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	enemy_roll_rng.randomize()
+	_state["pending_enemy_action"] = action
+	_state["enemy_rolls"] = build_enemy_rolls(action, int(_state.get("turn_index", 1)), 3, enemy_roll_rng)
+	_state["phase"] = "enemy_roll"
+
+
+func resolve_prepared_enemy_turn() -> void:
+	if bool(_state.get("enemy_skip_turn", false)):
+		return
+
+	var action: Dictionary = (_state.get("pending_enemy_action", {}) as Dictionary).duplicate(true)
+	if action.is_empty():
+		prepare_enemy_turn()
+		if bool(_state.get("enemy_skip_turn", false)):
+			return
+		action = (_state.get("pending_enemy_action", {}) as Dictionary).duplicate(true)
+		if action.is_empty():
+			return
+
+	var player: Dictionary = (_state.get("player", {}) as Dictionary).duplicate(true)
+	var enemy: Dictionary = (_state.get("enemy", {}) as Dictionary).duplicate(true)
 	var player_before_action := player.duplicate(true)
 	player = _enemy_ai.resolve_action(action, player, {})
 	var enemy_effect_summary := _build_enemy_action_summary(action, player_before_action, player)
@@ -290,6 +320,20 @@ func run_enemy_turn() -> void:
 	})
 
 
+func build_enemy_rolls(action: Dictionary, turn_index: int, roll_count: int = 3, rng = null) -> Array:
+	var count := maxi(roll_count, 1)
+	var preview_rolls: Array = []
+	var local_rng = rng
+	if local_rng == null:
+		local_rng = RandomNumberGenerator.new()
+		local_rng.randomize()
+
+	for roll_index in range(count):
+		var rolled_value := int(local_rng.randi_range(1, 6))
+		preview_rolls.append(_build_enemy_roll_entry(action, turn_index, roll_index, rolled_value))
+	return preview_rolls
+
+
 func end_enemy_turn() -> void:
 	var player: Dictionary = (_state.get("player", {}) as Dictionary).duplicate(true)
 	var enemy: Dictionary = (_state.get("enemy", {}) as Dictionary).duplicate(true)
@@ -305,6 +349,7 @@ func end_enemy_turn() -> void:
 	_state["player"] = player
 	_state["enemy"] = enemy
 	_state["turn_index"] = int(_state.get("turn_index", 1)) + 1
+	_state["pending_enemy_action"] = {}
 	_state["phase"] = "enemy_turn_end"
 
 
@@ -368,6 +413,29 @@ func _pick_reroll_targets(queue: Array, used_dice: Array, host_die_id: String, c
 		if targets.size() >= count:
 			break
 	return targets
+
+
+func _build_enemy_roll_entry(action: Dictionary, turn_index: int, roll_index: int, rolled_value: int) -> Dictionary:
+	var label := str(action.get("label", "Enemy Action"))
+	var action_type := str(action.get("action", "attack"))
+	var damage := int(action.get("damage", action.get("damage_per_hit", 0)))
+	var hits := maxi(int(action.get("hits", 1)), 1)
+	var total_damage := damage * hits
+	return {
+		"die_id": "enemy_turn_%d_%d" % [turn_index, roll_index],
+		"die_label": "Enemy Die %d" % (roll_index + 1),
+		"rolled_value": clampi(rolled_value, 1, 6),
+		"face_id": action_type,
+		"face_family": "enemy",
+		"face_label": label,
+		"energy_cost": 0,
+		"effect_label": action_type.capitalize(),
+		"action_label": label,
+		"action_type": action_type,
+		"hits": hits,
+		"damage": damage,
+		"damage_total": total_damage,
+	}
 
 
 func _record_roll_entry(entry: Dictionary, rerolled_from: Variant) -> void:

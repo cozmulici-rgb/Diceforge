@@ -56,8 +56,15 @@ func load_meta_state() -> Dictionary:
 	return {"ok": true, "data": payload.get("data", {})}
 
 
-func delete_corrupt_run_state(slot_id: String) -> Dictionary:
+func delete_run_state(slot_id: String) -> Dictionary:
 	var path := _run_slot_path(slot_id)
+	if not FileAccess.file_exists(path):
+		return {"ok": true}
+	return {"ok": DirAccess.remove_absolute(ProjectSettings.globalize_path(path)) == OK}
+
+
+func delete_meta_state() -> Dictionary:
+	var path := _meta_state_path()
 	if not FileAccess.file_exists(path):
 		return {"ok": true}
 	return {"ok": DirAccess.remove_absolute(ProjectSettings.globalize_path(path)) == OK}
@@ -87,6 +94,7 @@ func list_run_slots() -> Array:
 					"slot_id": slot_id,
 					"session_id": str(data.get("session_id", "")),
 					"archetype_id": str(data.get("archetype_id", "")),
+					"display_name": str(data.get("display_name", "")),
 					"floor_index": int(data.get("floor_index", 0)),
 					"room_id": str(data.get("current_room_id", "")),
 					"updated_at_unix": int(data.get("updated_at_unix", Time.get_unix_time_from_system())),
@@ -100,6 +108,10 @@ func list_run_slots() -> Array:
 func _ensure_directories() -> void:
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(base_path))
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("%s/runs" % base_path))
+
+
+func run_slot_exists(slot_id: String) -> bool:
+	return FileAccess.file_exists(_run_slot_path(slot_id))
 
 
 func _run_slot_path(slot_id: String) -> String:

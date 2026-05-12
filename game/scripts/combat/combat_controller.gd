@@ -36,6 +36,8 @@ signal combat_state_updated(combat_state)
 @onready var _state_label: Label = $RootMargin/MainRow/CenterVBox/TitleVBox/StateLabel
 @onready var _dice_header: Label = $RootMargin/MainRow/CenterVBox/DiceSectionVBox/DiceHeader
 @onready var _dice_row: HBoxContainer = $RootMargin/MainRow/CenterVBox/DiceSectionVBox/DiceRow
+@onready var _enemy_dice_header: Label = $RootMargin/MainRow/CenterVBox/EnemyDiceSection/EnemyDiceHeader
+@onready var _enemy_dice_row: HBoxContainer = $RootMargin/MainRow/CenterVBox/EnemyDiceSection/EnemyDiceRow
 @onready var _queue_header: Label = $RootMargin/MainRow/CenterVBox/QueueSectionVBox/QueueHeader
 @onready var _queue_list: VBoxContainer = $RootMargin/MainRow/CenterVBox/QueueSectionVBox/QueueScroll/QueueList
 @onready var _queue_hint: Label = $RootMargin/MainRow/CenterVBox/QueueSectionVBox/QueueHint
@@ -155,6 +157,7 @@ func roll_active_dice(state) -> Dictionary:
 		state.roll_results = []
 		state.state = "enemy_turn"
 		state.turn_log.append("Player turn skipped.")
+		prepare_enemy_turn(state)
 		return {"ok": true, "combat_state": state}
 
 	var roll_result: Dictionary = _engine.roll_phase((state.pending_player_rolls as Array).duplicate(true))
@@ -271,21 +274,50 @@ func resolve_player_turn(state) -> Dictionary:
 	var after_enemy: Dictionary = (after_engine_state.get("enemy", {}) as Dictionary).duplicate(true)
 	var after_player: Dictionary = (after_engine_state.get("player", {}) as Dictionary).duplicate(true)
 	var damage_to_enemy := maxi(int(before_enemy.get("hp", 0)) - int(after_enemy.get("hp", 0)), 0)
+	var enemy_absorbed_damage := maxi(int(before_enemy.get("block", 0)) - int(after_enemy.get("block", 0)), 0)
+	var enemy_incoming_damage := damage_to_enemy + enemy_absorbed_damage
 	var gained_block := maxi(int(after_player.get("block", 0)) - int(before_player.get("block", 0)), 0)
 
-	state.turn_log.append("Player turn resolved: %d damage, %d block." % [damage_to_enemy, gained_block])
-	state.roll_results = []
+	state.turn_log.append(
+		"Player turn resolved: incoming %d, absorbed %d, remaining %d, enemy block %d -> %d, gained %d block." % [
+			enemy_incoming_damage,
+			enemy_absorbed_damage,
+			damage_to_enemy,
+			int(before_enemy.get("block", 0)),
+			int(after_enemy.get("block", 0)),
+			gained_block,
+		]
+	)
 
 	match str(battle_result.get("result", "ongoing")):
 		"victory":
+			state.roll_results = []
 			state.outcome = "victory"
 			state.state = "complete"
 		"defeat":
+			state.roll_results = []
 			state.outcome = "defeat"
 			state.state = "complete"
 		_:
 			state.state = "enemy_turn"
+			prepare_enemy_turn(state)
 
+	return {"ok": true, "combat_state": state}
+
+
+func prepare_enemy_turn(state) -> Dictionary:
+	if state.outcome == "victory":
+		return {"ok": true, "combat_state": state}
+	if _engine == null:
+		return {"ok": false, "error": "missing_combat_engine"}
+
+	var engine_state: Dictionary = _engine.get_state()
+	var pending_action: Dictionary = (engine_state.get("pending_enemy_action", {}) as Dictionary).duplicate(true)
+	var enemy_rolls: Array = (engine_state.get("enemy_rolls", []) as Array).duplicate(true)
+	if pending_action.is_empty() and enemy_rolls.is_empty() and not bool(engine_state.get("enemy_skip_turn", false)):
+		_engine.prepare_enemy_turn()
+	_sync_engine_state(state)
+	state.state = "enemy_turn"
 	return {"ok": true, "combat_state": state}
 
 
@@ -295,9 +327,13 @@ func resolve_enemy_turn(state) -> Dictionary:
 	if _engine == null:
 		return {"ok": false, "error": "missing_combat_engine"}
 
+	var prepare_result := prepare_enemy_turn(state)
+	if not bool(prepare_result.get("ok", false)):
+		return prepare_result
+
 	var before_state: Dictionary = _engine.get_state()
 	var before_player: Dictionary = (before_state.get("player", {}) as Dictionary).duplicate(true)
-	_engine.run_enemy_turn()
+	_engine.resolve_prepared_enemy_turn()
 	_engine.end_enemy_turn()
 	var battle_result: Dictionary = _engine.check_battle_end()
 
@@ -308,7 +344,15 @@ func resolve_enemy_turn(state) -> Dictionary:
 	if bool(state.engine_state.get("enemy_skip_turn", false)):
 		state.turn_log.append("Enemy turn skipped.")
 	else:
-		state.turn_log.append("Enemy turn resolved: %d incoming, %d taken." % [incoming_damage, taken_damage])
+		state.turn_log.append(
+			"Enemy turn resolved: incoming %d, absorbed %d, remaining %d, player block %d -> %d." % [
+				incoming_damage,
+				maxi(int(before_player.get("block", 0)) - int(after_player.get("block", 0)), 0),
+				taken_damage,
+				int(before_player.get("block", 0)),
+				int(after_player.get("block", 0)),
+			]
+		)
 
 	state.roll_results = []
 	state.action_slots = _reset_action_slots(state.action_slots)
@@ -453,6 +497,7 @@ func _render() -> void:
 
 	_rebuild_bonuses()
 	_rebuild_dice_cards()
+	_rebuild_enemy_dice_cards()
 	_rebuild_queue_rows()
 	_refresh_combat_log()
 
@@ -495,7 +540,65 @@ func _rebuild_dice_cards() -> void:
 		_dice_row.add_child(_make_die_card(roll as Dictionary))
 
 
-func _make_die_card(roll: Dictionary) -> Control:
+func _rebuild_enemy_dice_cards() -> void:
+	for child in _enemy_dice_row.get_children():
+		child.queue_free()
+
+	if str(combat_state.state) != "enemy_turn":
+		var hint := Label.new()
+		hint.text = "Enemy dice hidden until enemy turn."
+		hint.theme_type_variation = &"FacetBodyMuted"
+		_enemy_dice_row.add_child(hint)
+		return
+
+	var enemy_rolls: Array = get_enemy_display_rolls(combat_state)
+	if enemy_rolls.is_empty():
+		var hint := Label.new()
+		hint.text = "Enemy dice hidden until enemy turn."
+		hint.theme_type_variation = &"FacetBodyMuted"
+		_enemy_dice_row.add_child(hint)
+		return
+
+	for roll in enemy_rolls:
+		_enemy_dice_row.add_child(_make_die_card(roll as Dictionary, true, true))
+
+
+func get_enemy_display_rolls(state, rng = null) -> Array:
+	if state == null:
+		return []
+
+	var engine_state: Dictionary = (state.engine_state as Dictionary).duplicate(true)
+	var enemy_rolls: Array = (engine_state.get("enemy_rolls", []) as Array).duplicate(true)
+	var display_rolls: Array = []
+	for roll in enemy_rolls:
+		display_rolls.append(_build_enemy_display_roll(roll as Dictionary, display_rolls.size()))
+	return display_rolls
+
+
+func _build_enemy_display_roll(source: Dictionary, index: int) -> Dictionary:
+	var action_type := str(source.get("action", source.get("face_id", "attack")))
+	var option_label := str(source.get("label", source.get("face_label", "Enemy Action")))
+	var damage := int(source.get("damage", source.get("damage_per_hit", source.get("rolled_value", 0))))
+	var hits := maxi(int(source.get("hits", 1)), 1)
+	var total_damage: int = damage * hits
+	if total_damage < 0:
+		total_damage = 0
+	var rolled_value := int(source.get("rolled_value", total_damage))
+
+	return {
+		"die_id": str(source.get("die_id", "enemy_preview_%d" % index)),
+		"die_label": str(source.get("die_label", "Enemy %d" % (index + 1))),
+		"rolled_value": rolled_value,
+		"face_id": action_type,
+		"face_family": str(source.get("face_family", _enemy_family_for_action(action_type))),
+		"face_label": option_label,
+		"effect_label": str(source.get("effect_label", action_type.capitalize())),
+		"action_label": option_label,
+		"energy_cost": int(source.get("energy_cost", 0)),
+	}
+
+
+func _make_die_card(roll: Dictionary, read_only: bool = false, controls_enabled: bool = true) -> Control:
 	var family := str(roll.get("face_family", "utility"))
 	var fc := _family_color(family)
 	var assigned_slot_id := str(roll.get("assigned_slot_id", ""))
@@ -563,10 +666,13 @@ func _make_die_card(roll: Dictionary) -> Control:
 
 	var cost := _energy_cost_for_roll(roll)
 	var cost_lbl := Label.new()
-	cost_lbl.text = "%d ⚡" % cost
+	cost_lbl.text = "—" if read_only else "%d ⚡" % cost
 	cost_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	cost_lbl.theme_type_variation = &"FacetInfo"
 	vbox.add_child(cost_lbl)
+
+	if not controls_enabled:
+		return card
 
 	var control_row := HBoxContainer.new()
 	control_row.add_theme_constant_override("separation", 4)
@@ -579,11 +685,12 @@ func _make_die_card(roll: Dictionary) -> Control:
 			roll_index = index
 			break
 	var is_assignment_phase := str(combat_state.state) == "player_assignment"
+	var can_interact := controls_enabled and not read_only and is_assignment_phase
 
 	var left_button := Button.new()
 	left_button.text = "◀"
 	left_button.custom_minimum_size = Vector2(28, 24)
-	left_button.disabled = (not is_assignment_phase) or roll_index <= 0
+	left_button.disabled = (not can_interact) or roll_index <= 0
 	left_button.pressed.connect(func() -> void:
 		move_die_in_order(combat_state, die_id, -1)
 		combat_state_updated.emit(combat_state)
@@ -594,12 +701,14 @@ func _make_die_card(roll: Dictionary) -> Control:
 	var slot_pill := Button.new()
 	if is_assigned:
 		slot_pill.text = "→ %s" % _format_assigned_slot(assigned_slot_id)
+	elif read_only:
+		slot_pill.text = "→ %s" % str(roll.get("action_label", "Assign"))
 	else:
 		slot_pill.text = "→ Assign"
 	slot_pill.flat = true
 	slot_pill.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	slot_pill.add_theme_color_override("font_color", FacetboundThemeScript.ACCENT_GOLD)
-	slot_pill.disabled = not is_assignment_phase
+	slot_pill.disabled = not can_interact
 	slot_pill.pressed.connect(func() -> void:
 		cycle_die_slot(combat_state, die_id)
 		combat_state_updated.emit(combat_state)
@@ -610,7 +719,7 @@ func _make_die_card(roll: Dictionary) -> Control:
 	var right_button := Button.new()
 	right_button.text = "▶"
 	right_button.custom_minimum_size = Vector2(28, 24)
-	right_button.disabled = (not is_assignment_phase) or roll_index < 0 or roll_index >= rolls.size() - 1
+	right_button.disabled = (not can_interact) or roll_index < 0 or roll_index >= rolls.size() - 1
 	right_button.pressed.connect(func() -> void:
 		move_die_in_order(combat_state, die_id, 1)
 		combat_state_updated.emit(combat_state)
@@ -881,6 +990,8 @@ func _apply_theme() -> void:
 		_enemy_turn_label.theme_type_variation = &"FacetBodyMuted"
 	if _skip_label != null:
 		_skip_label.theme_type_variation = &"FacetBodyMuted"
+	if _enemy_dice_header != null:
+		_enemy_dice_header.theme_type_variation = &"FacetSectionLabel"
 	if _queue_hint != null:
 		_queue_hint.theme_type_variation = &"FacetMeta"
 	if _boss_phase_label != null:
@@ -960,8 +1071,6 @@ func _on_resolve_pressed() -> void:
 		return
 	if combat_state.state == "player_assignment":
 		resolve_player_turn(combat_state)
-		if combat_state.state != "complete":
-			resolve_enemy_turn(combat_state)
 	elif combat_state.state == "enemy_turn":
 		resolve_enemy_turn(combat_state)
 	elif combat_state.state == "player_roll":
@@ -988,7 +1097,18 @@ func _family_color(family: String) -> Color:
 		"attack": return Color("3a8acc")
 		"defense": return Color("3a9a6a")
 		"utility": return Color("7a4acc")
+		"enemy": return Color("9ca6b2")
 		_: return Color("9ca6b2")
+
+
+func _enemy_family_for_action(action_type: String) -> String:
+	match action_type:
+		"attack", "multi_hit":
+			return "attack"
+		"debuff", "lock":
+			return "utility"
+		_:
+			return "enemy"
 
 
 func _status_glyph(status_id: String) -> String:
@@ -1062,6 +1182,10 @@ func _format_assigned_slot(slot_id: String) -> String:
 
 
 func _effect_label_for_roll(roll_data: Dictionary) -> String:
+	if roll_data.has("effect_label"):
+		return str(roll_data.get("effect_label", ""))
+	if roll_data.has("action_label"):
+		return str(roll_data.get("action_label", ""))
 	var engine_state: Dictionary = combat_state.engine_state
 	for rolled_face in (engine_state.get("rolled_faces", []) as Array):
 		var face: Dictionary = rolled_face as Dictionary
@@ -1071,6 +1195,8 @@ func _effect_label_for_roll(roll_data: Dictionary) -> String:
 
 
 func _energy_cost_for_roll(roll_data: Dictionary) -> int:
+	if roll_data.has("energy_cost"):
+		return int(roll_data.get("energy_cost", 0))
 	var engine_state: Dictionary = combat_state.engine_state
 	for rolled_face in (engine_state.get("rolled_faces", []) as Array):
 		var face: Dictionary = rolled_face as Dictionary

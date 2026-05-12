@@ -154,7 +154,7 @@ The current game defines three enemy units.
 
 - Id: `slime_echo`
 - Type: standard enemy
-- HP: `8`
+- HP: `26`
 - Starting block: `0`
 - Intent: `Gel Strike`
 - Damage: `3`

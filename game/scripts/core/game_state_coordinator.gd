@@ -27,19 +27,21 @@ var daily_void_mode_adapter
 var modifier_registry
 var last_recovery_message := ""
 
-const ACTIVE_RUN_SLOT := "active_run"
+const _LEGACY_ACTIVE_SLOT_ID := "active_run"
 
 
-func _init(catalog) -> void:
+func _init(catalog, base_path_override: String = "") -> void:
 	content_catalog = catalog
 	_reward_controller = RewardControllerScript.new(catalog)
 	_forge_assembly_system = ForgeAssemblySystemScript.new(catalog)
 	_dungeon_generator = DungeonGeneratorScript.new(catalog)
-	persistence_service = PersistenceServiceScript.new(catalog)
+	var storage_base_path := base_path_override if base_path_override != "" else "user://facetbound"
+	persistence_service = PersistenceServiceScript.new(catalog, storage_base_path)
 	meta_progression_controller = MetaProgressionControllerScript.new(catalog)
 	daily_void_mode_adapter = DailyVoidModeAdapterScript.new(catalog)
 	modifier_registry = ModifierRegistryScript.new(catalog)
 	_load_or_initialize_meta_state()
+	_migrate_legacy_active_run_slot_if_needed()
 
 
 func create_run_session(archetype_id: String) -> Variant:
@@ -52,8 +54,12 @@ func create_run_session(archetype_id: String) -> Variant:
 		return starter_floor
 
 	_session_sequence += 1
+	var generated_slot_id: String = _generate_run_slot_id(archetype_id)
+	var generated_display_name: String = _format_run_display_name(archetype)
 	var session = RunSessionScript.new({
 		"session_id": "run_%03d_%s" % [_session_sequence, archetype_id],
+		"slot_id": generated_slot_id,
+		"display_name": generated_display_name,
 		"archetype_id": archetype_id,
 		"floor_index": 1,
 		"current_room_id": str(starter_floor.get("starting_room_id", "")),
@@ -117,11 +123,17 @@ func create_daily_void_session(archetype_id: String, calendar_day: String = "") 
 	if session == null or session is Dictionary:
 		return session
 
+	var temp_standard_slot_id: String = str(session.slot_id)
+
 	var session_overrides = daily_void_mode_adapter.create_daily_run_session(daily_config, archetype_id)
 	if not session_overrides.get("ok", false):
 		return session_overrides
 	var overrides: Dictionary = session_overrides.get("session_overrides", {})
 	session.session_id = "daily_%s_%s" % [archetype_id, str(overrides.get("session_id_suffix", target_day)).replace("-", "_")]
+	session.slot_id = _generate_daily_slot_id(target_day)
+	session.display_name = _format_daily_display_name(target_day)
+	if temp_standard_slot_id != "" and temp_standard_slot_id != session.slot_id:
+		persistence_service.delete_run_state(temp_standard_slot_id)
 	session.mode_id = str(overrides.get("mode_id", "daily_void"))
 	session.seed_id = str(overrides.get("seed_id", target_day))
 	session.numeric_seed = int(overrides.get("numeric_seed", 0))
@@ -149,7 +161,7 @@ func load_run_session(save_slot_id: String) -> Dictionary:
 	if not load_result.get("ok", false):
 		last_recovery_message = "Continue-run data was invalid and could not be loaded."
 		if load_result.get("error", "") == "invalid_run_state":
-			persistence_service.delete_corrupt_run_state(save_slot_id)
+			persistence_service.delete_run_state(save_slot_id)
 		return load_result
 
 	current_session = RunSessionScript.new(load_result.get("data", {}))
@@ -172,6 +184,17 @@ func enter_room(room_id: String) -> Dictionary:
 			"from_room_id": current_room_id,
 			"to_room_id": room_id,
 		}
+
+	if current_room_id != room_id:
+		var current_room_definition = _get_room_definition(room_graph, current_room_id)
+		var current_room_state: Dictionary = current_session.room_states.get(current_room_id, {})
+		if str(current_room_definition.get("encounter_id", "")) != "" and not bool(current_room_state.get("completed", false)):
+			return {
+				"ok": false,
+				"error": "encounter_unresolved",
+				"from_room_id": current_room_id,
+				"to_room_id": room_id,
+			}
 
 	current_session.current_room_id = room_id
 	var room_history: Array = current_session.flags.get("room_history", [])
@@ -208,6 +231,9 @@ func begin_encounter(encounter_id: String) -> Dictionary:
 	var expected_encounter_id: String = str(current_room.get("encounter_id", ""))
 	if expected_encounter_id == "":
 		return {"ok": false, "error": "room_has_no_encounter"}
+	var current_room_state: Dictionary = current_session.room_states.get(str(current_session.current_room_id), {})
+	if bool(current_room_state.get("completed", false)):
+		return {"ok": false, "error": "room_already_completed"}
 	if encounter_id != expected_encounter_id:
 		return {
 			"ok": false,
@@ -270,7 +296,7 @@ func apply_encounter_result(result: Dictionary) -> Variant:
 		current_session.run_complete = true
 		current_session.progression_result = finalize_run(result)
 		current_session.flags["screen_state"] = "run_complete"
-		_clear_active_run_slot()
+		_clear_current_run_slot()
 		_persist_meta_state()
 	else:
 		current_session.flags["screen_state"] = "exploration"
@@ -378,7 +404,7 @@ func complete_reward_flow() -> Variant:
 		current_session.progression_result = finalize_run(current_session.last_encounter_result)
 		current_session.flags["screen_state"] = "run_complete"
 		current_session.flags["encounter_status"] = "Run complete."
-		_clear_active_run_slot()
+		_clear_current_run_slot()
 		_persist_meta_state()
 		return current_session
 
@@ -566,13 +592,17 @@ func _build_run_summary(result: Variant) -> Dictionary:
 func _persist_current_session() -> void:
 	if current_session == null or current_session.run_complete:
 		return
+	if str(current_session.slot_id) == "":
+		return
 	var payload = current_session.to_dictionary()
 	payload["updated_at_unix"] = Time.get_unix_time_from_system()
-	persistence_service.save_run_state(ACTIVE_RUN_SLOT, payload)
+	persistence_service.save_run_state(current_session.slot_id, payload)
 
 
-func _clear_active_run_slot() -> void:
-	persistence_service.delete_corrupt_run_state(ACTIVE_RUN_SLOT)
+func _clear_current_run_slot() -> void:
+	if current_session == null or str(current_session.slot_id) == "":
+		return
+	persistence_service.delete_run_state(current_session.slot_id)
 
 
 func _persist_meta_state() -> void:
@@ -593,13 +623,95 @@ func _load_or_initialize_meta_state() -> void:
 		last_recovery_message = "Meta progression data was reset to safe defaults."
 
 
+func _generate_run_slot_id(archetype_id: String) -> String:
+	var unix_now: int = int(Time.get_unix_time_from_system())
+	var safe_archetype: String = archetype_id.replace("-", "_").substr(0, 16)
+	var base_id: String = "run_%d_%s" % [unix_now, safe_archetype]
+	var candidate: String = base_id
+	var suffix: int = 2
+	while persistence_service.run_slot_exists(candidate):
+		candidate = "%s_%d" % [base_id, suffix]
+		suffix += 1
+	return candidate
+
+
+func _generate_daily_slot_id(calendar_day: String) -> String:
+	return "daily_%s" % calendar_day.replace("-", "_")
+
+
+func _format_run_display_name(archetype: Dictionary) -> String:
+	var archetype_name: String = str(archetype.get("name", archetype.get("id", "Run")))
+	var ts: String = "%s %s" % [Time.get_date_string_from_system(), Time.get_time_string_from_system().substr(0, 5)]
+	return "%s · %s" % [archetype_name, ts]
+
+
+func _format_daily_display_name(calendar_day: String) -> String:
+	return "Daily Void · %s" % calendar_day
+
+
+func _migrate_legacy_active_run_slot_if_needed() -> void:
+	if not persistence_service.run_slot_exists(_LEGACY_ACTIVE_SLOT_ID):
+		return
+	var load_result = persistence_service.load_run_state(_LEGACY_ACTIVE_SLOT_ID)
+	if not load_result.get("ok", false):
+		persistence_service.delete_run_state(_LEGACY_ACTIVE_SLOT_ID)
+		last_recovery_message = "Legacy run save was reset to safe defaults."
+		return
+	var data: Dictionary = (load_result.get("data", {}) as Dictionary).duplicate(true)
+	var archetype_id: String = str(data.get("archetype_id", "run"))
+	var new_slot_id: String = _generate_run_slot_id(archetype_id)
+	data["slot_id"] = new_slot_id
+	if str(data.get("display_name", "")) == "":
+		data["display_name"] = "Recovered Run · %s" % Time.get_date_string_from_system()
+	data["updated_at_unix"] = Time.get_unix_time_from_system()
+	persistence_service.save_run_state(new_slot_id, data)
+	persistence_service.delete_run_state(_LEGACY_ACTIVE_SLOT_ID)
+
+
+func list_resumable_runs() -> Array:
+	var result: Array = []
+	for slot in list_run_slots():
+		var summary: Dictionary = slot
+		var slot_id: String = str(summary.get("slot_id", ""))
+		if slot_id == "" or slot_id.begins_with("daily_"):
+			continue
+		if bool(summary.get("is_corrupt", false)):
+			# Surface corrupt entries so the popup can offer Delete-only on them.
+			result.append(summary.duplicate(true))
+			continue
+		result.append(summary.duplicate(true))
+	result.sort_custom(func(a, b):
+		return int((a as Dictionary).get("updated_at_unix", 0)) > int((b as Dictionary).get("updated_at_unix", 0)))
+	return result
+
+
+func rename_run(slot_id: String, new_name: String) -> Dictionary:
+	var trimmed: String = new_name.strip_edges()
+	if trimmed.length() == 0:
+		return {"ok": false, "error": "empty_name"}
+	if trimmed.length() > 64:
+		return {"ok": false, "error": "name_too_long"}
+	var load_result = persistence_service.load_run_state(slot_id)
+	if not load_result.get("ok", false):
+		return load_result
+	var data: Dictionary = (load_result.get("data", {}) as Dictionary).duplicate(true)
+	data["display_name"] = trimmed
+	data["updated_at_unix"] = Time.get_unix_time_from_system()
+	var save_result = persistence_service.save_run_state(slot_id, data)
+	if not save_result.get("ok", false):
+		return save_result
+	if current_session != null and str(current_session.slot_id) == slot_id:
+		current_session.display_name = trimmed
+	return {"ok": true, "slot_id": slot_id, "display_name": trimmed}
+
+
+func delete_run(slot_id: String) -> Dictionary:
+	if slot_id == "":
+		return {"ok": false, "error": "missing_slot_id"}
+	if current_session != null and not current_session.run_complete and str(current_session.slot_id) == slot_id:
+		return {"ok": false, "error": "active_run_locked"}
+	return persistence_service.delete_run_state(slot_id)
+
+
 func list_run_slots() -> Array:
 	return persistence_service.list_run_slots()
-
-
-func get_continue_run_summary() -> Dictionary:
-	for run_slot in list_run_slots():
-		var summary: Dictionary = run_slot
-		if str(summary.get("slot_id", "")) == ACTIVE_RUN_SLOT and not bool(summary.get("is_corrupt", false)):
-			return summary.duplicate(true)
-	return {}
