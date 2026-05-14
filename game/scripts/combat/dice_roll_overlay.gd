@@ -106,10 +106,6 @@ func trigger_reroll(die_id: String, new_value: int) -> void:
 		if str(entry["die_id"]) != die_id:
 			continue
 		entry["rolled_value"] = new_value
-		var node: Node3D = entry["node"] as Node3D
-		for child in node.get_children():
-			if child is Label3D:
-				child.queue_free()
 		var e: Dictionary = entry
 		_animate_single(e, 0.0, func(): _show_label(e))
 		break
@@ -170,19 +166,25 @@ func _on_all_done() -> void:
 
 func _show_label(entry: Dictionary) -> void:
 	var node: Node3D = entry["node"] as Node3D
+	# Remove any existing label for this entry
+	var old: Label3D = entry.get("label") as Label3D
+	if old != null and is_instance_valid(old):
+		old.queue_free()
 	var lbl := Label3D.new()
 	lbl.text = str(int(entry["rolled_value"]))
 	lbl.font_size = 96
-	lbl.pixel_size = 0.03
+	lbl.pixel_size = 0.05
 	lbl.modulate = Color(1.0, 0.88, 0.15)
 	lbl.outline_size = 8
 	lbl.outline_modulate = Color(0.0, 0.0, 0.0, 0.9)
 	lbl.billboard = BaseMaterial3D.BILLBOARD_DISABLED
-	lbl.no_depth_test = false
-	# Lay flat on die top face — Label3D default faces -Z, rotate -90° X to face +Y
-	lbl.rotation_degrees = Vector3(-90.0, 0.0, 0.0)
-	lbl.position = Vector3(0.0, die_visual_scale * 0.55, 0.0)
-	node.add_child(lbl)
+	lbl.no_depth_test = true
+	# Pitch to match camera (-67°) so text is readable; parented to _viewport
+	# so it doesn't inherit the die's random Y spin.
+	lbl.rotation_degrees = Vector3(-67.0, 0.0, 0.0)
+	lbl.position = Vector3(node.position.x, die_visual_scale * 0.55, node.position.z)
+	_viewport.add_child(lbl)
+	entry["label"] = lbl
 
 
 func _clear_dice() -> void:
@@ -190,6 +192,9 @@ func _clear_dice() -> void:
 		var node = entry.get("node")
 		if node != null and is_instance_valid(node):
 			node.queue_free()
+		var lbl: Label3D = entry.get("label") as Label3D
+		if lbl != null and is_instance_valid(lbl):
+			lbl.queue_free()
 
 
 func _load_visual(sides: int, body_id: String = "") -> Node3D:
