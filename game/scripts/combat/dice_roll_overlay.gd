@@ -35,6 +35,7 @@ func _build_scene() -> void:
 	_vp_container.position = Vector2(0.0, screen.y - strip_height)
 	_vp_container.size     = Vector2(screen.x, strip_height)
 	_vp_container.stretch  = true
+	_vp_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_vp_container)
 
 	_viewport = SubViewport.new()
