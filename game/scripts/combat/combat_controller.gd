@@ -78,7 +78,7 @@ func _ready() -> void:
 	if resolve_button != null:
 		resolve_button.pressed.connect(_on_resolve_pressed)
 	if _dice_roll_overlay != null:
-		_dice_roll_overlay.roll_complete.connect(_render)
+		_dice_roll_overlay.roll_complete.connect(_on_dice_roll_complete)
 	_render()
 
 
@@ -1070,6 +1070,12 @@ func _on_roll_pressed() -> void:
 		_dice_roll_overlay.start_roll(combat_state.roll_results)
 	else:
 		_render()
+
+
+func _on_dice_roll_complete() -> void:
+	_render()
+	if _dice_roll_overlay != null:
+		_dice_roll_overlay.hide()
 
 
 func _on_resolve_pressed() -> void:
