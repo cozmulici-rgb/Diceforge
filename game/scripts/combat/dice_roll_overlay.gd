@@ -4,15 +4,14 @@ extends CanvasLayer
 signal roll_complete
 
 # Tuneable at runtime
-var strip_height: float   = 300.0
-var die_visual_scale: float = 8.0
-var die_spacing: float    = 3.2
-var float_height: float   = 2.5
-var float_duration: float = 0.35
-var spin_duration: float  = 1.0
-var spin_rotations: float = 2.5
-var stagger_delay: float  = 0.08
-var display_hold: float   = 2.0
+var strip_height: float     = 530.0
+var die_visual_scale: float = 6.0
+var die_spacing: float      = 2.0
+var float_height: float     = 3.7
+var float_duration: float   = 0.25
+var spin_duration: float    = 0.3
+var spin_rotations: float   = 5.5
+var stagger_delay: float    = 0.08
 
 var camera: Camera3D
 
@@ -46,9 +45,9 @@ func _build_scene() -> void:
 
 	# Near top-down camera: high Y, very slight Z offset, steep pitch
 	camera = Camera3D.new()
-	camera.position = Vector3(0.0, 7.0, 1.5)
-	camera.rotation_degrees = Vector3(-80.0, 0.0, 0.0)
-	camera.fov = 30.0
+	camera.position = Vector3(0.0, 11.5, 3.4)
+	camera.rotation_degrees = Vector3(-67.0, 0.0, 0.0)
+	camera.fov = 50.0
 	_viewport.add_child(camera)
 
 	var sun := DirectionalLight3D.new()
@@ -162,9 +161,8 @@ func _animate_single(entry: Dictionary, delay: float, on_done: Callable) -> void
 
 
 func _on_all_done() -> void:
-	await get_tree().create_timer(display_hold).timeout
-	hide()
 	roll_complete.emit()
+	# Overlay stays visible; start_roll() or an explicit hide() call dismisses it.
 
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
