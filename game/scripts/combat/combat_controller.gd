@@ -1074,8 +1074,6 @@ func _on_roll_pressed() -> void:
 
 func _on_dice_roll_complete() -> void:
 	_render()
-	if _dice_roll_overlay != null:
-		_dice_roll_overlay.hide()
 
 
 func _on_resolve_pressed() -> void:
