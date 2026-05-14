@@ -173,7 +173,7 @@ func _show_label(entry: Dictionary) -> void:
 	var lbl := Label3D.new()
 	lbl.text = str(int(entry["rolled_value"]))
 	lbl.font_size = 96
-	lbl.pixel_size = 0.05
+	lbl.pixel_size = 0.02
 	lbl.modulate = Color(1.0, 0.88, 0.15)
 	lbl.outline_size = 8
 	lbl.outline_modulate = Color(0.0, 0.0, 0.0, 0.9)
