@@ -85,7 +85,7 @@ func start_roll(roll_data: Array) -> void:
 		die_node.position = Vector3(x_pos, 0.0, 0.0)
 		_viewport.add_child(die_node)
 
-		var visual := _load_visual(sides)
+		var visual := _load_visual(sides, str(entry.get("body_id", "")))
 		visual.scale = Vector3(die_visual_scale, die_visual_scale, die_visual_scale)
 		die_node.add_child(visual)
 
@@ -173,12 +173,15 @@ func _show_label(entry: Dictionary) -> void:
 	var lbl := Label3D.new()
 	lbl.text = str(int(entry["rolled_value"]))
 	lbl.font_size = 96
+	lbl.pixel_size = 0.03
 	lbl.modulate = Color(1.0, 0.88, 0.15)
 	lbl.outline_size = 8
 	lbl.outline_modulate = Color(0.0, 0.0, 0.0, 0.9)
-	lbl.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	lbl.no_depth_test = true
-	lbl.position = Vector3(0.0, 1.0, 0.0)
+	lbl.billboard = BaseMaterial3D.BILLBOARD_DISABLED
+	lbl.no_depth_test = false
+	# Lay flat on die top face — Label3D default faces -Z, rotate -90° X to face +Y
+	lbl.rotation_degrees = Vector3(-90.0, 0.0, 0.0)
+	lbl.position = Vector3(0.0, die_visual_scale * 0.55, 0.0)
 	node.add_child(lbl)
 
 
@@ -189,22 +192,61 @@ func _clear_dice() -> void:
 			node.queue_free()
 
 
-func _load_visual(sides: int) -> Node3D:
+func _load_visual(sides: int, body_id: String = "") -> Node3D:
+	var mat := _make_dice_material(body_id)
 	var mesh_path := "res://assets/dice/meshes/d%d.glb" % sides
 	if ResourceLoader.exists(mesh_path):
 		var packed := load(mesh_path) as PackedScene
 		if packed != null:
-			return packed.instantiate()
+			var instance := packed.instantiate()
+			_apply_material_recursive(instance, mat)
+			return instance
 	var mi := MeshInstance3D.new()
 	var bm := BoxMesh.new()
 	bm.size = Vector3(0.9, 0.9, 0.9)
 	mi.mesh = bm
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(0.15, 0.30, 0.65)
-	mat.roughness = 0.35
-	mat.metallic = 0.25
 	mi.material_override = mat
 	return mi
+
+
+func _make_dice_material(body_id: String) -> StandardMaterial3D:
+	var mat := StandardMaterial3D.new()
+
+	var use_light := body_id.contains("bone") or body_id.contains("crystal")
+	var diffuse_path := "res://assets/dice/diffuse-%s.png" % ("light" if use_light else "dark")
+	if ResourceLoader.exists(diffuse_path):
+		mat.albedo_texture = load(diffuse_path)
+
+	if body_id.contains("bone"):
+		mat.albedo_color = Color(0.95, 0.90, 0.78)
+	elif body_id.contains("crystal"):
+		mat.albedo_color = Color(0.55, 0.80, 1.00)
+	elif body_id.contains("flesh"):
+		mat.albedo_color = Color(0.85, 0.38, 0.32)
+	elif body_id.contains("heavy"):
+		mat.albedo_color = Color(0.32, 0.32, 0.38)
+	elif body_id.contains("void"):
+		mat.albedo_color = Color(0.22, 0.12, 0.42)
+	else:
+		mat.albedo_color = Color(0.55, 0.62, 0.90)
+
+	var normal_path := "res://assets/dice/normal.png"
+	if ResourceLoader.exists(normal_path):
+		mat.normal_enabled = true
+		mat.normal_texture = load(normal_path)
+		mat.normal_scale = 1.2
+
+	mat.roughness = 0.35
+	mat.metallic = 0.15
+	mat.metallic_specular = 0.6
+	return mat
+
+
+func _apply_material_recursive(node: Node, mat: StandardMaterial3D) -> void:
+	if node is MeshInstance3D:
+		(node as MeshInstance3D).material_override = mat
+	for child in node.get_children():
+		_apply_material_recursive(child, mat)
 
 
 func _spread_x(index: int, total: int) -> float:
