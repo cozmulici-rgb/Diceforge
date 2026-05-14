@@ -203,22 +203,21 @@ func _show_label(entry: Dictionary) -> void:
 		sv.queue_free()
 		return
 
-	# ── Glue a flat plane onto the die top face using the rendered digit ───────
-	var mat := StandardMaterial3D.new()
-	mat.albedo_texture = sv.get_texture()
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-
-	var mi := MeshInstance3D.new()
-	var pm := PlaneMesh.new()
-	var face := die_visual_scale * 0.72
-	pm.size = Vector2(face, face)
-	mi.mesh = pm
-	mi.material_override = mat
-	# PlaneMesh faces +Y by default; sit it just above the top face
-	mi.position = Vector3(0.0, die_visual_scale * 0.5, 0.0)
-	node.add_child(mi)
-	entry["label"] = mi
+	# ── Project the digit onto the die surface with a Decal ──────────────────
+	# Decal projects along local -Y, painting the texture onto any geometry
+	# inside its bounding box — the number appears as part of the die surface.
+	var decal := Decal.new()
+	decal.texture_albedo = sv.get_texture()
+	var face := die_visual_scale * 0.85
+	# size: XZ covers the face, Y depth spans top-face region
+	decal.size = Vector3(face, die_visual_scale * 0.5, face)
+	# Centre the decal just above the top face so projection hits it cleanly
+	decal.position = Vector3(0.0, die_visual_scale * 0.6, 0.0)
+	decal.albedo_mix = 1.0
+	decal.lower_fade = 0.0
+	decal.upper_fade = 0.0
+	node.add_child(decal)
+	entry["label"] = decal
 
 
 func _clear_dice() -> void:
