@@ -1,12 +1,12 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=8 format=3 uid="uid://bjrpcfgb73w84"]
 
 [ext_resource type="Script" path="res://scripts/combat/combat_controller.gd" id="1"]
+[ext_resource type="Texture2D" uid="uid://dirxvgy4sr4n0" path="res://assets/combat/exports/bg-combat-void-dais-v1.png" id="2"]
+[ext_resource type="Texture2D" uid="uid://cn7aw6t7ib6we" path="res://assets/combat/exports/bg-combat-void-fog-v1.png" id="3"]
+[ext_resource type="Texture2D" uid="uid://bmobfel4cxifa" path="res://assets/combat/exports/overlay-combat-runes-v1.png" id="4"]
+[ext_resource type="Texture2D" uid="uid://btbet6heyoy23" path="res://assets/combat/exports/combat-portrait-enemy-colossus-v1.png" id="5"]
+[ext_resource type="Texture2D" uid="uid://dsqpo76i2s3yf" path="res://assets/combat/exports/combat-portrait-player-facetwalker-v1.png" id="6"]
 [ext_resource type="Script" path="res://scripts/combat/dice_roll_overlay.gd" id="8"]
-[ext_resource type="Texture2D" path="res://assets/combat/exports/bg-combat-void-dais-v1.png" id="2"]
-[ext_resource type="Texture2D" path="res://assets/combat/exports/bg-combat-void-fog-v1.png" id="3"]
-[ext_resource type="Texture2D" path="res://assets/combat/exports/overlay-combat-runes-v1.png" id="4"]
-[ext_resource type="Texture2D" path="res://assets/combat/exports/combat-portrait-enemy-colossus-v1.png" id="5"]
-[ext_resource type="Texture2D" path="res://assets/combat/exports/combat-portrait-player-facetwalker-v1.png" id="6"]
 
 [node name="CombatScreen" type="Control"]
 layout_mode = 3
@@ -110,10 +110,10 @@ expand_mode = 1
 stretch_mode = 4
 
 [node name="BossPhaseLabel" type="Label" parent="RootMargin/MainRow/LeftPanel/EnemyVBox"]
+visible = false
 layout_mode = 2
 text = "Boss: Phase 1"
 horizontal_alignment = 1
-visible = false
 
 [node name="EnemyHpVBox" type="VBoxContainer" parent="RootMargin/MainRow/LeftPanel/EnemyVBox"]
 layout_mode = 2
@@ -139,7 +139,6 @@ text = "Block 0"
 [node name="EnemyHpBar" type="ProgressBar" parent="RootMargin/MainRow/LeftPanel/EnemyVBox/EnemyHpVBox"]
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
-max_value = 100.0
 value = 100.0
 show_percentage = false
 
@@ -157,7 +156,6 @@ autowrap_mode = 3
 
 [node name="IntentDetailLabel" type="Label" parent="RootMargin/MainRow/LeftPanel/EnemyVBox"]
 layout_mode = 2
-text = ""
 autowrap_mode = 3
 
 [node name="EnemySep2" type="HSeparator" parent="RootMargin/MainRow/LeftPanel/EnemyVBox"]
@@ -229,8 +227,8 @@ horizontal_alignment = 1
 [node name="DiceRow" type="HBoxContainer" parent="RootMargin/MainRow/CenterVBox/DiceSectionVBox"]
 layout_mode = 2
 size_flags_horizontal = 3
-alignment = 1
 theme_override_constants/separation = 8
+alignment = 1
 
 [node name="EnemyDiceSection" type="VBoxContainer" parent="RootMargin/MainRow/CenterVBox"]
 layout_mode = 2
@@ -244,8 +242,8 @@ horizontal_alignment = 1
 [node name="EnemyDiceRow" type="HBoxContainer" parent="RootMargin/MainRow/CenterVBox/EnemyDiceSection"]
 layout_mode = 2
 size_flags_horizontal = 3
-alignment = 1
 theme_override_constants/separation = 8
+alignment = 1
 
 [node name="QueueSectionVBox" type="VBoxContainer" parent="RootMargin/MainRow/CenterVBox"]
 visible = false
@@ -275,8 +273,8 @@ horizontal_alignment = 1
 
 [node name="ButtonRow" type="HBoxContainer" parent="RootMargin/MainRow/CenterVBox"]
 layout_mode = 2
-alignment = 1
 theme_override_constants/separation = 16
+alignment = 1
 
 [node name="RollButton" type="Button" parent="RootMargin/MainRow/CenterVBox/ButtonRow"]
 custom_minimum_size = Vector2(180, 60)
@@ -348,7 +346,6 @@ text = "Block 0"
 [node name="PlayerHpBar" type="ProgressBar" parent="RootMargin/MainRow/RightPanel/PlayerVBox/PlayerHpVBox"]
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
-max_value = 100.0
 value = 100.0
 show_percentage = false
 

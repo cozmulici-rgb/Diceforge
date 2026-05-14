@@ -1,25 +1,25 @@
 {
   "id": "tutorial_shop",
   "definitions": [
-    {
-      "id": "tutorial_vendor",
-      "name": "Tutorial Vendor",
-      "reward_type": "shop",
-      "can_enter_forge": false,
-      "options": [
-        {
-          "option_id": "shop_buy_bulwark",
-          "grant_type": "face",
-          "content_id": "bulwark",
-          "quantity": 1
-        },
-        {
-          "option_id": "shop_buy_ember_rune",
-          "grant_type": "rune",
-          "content_id": "ember_rune",
-          "quantity": 1
-        }
-      ]
-    }
+	{
+	  "id": "tutorial_vendor",
+	  "name": "Tutorial Vendor",
+	  "reward_type": "shop",
+	  "can_enter_forge": false,
+	  "options": [
+		{
+		  "option_id": "shop_buy_bulwark",
+		  "grant_type": "face",
+		  "content_id": "bulwark",
+		  "quantity": 1
+		},
+		{
+		  "option_id": "shop_buy_ember_rune",
+		  "grant_type": "rune",
+		  "content_id": "ember_rune",
+		  "quantity": 1
+		}
+	  ]
+	}
   ]
 }
