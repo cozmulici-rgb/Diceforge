@@ -165,26 +165,60 @@ func _on_all_done() -> void:
 # ── Helpers ────────────────────────────────────────────────────────────────────
 
 func _show_label(entry: Dictionary) -> void:
+	# Clean up any previous label plane + its backing viewport
+	var old_plane: Node = entry.get("label") as Node
+	if old_plane != null and is_instance_valid(old_plane):
+		old_plane.queue_free()
+	var old_sv: SubViewport = entry.get("label_sv") as SubViewport
+	if old_sv != null and is_instance_valid(old_sv):
+		old_sv.queue_free()
+
 	var node: Node3D = entry["node"] as Node3D
-	# Remove any existing label for this entry
-	var old: Label3D = entry.get("label") as Label3D
-	if old != null and is_instance_valid(old):
-		old.queue_free()
-	var lbl := Label3D.new()
-	lbl.text = str(int(entry["rolled_value"]))
-	lbl.font_size = 96
-	lbl.pixel_size = 0.02
-	lbl.modulate = Color(1.0, 0.88, 0.15)
-	lbl.outline_size = 8
-	lbl.outline_modulate = Color(0.0, 0.0, 0.0, 0.9)
-	lbl.billboard = BaseMaterial3D.BILLBOARD_DISABLED
-	lbl.no_depth_test = true
-	# Pitch to match camera (-67°) so text is readable; parented to _viewport
-	# so it doesn't inherit the die's random Y spin.
-	lbl.rotation_degrees = Vector3(-67.0, 0.0, 0.0)
-	lbl.position = Vector3(node.position.x, die_visual_scale * 0.55, node.position.z)
-	_viewport.add_child(lbl)
-	entry["label"] = lbl
+	var value := int(entry["rolled_value"])
+
+	# ── Render the digit into a tiny 2D viewport ──────────────────────────────
+	var sv := SubViewport.new()
+	sv.size = Vector2i(256, 256)
+	sv.transparent_bg = true
+	sv.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	var lbl := Label.new()
+	lbl.text = str(value)
+	lbl.add_theme_font_size_override("font_size", 190)
+	lbl.add_theme_color_override("font_color", Color(1.0, 0.88, 0.15))
+	lbl.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0))
+	lbl.add_theme_constant_override("outline_size", 14)
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	lbl.size = Vector2(256.0, 256.0)
+	sv.add_child(lbl)
+	add_child(sv)
+	entry["label_sv"] = sv
+
+	# Wait two frames so the viewport flushes at least one rendered frame
+	await get_tree().process_frame
+	await get_tree().process_frame
+	sv.render_target_update_mode = SubViewport.UPDATE_DISABLED
+
+	if not is_instance_valid(node):
+		sv.queue_free()
+		return
+
+	# ── Glue a flat plane onto the die top face using the rendered digit ───────
+	var mat := StandardMaterial3D.new()
+	mat.albedo_texture = sv.get_texture()
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+
+	var mi := MeshInstance3D.new()
+	var pm := PlaneMesh.new()
+	var face := die_visual_scale * 0.72
+	pm.size = Vector2(face, face)
+	mi.mesh = pm
+	mi.material_override = mat
+	# PlaneMesh faces +Y by default; sit it just above the top face
+	mi.position = Vector3(0.0, die_visual_scale * 0.5, 0.0)
+	node.add_child(mi)
+	entry["label"] = mi
 
 
 func _clear_dice() -> void:
@@ -192,9 +226,12 @@ func _clear_dice() -> void:
 		var node = entry.get("node")
 		if node != null and is_instance_valid(node):
 			node.queue_free()
-		var lbl: Label3D = entry.get("label") as Label3D
-		if lbl != null and is_instance_valid(lbl):
-			lbl.queue_free()
+		var label: Node = entry.get("label") as Node
+		if label != null and is_instance_valid(label):
+			label.queue_free()
+		var sv: SubViewport = entry.get("label_sv") as SubViewport
+		if sv != null and is_instance_valid(sv):
+			sv.queue_free()
 
 
 func _load_visual(sides: int, body_id: String = "") -> Node3D:
