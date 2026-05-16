@@ -22,6 +22,11 @@ var fill_energy: float = 0.35
 var ambient_energy: float = 0.9
 var ambient_lightness: float = 1.0
 
+# Debug: when true, _load_visual() always returns a BoxMesh fallback,
+# skipping the .glb mesh lookup. Used by test_dice_tuner for side-by-side
+# render-path comparison. Leave false in production.
+var force_box_fallback: bool = false
+
 var camera: Camera3D
 var sun_light: DirectionalLight3D
 var fill_light: DirectionalLight3D
@@ -276,13 +281,14 @@ func _clear_dice() -> void:
 
 func _load_visual(sides: int, body_id: String = "") -> Node3D:
 	var mat := _make_dice_material(body_id)
-	var mesh_path := "res://assets/dice/meshes/d%d.glb" % sides
-	if ResourceLoader.exists(mesh_path):
-		var packed := load(mesh_path) as PackedScene
-		if packed != null:
-			var instance := packed.instantiate()
-			_apply_material_recursive(instance, mat)
-			return instance
+	if not force_box_fallback:
+		var mesh_path := "res://assets/dice/meshes/d%d.glb" % sides
+		if ResourceLoader.exists(mesh_path):
+			var packed := load(mesh_path) as PackedScene
+			if packed != null:
+				var instance := packed.instantiate()
+				_apply_material_recursive(instance, mat)
+				return instance
 	var mi := MeshInstance3D.new()
 	var bm := BoxMesh.new()
 	bm.size = Vector3(0.9, 0.9, 0.9)
@@ -369,6 +375,16 @@ func resize_strip(new_height: float) -> void:
 	_vp_container.position.y = screen.y - new_height
 	_vp_container.size.y = new_height
 	_viewport.size.y = int(new_height)
+
+
+func set_strip_rect(rect: Rect2) -> void:
+	if _vp_container == null:
+		return
+	_vp_container.position = rect.position
+	_vp_container.size = rect.size
+	if _viewport != null:
+		_viewport.size = Vector2i(int(rect.size.x), int(rect.size.y))
+	strip_height = rect.size.y
 
 
 func refresh_materials() -> void:
