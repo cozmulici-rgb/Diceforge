@@ -9,6 +9,7 @@ const MOCK_ROLLS := [
 
 var _overlay_mesh: DiceRollOverlay
 var _overlay_box: DiceRollOverlay
+var _strip_envelope: float = 530.0
 
 
 func _ready() -> void:
@@ -25,13 +26,13 @@ func _ready() -> void:
 	_overlay_box.force_box_fallback = true
 	add_child(_overlay_mesh)
 	add_child(_overlay_box)
-	_layout_strip(_overlay_mesh.strip_height)
+	_layout_strip(_strip_envelope)
 
 	var panel := PanelContainer.new()
 	panel.set_anchor_and_offset(SIDE_LEFT,   0.0,  8.0)
 	panel.set_anchor_and_offset(SIDE_TOP,    0.0,  8.0)
 	panel.set_anchor_and_offset(SIDE_RIGHT,  1.0, -8.0)
-	panel.set_anchor_and_offset(SIDE_BOTTOM, 1.0, -(_overlay_mesh.strip_height + 8.0))
+	panel.set_anchor_and_offset(SIDE_BOTTOM, 1.0, -(_strip_envelope + 8.0))
 	add_child(panel)
 
 	var root_vbox := VBoxContainer.new()
@@ -127,6 +128,7 @@ func _ready() -> void:
 
 
 func _layout_strip(strip_h: float) -> void:
+	_strip_envelope = strip_h
 	var screen := get_viewport().get_visible_rect().size
 	var half := strip_h / 2.0
 	var top_y := screen.y - strip_h
