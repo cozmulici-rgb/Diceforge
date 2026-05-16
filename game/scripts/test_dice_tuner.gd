@@ -7,7 +7,8 @@ const MOCK_ROLLS := [
 	{"die_id": "d4", "body_id": "standard_d6",  "rolled_value": 3, "face_label": "Amplify"},
 ]
 
-var _overlay
+var _overlay_mesh: DiceRollOverlay
+var _overlay_box: DiceRollOverlay
 
 
 func _ready() -> void:
@@ -19,14 +20,18 @@ func _ready() -> void:
 	add_child(bg)
 
 	var overlay_script = load("res://scripts/combat/dice_roll_overlay.gd")
-	_overlay = overlay_script.new()
-	add_child(_overlay)
+	_overlay_mesh = overlay_script.new()
+	_overlay_box  = overlay_script.new()
+	_overlay_box.force_box_fallback = true
+	add_child(_overlay_mesh)
+	add_child(_overlay_box)
+	_layout_strip(_overlay_mesh.strip_height)
 
 	var panel := PanelContainer.new()
 	panel.set_anchor_and_offset(SIDE_LEFT,   0.0,  8.0)
 	panel.set_anchor_and_offset(SIDE_TOP,    0.0,  8.0)
 	panel.set_anchor_and_offset(SIDE_RIGHT,  1.0, -8.0)
-	panel.set_anchor_and_offset(SIDE_BOTTOM, 1.0, -(_overlay.strip_height + 8.0))
+	panel.set_anchor_and_offset(SIDE_BOTTOM, 1.0, -(_overlay_mesh.strip_height + 8.0))
 	add_child(panel)
 
 	var root_vbox := VBoxContainer.new()
@@ -71,16 +76,16 @@ func _ready() -> void:
 	_spin(cam_col, "Far",    20.0, 500.0, 400.0, 5.0, func(v): _set_cam(func(c): c.far = v))
 
 	var anim_col := _make_section(cols, "Animation")
-	_spin(anim_col, "Float H",   0.5, 10.0, 3.7,  0.1,  func(v): _overlay.float_height  = v)
-	_spin(anim_col, "Float Dur", 0.05, 2.0, 0.25, 0.05, func(v): _overlay.float_duration = v)
-	_spin(anim_col, "Spin Dur",  0.05, 4.0, 0.3,  0.05, func(v): _overlay.spin_duration  = v)
-	_spin(anim_col, "Spin Rot",  0.5, 10.0, 5.5,  0.5,  func(v): _overlay.spin_rotations = v)
-	_spin(anim_col, "Stagger",   0.0,  0.5, 0.08, 0.01, func(v): _overlay.stagger_delay  = v)
+	_spin(anim_col, "Float H",   0.5, 10.0, 3.7,  0.1,  func(v): _overlay_mesh.float_height  = v)
+	_spin(anim_col, "Float Dur", 0.05, 2.0, 0.25, 0.05, func(v): _overlay_mesh.float_duration = v)
+	_spin(anim_col, "Spin Dur",  0.05, 4.0, 0.3,  0.05, func(v): _overlay_mesh.spin_duration  = v)
+	_spin(anim_col, "Spin Rot",  0.5, 10.0, 5.5,  0.5,  func(v): _overlay_mesh.spin_rotations = v)
+	_spin(anim_col, "Stagger",   0.0,  0.5, 0.08, 0.01, func(v): _overlay_mesh.stagger_delay  = v)
 
 	var scene_col := _make_section(cols, "Scene")
-	_spin(scene_col, "Die Scale",  1.0,  20.0,  6.0, 0.5,  func(v): _overlay.die_visual_scale = v)
-	_spin(scene_col, "Spacing",    0.5,   8.0,  2.0, 0.1,  func(v): _overlay.die_spacing      = v)
-	_spin(scene_col, "Strip H",   80.0, 800.0, 530.0, 10.0, func(v): _overlay.resize_strip(v))
+	_spin(scene_col, "Die Scale",  1.0,  20.0,  6.0, 0.5,  func(v): _overlay_mesh.die_visual_scale = v)
+	_spin(scene_col, "Spacing",    0.5,   8.0,  2.0, 0.1,  func(v): _overlay_mesh.die_spacing      = v)
+	_spin(scene_col, "Strip H",   80.0, 800.0, 530.0, 10.0, func(v): _overlay_mesh.resize_strip(v))
 
 	var texture_col := _make_section(cols_2, "Texture")
 	_spin(texture_col, "Light",  0.2, 2.0, 1.0,  0.05, func(v): _set_material("texture_lightness", v))
@@ -103,7 +108,15 @@ func _ready() -> void:
 	status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	root_vbox.add_child(status)
 
-	_overlay.roll_complete.connect(func(): _status("Roll complete."))
+	_overlay_mesh.roll_complete.connect(func(): _status("Roll complete."))
+
+
+func _layout_strip(strip_h: float) -> void:
+	var screen := get_viewport().get_visible_rect().size
+	var half := strip_h / 2.0
+	var top_y := screen.y - strip_h
+	_overlay_mesh.set_strip_rect(Rect2(0.0, top_y,        screen.x, half))
+	_overlay_box.set_strip_rect( Rect2(0.0, top_y + half, screen.x, half))
 
 
 func _make_section(parent: HBoxContainer, title: String) -> VBoxContainer:
@@ -156,25 +169,28 @@ func _status(msg: String) -> void:
 
 
 func _do_roll() -> void:
-	_overlay.start_roll(MOCK_ROLLS)
+	_overlay_mesh.start_roll(MOCK_ROLLS)
+	_overlay_box.start_roll(MOCK_ROLLS)
 	_status("Rolling...")
 
 
 func _do_reroll(die_id: String) -> void:
-	_overlay.trigger_reroll(die_id, randi_range(1, 20))
+	var new_value := randi_range(1, 20)
+	_overlay_mesh.trigger_reroll(die_id, new_value)
+	_overlay_box.trigger_reroll(die_id, new_value)
 	_status("Re-rolling %s..." % die_id)
 
 
 func _set_cam(mutate: Callable) -> void:
-	if _overlay.camera != null:
-		mutate.call(_overlay.camera)
+	if _overlay_mesh.camera != null:
+		mutate.call(_overlay_mesh.camera)
 
 
 func _set_material(prop_name: String, value: float) -> void:
-	_overlay.set(prop_name, value)
-	_overlay.refresh_materials()
+	_overlay_mesh.set(prop_name, value)
+	_overlay_mesh.refresh_materials()
 
 
 func _set_light(prop_name: String, value: float) -> void:
-	_overlay.set(prop_name, value)
-	_overlay.refresh_lighting()
+	_overlay_mesh.set(prop_name, value)
+	_overlay_mesh.refresh_lighting()
