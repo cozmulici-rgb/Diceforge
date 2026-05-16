@@ -186,6 +186,9 @@ func _status(msg: String) -> void:
 
 
 func _do_roll() -> void:
+	var roll_seed := randi()
+	_overlay_mesh.set_rng_seed(roll_seed)
+	_overlay_box.set_rng_seed(roll_seed)
 	_overlay_mesh.start_roll(MOCK_ROLLS)
 	_overlay_box.start_roll(MOCK_ROLLS)
 	_status("Rolling...")
@@ -193,6 +196,9 @@ func _do_roll() -> void:
 
 func _do_reroll(die_id: String) -> void:
 	var new_value := randi_range(1, 20)
+	var roll_seed := randi()
+	_overlay_mesh.set_rng_seed(roll_seed)
+	_overlay_box.set_rng_seed(roll_seed)
 	_overlay_mesh.trigger_reroll(die_id, new_value)
 	_overlay_box.trigger_reroll(die_id, new_value)
 	_status("Re-rolling %s..." % die_id)

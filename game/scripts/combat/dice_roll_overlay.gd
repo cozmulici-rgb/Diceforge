@@ -403,3 +403,7 @@ func refresh_lighting() -> void:
 	if world_environment != null and world_environment.environment != null:
 		world_environment.environment.ambient_light_color = _ambient_color()
 		world_environment.environment.ambient_light_energy = ambient_energy
+
+
+func set_rng_seed(seed: int) -> void:
+	_rng.seed = seed
