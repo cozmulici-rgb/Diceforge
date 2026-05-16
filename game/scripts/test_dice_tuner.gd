@@ -52,14 +52,23 @@ func _ready() -> void:
 	_add_separator(root_vbox)
 
 	var cols := HBoxContainer.new()
-	cols.add_theme_constant_override("separation", 24)
+	cols.add_theme_constant_override("separation", 18)
 	root_vbox.add_child(cols)
 
+	var cols_2 := HBoxContainer.new()
+	cols_2.add_theme_constant_override("separation", 18)
+	root_vbox.add_child(cols_2)
+
 	var cam_col := _make_section(cols, "Camera")
-	_spin(cam_col, "Height",   2.0,  20.0,  11.5, 0.5, func(v): _set_cam(func(c): c.position.y = v))
-	_spin(cam_col, "Z Offset", 0.0,   8.0,   3.4, 0.1, func(v): _set_cam(func(c): c.position.z = v))
-	_spin(cam_col, "Pitch",  -90.0,   0.0, -67.0, 1.0, func(v): _set_cam(func(c): c.rotation_degrees.x = v))
-	_spin(cam_col, "FOV",      5.0, 100.0,  50.0, 1.0, func(v): _set_cam(func(c): c.fov = v))
+	_spin(cam_col, "X",      -8.0,   8.0,   0.0, 0.1, func(v): _set_cam(func(c): c.position.x = v))
+	_spin(cam_col, "Height",  2.0,  20.0,  11.5, 0.5, func(v): _set_cam(func(c): c.position.y = v))
+	_spin(cam_col, "Z",      -4.0,   8.0,   3.4, 0.1, func(v): _set_cam(func(c): c.position.z = v))
+	_spin(cam_col, "Pitch", -90.0,   0.0, -67.0, 1.0, func(v): _set_cam(func(c): c.rotation_degrees.x = v))
+	_spin(cam_col, "Yaw",   -45.0,  45.0,   0.0, 1.0, func(v): _set_cam(func(c): c.rotation_degrees.y = v))
+	_spin(cam_col, "Roll",  -45.0,  45.0,   0.0, 1.0, func(v): _set_cam(func(c): c.rotation_degrees.z = v))
+	_spin(cam_col, "FOV",     5.0, 100.0,  50.0, 1.0, func(v): _set_cam(func(c): c.fov = v))
+	_spin(cam_col, "Near",  0.005,   2.0,  0.05, 0.005, func(v): _set_cam(func(c): c.near = v))
+	_spin(cam_col, "Far",    20.0, 500.0, 400.0, 5.0, func(v): _set_cam(func(c): c.far = v))
 
 	var anim_col := _make_section(cols, "Animation")
 	_spin(anim_col, "Float H",   0.5, 10.0, 3.7,  0.1,  func(v): _overlay.float_height  = v)
@@ -72,6 +81,19 @@ func _ready() -> void:
 	_spin(scene_col, "Die Scale",  1.0,  20.0,  6.0, 0.5,  func(v): _overlay.die_visual_scale = v)
 	_spin(scene_col, "Spacing",    0.5,   8.0,  2.0, 0.1,  func(v): _overlay.die_spacing      = v)
 	_spin(scene_col, "Strip H",   80.0, 800.0, 530.0, 10.0, func(v): _overlay.resize_strip(v))
+
+	var texture_col := _make_section(cols_2, "Texture")
+	_spin(texture_col, "Light",  0.2, 2.0, 1.0,  0.05, func(v): _set_material("texture_lightness", v))
+	_spin(texture_col, "Normal", 0.0, 3.0, 1.2,  0.1,  func(v): _set_material("texture_normal_scale", v))
+	_spin(texture_col, "Rough",  0.0, 1.0, 0.35, 0.05, func(v): _set_material("material_roughness", v))
+	_spin(texture_col, "Metal",  0.0, 1.0, 0.15, 0.05, func(v): _set_material("material_metallic", v))
+	_spin(texture_col, "Spec",   0.0, 1.0, 0.6,  0.05, func(v): _set_material("material_specular", v))
+
+	var light_col := _make_section(cols_2, "Lighting")
+	_spin(light_col, "Sun",    0.0, 5.0, 1.6,  0.1,  func(v): _set_light("sun_energy", v))
+	_spin(light_col, "Fill",   0.0, 3.0, 0.35, 0.05, func(v): _set_light("fill_energy", v))
+	_spin(light_col, "Ambient", 0.0, 3.0, 0.9,  0.05, func(v): _set_light("ambient_energy", v))
+	_spin(light_col, "Amb Lit", 0.2, 2.0, 1.0,  0.05, func(v): _set_light("ambient_lightness", v))
 
 	_add_separator(root_vbox)
 
@@ -103,14 +125,14 @@ func _spin(parent: VBoxContainer, label: String, mn: float, mx: float, val: floa
 	parent.add_child(row)
 	var lbl := Label.new()
 	lbl.text = label
-	lbl.custom_minimum_size.x = 74
+	lbl.custom_minimum_size.x = 64
 	row.add_child(lbl)
 	var spin := SpinBox.new()
 	spin.min_value = mn
 	spin.max_value = mx
 	spin.step = step
 	spin.value = val
-	spin.custom_minimum_size.x = 88
+	spin.custom_minimum_size.x = 84
 	spin.value_changed.connect(cb)
 	row.add_child(spin)
 
@@ -146,3 +168,13 @@ func _do_reroll(die_id: String) -> void:
 func _set_cam(mutate: Callable) -> void:
 	if _overlay.camera != null:
 		mutate.call(_overlay.camera)
+
+
+func _set_material(prop_name: String, value: float) -> void:
+	_overlay.set(prop_name, value)
+	_overlay.refresh_materials()
+
+
+func _set_light(prop_name: String, value: float) -> void:
+	_overlay.set(prop_name, value)
+	_overlay.refresh_lighting()

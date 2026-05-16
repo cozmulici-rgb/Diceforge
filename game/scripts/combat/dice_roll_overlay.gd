@@ -12,8 +12,20 @@ var float_duration: float   = 0.25
 var spin_duration: float    = 0.3
 var spin_rotations: float   = 5.5
 var stagger_delay: float    = 0.08
+var texture_lightness: float = 1.0
+var texture_normal_scale: float = 1.2
+var material_roughness: float = 0.35
+var material_metallic: float = 0.15
+var material_specular: float = 0.6
+var sun_energy: float = 1.6
+var fill_energy: float = 0.35
+var ambient_energy: float = 0.9
+var ambient_lightness: float = 1.0
 
 var camera: Camera3D
+var sun_light: DirectionalLight3D
+var fill_light: DirectionalLight3D
+var world_environment: WorldEnvironment
 
 var _vp_container: SubViewportContainer
 var _viewport: SubViewport
@@ -51,24 +63,24 @@ func _build_scene() -> void:
 	camera.fov = 50.0
 	_viewport.add_child(camera)
 
-	var sun := DirectionalLight3D.new()
-	sun.rotation_degrees = Vector3(-70.0, 20.0, 0.0)
-	sun.light_energy = 1.6
-	_viewport.add_child(sun)
+	sun_light = DirectionalLight3D.new()
+	sun_light.rotation_degrees = Vector3(-70.0, 20.0, 0.0)
+	sun_light.light_energy = sun_energy
+	_viewport.add_child(sun_light)
 
-	var fill := DirectionalLight3D.new()
-	fill.rotation_degrees = Vector3(-20.0, -130.0, 0.0)
-	fill.light_energy = 0.35
-	fill.shadow_enabled = false
-	_viewport.add_child(fill)
+	fill_light = DirectionalLight3D.new()
+	fill_light.rotation_degrees = Vector3(-20.0, -130.0, 0.0)
+	fill_light.light_energy = fill_energy
+	fill_light.shadow_enabled = false
+	_viewport.add_child(fill_light)
 
-	var world_env := WorldEnvironment.new()
+	world_environment = WorldEnvironment.new()
 	var env := Environment.new()
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color  = Color(0.28, 0.30, 0.42)
-	env.ambient_light_energy = 0.9
-	world_env.environment = env
-	_viewport.add_child(world_env)
+	env.ambient_light_color  = _ambient_color()
+	env.ambient_light_energy = ambient_energy
+	world_environment.environment = env
+	_viewport.add_child(world_environment)
 
 
 func start_roll(roll_data: Array) -> void:
@@ -93,6 +105,7 @@ func start_roll(roll_data: Array) -> void:
 			"node":         die_node,
 			"visual":       visual,
 			"die_id":       str(entry.get("die_id", "")),
+			"body_id":      str(entry.get("body_id", "")),
 			"rolled_value": int(entry.get("rolled_value", 1)),
 			"face_label":   str(entry.get("face_label", "")),
 		})
@@ -132,8 +145,10 @@ func _begin_animation() -> void:
 
 func _animate_single(entry: Dictionary, delay: float, on_done: Callable) -> void:
 	var die_node: Node3D = entry["node"] as Node3D
-	var spin_dir  := 1.0 if _rng.randf() > 0.5 else -1.0
-	var spin_deg  := 360.0 * spin_rotations * spin_dir
+	var final_rotation := _random_landing_rotation()
+	var spin_x := 360.0 * spin_rotations * _random_spin_direction()
+	var spin_y := 360.0 * spin_rotations * _random_spin_direction()
+	var spin_z := 360.0 * spin_rotations * _random_spin_direction()
 	# Float down starts early enough to land exactly when spin ends.
 	var down_start := maxf(delay + float_duration, delay + spin_duration - float_duration)
 	var end_time   := delay + spin_duration
@@ -145,10 +160,16 @@ func _animate_single(entry: Dictionary, delay: float, on_done: Callable) -> void
 	tw.tween_property(die_node, "position:y", float_height, float_duration) \
 	  .set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD).set_delay(delay)
 
-	# Spin Y only — vertical axis never tilts
-	tw.tween_property(die_node, "rotation_degrees:y",
-	                  die_node.rotation_degrees.y + spin_deg, spin_duration) \
+	# Spin all axes, then settle into a random face-up orientation.
+	tw.tween_property(die_node, "rotation_degrees:x", final_rotation.x + spin_x, spin_duration * 0.55) \
 	  .set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_CUBIC).set_delay(delay)
+	tw.tween_property(die_node, "rotation_degrees:y", final_rotation.y + spin_y, spin_duration * 0.55) \
+	  .set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_CUBIC).set_delay(delay)
+	tw.tween_property(die_node, "rotation_degrees:z", final_rotation.z + spin_z, spin_duration * 0.55) \
+	  .set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_CUBIC).set_delay(delay)
+
+	tw.tween_property(die_node, "rotation_degrees", final_rotation, spin_duration * 0.45) \
+	  .set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD).set_delay(delay + spin_duration * 0.55)
 
 	# Float down — lands at same XZ, Y=0
 	tw.tween_property(die_node, "position:y", 0.0, float_duration) \
@@ -217,7 +238,27 @@ func _show_label(entry: Dictionary) -> void:
 	decal.lower_fade = 0.0
 	decal.upper_fade = 0.0
 	node.add_child(decal)
+	decal.global_position = node.global_position + Vector3(0.0, die_visual_scale * 0.6, 0.0)
+	decal.global_rotation = Vector3.ZERO
 	entry["label"] = decal
+
+
+func _random_spin_direction() -> float:
+	return 1.0 if _rng.randf() > 0.5 else -1.0
+
+
+func _random_landing_rotation() -> Vector3:
+	var face_rotations := [
+		Vector3(0.0, 0.0, 0.0),
+		Vector3(90.0, 0.0, 0.0),
+		Vector3(180.0, 0.0, 0.0),
+		Vector3(270.0, 0.0, 0.0),
+		Vector3(0.0, 0.0, 90.0),
+		Vector3(0.0, 0.0, 270.0),
+	]
+	var rotation: Vector3 = face_rotations[_rng.randi_range(0, face_rotations.size() - 1)]
+	rotation.y = float(_rng.randi_range(0, 3)) * 90.0
+	return rotation
 
 
 func _clear_dice() -> void:
@@ -258,29 +299,45 @@ func _make_dice_material(body_id: String) -> StandardMaterial3D:
 	if ResourceLoader.exists(diffuse_path):
 		mat.albedo_texture = load(diffuse_path)
 
-	if body_id.contains("bone"):
-		mat.albedo_color = Color(0.95, 0.90, 0.78)
-	elif body_id.contains("crystal"):
-		mat.albedo_color = Color(0.55, 0.80, 1.00)
-	elif body_id.contains("flesh"):
-		mat.albedo_color = Color(0.85, 0.38, 0.32)
-	elif body_id.contains("heavy"):
-		mat.albedo_color = Color(0.32, 0.32, 0.38)
-	elif body_id.contains("void"):
-		mat.albedo_color = Color(0.22, 0.12, 0.42)
-	else:
-		mat.albedo_color = Color(0.55, 0.62, 0.90)
+	mat.albedo_color = _scaled_color(_base_color_for_body(body_id), texture_lightness)
 
 	var normal_path := "res://assets/dice/normal.png"
 	if ResourceLoader.exists(normal_path):
 		mat.normal_enabled = true
 		mat.normal_texture = load(normal_path)
-		mat.normal_scale = 1.2
+		mat.normal_scale = texture_normal_scale
 
-	mat.roughness = 0.35
-	mat.metallic = 0.15
-	mat.metallic_specular = 0.6
+	mat.roughness = material_roughness
+	mat.metallic = material_metallic
+	mat.metallic_specular = material_specular
 	return mat
+
+
+func _base_color_for_body(body_id: String) -> Color:
+	if body_id.contains("bone"):
+		return Color(0.95, 0.90, 0.78)
+	if body_id.contains("crystal"):
+		return Color(0.55, 0.80, 1.00)
+	if body_id.contains("flesh"):
+		return Color(0.85, 0.38, 0.32)
+	if body_id.contains("heavy"):
+		return Color(0.32, 0.32, 0.38)
+	if body_id.contains("void"):
+		return Color(0.22, 0.12, 0.42)
+	return Color(0.55, 0.62, 0.90)
+
+
+func _scaled_color(color: Color, lightness: float) -> Color:
+	return Color(
+		clampf(color.r * lightness, 0.0, 1.0),
+		clampf(color.g * lightness, 0.0, 1.0),
+		clampf(color.b * lightness, 0.0, 1.0),
+		color.a
+	)
+
+
+func _ambient_color() -> Color:
+	return _scaled_color(Color(0.28, 0.30, 0.42), ambient_lightness)
 
 
 func _apply_material_recursive(node: Node, mat: StandardMaterial3D) -> void:
@@ -312,3 +369,21 @@ func resize_strip(new_height: float) -> void:
 	_vp_container.position.y = screen.y - new_height
 	_vp_container.size.y = new_height
 	_viewport.size.y = int(new_height)
+
+
+func refresh_materials() -> void:
+	for entry in _die_entries:
+		var visual: Node = entry.get("visual") as Node
+		if visual == null or not is_instance_valid(visual):
+			continue
+		_apply_material_recursive(visual, _make_dice_material(str(entry.get("body_id", ""))))
+
+
+func refresh_lighting() -> void:
+	if sun_light != null:
+		sun_light.light_energy = sun_energy
+	if fill_light != null:
+		fill_light.light_energy = fill_energy
+	if world_environment != null and world_environment.environment != null:
+		world_environment.environment.ambient_light_color = _ambient_color()
+		world_environment.environment.ambient_light_energy = ambient_energy
