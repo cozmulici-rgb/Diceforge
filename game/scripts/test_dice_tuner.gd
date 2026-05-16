@@ -76,16 +76,31 @@ func _ready() -> void:
 	_spin(cam_col, "Far",    20.0, 500.0, 400.0, 5.0, func(v): _set_cam(func(c): c.far = v))
 
 	var anim_col := _make_section(cols, "Animation")
-	_spin(anim_col, "Float H",   0.5, 10.0, 3.7,  0.1,  func(v): _overlay_mesh.float_height  = v)
-	_spin(anim_col, "Float Dur", 0.05, 2.0, 0.25, 0.05, func(v): _overlay_mesh.float_duration = v)
-	_spin(anim_col, "Spin Dur",  0.05, 4.0, 0.3,  0.05, func(v): _overlay_mesh.spin_duration  = v)
-	_spin(anim_col, "Spin Rot",  0.5, 10.0, 5.5,  0.5,  func(v): _overlay_mesh.spin_rotations = v)
-	_spin(anim_col, "Stagger",   0.0,  0.5, 0.08, 0.01, func(v): _overlay_mesh.stagger_delay  = v)
+	_spin(anim_col, "Float H",   0.5, 10.0, 3.7,  0.1,  func(v):
+		_overlay_mesh.float_height  = v
+		_overlay_box.float_height   = v)
+	_spin(anim_col, "Float Dur", 0.05, 2.0, 0.25, 0.05, func(v):
+		_overlay_mesh.float_duration = v
+		_overlay_box.float_duration  = v)
+	_spin(anim_col, "Spin Dur",  0.05, 4.0, 0.3,  0.05, func(v):
+		_overlay_mesh.spin_duration  = v
+		_overlay_box.spin_duration   = v)
+	_spin(anim_col, "Spin Rot",  0.5, 10.0, 5.5,  0.5,  func(v):
+		_overlay_mesh.spin_rotations = v
+		_overlay_box.spin_rotations  = v)
+	_spin(anim_col, "Stagger",   0.0,  0.5, 0.08, 0.01, func(v):
+		_overlay_mesh.stagger_delay  = v
+		_overlay_box.stagger_delay   = v)
 
 	var scene_col := _make_section(cols, "Scene")
-	_spin(scene_col, "Die Scale",  1.0,  20.0,  6.0, 0.5,  func(v): _overlay_mesh.die_visual_scale = v)
-	_spin(scene_col, "Spacing",    0.5,   8.0,  2.0, 0.1,  func(v): _overlay_mesh.die_spacing      = v)
-	_spin(scene_col, "Strip H",   80.0, 800.0, 530.0, 10.0, func(v): _overlay_mesh.resize_strip(v))
+	_spin(scene_col, "Die Scale",  1.0,  20.0,  6.0, 0.5,  func(v):
+		_overlay_mesh.die_visual_scale = v
+		_overlay_box.die_visual_scale  = v)
+	_spin(scene_col, "Spacing",    0.5,   8.0,  2.0, 0.1,  func(v):
+		_overlay_mesh.die_spacing      = v
+		_overlay_box.die_spacing       = v)
+	_spin(scene_col, "Strip H",   80.0, 800.0, 530.0, 10.0, func(v):
+		_layout_strip(v))
 
 	var texture_col := _make_section(cols_2, "Texture")
 	_spin(texture_col, "Light",  0.2, 2.0, 1.0,  0.05, func(v): _set_material("texture_lightness", v))
@@ -184,13 +199,19 @@ func _do_reroll(die_id: String) -> void:
 func _set_cam(mutate: Callable) -> void:
 	if _overlay_mesh.camera != null:
 		mutate.call(_overlay_mesh.camera)
+	if _overlay_box.camera != null:
+		mutate.call(_overlay_box.camera)
 
 
 func _set_material(prop_name: String, value: float) -> void:
 	_overlay_mesh.set(prop_name, value)
+	_overlay_box.set(prop_name, value)
 	_overlay_mesh.refresh_materials()
+	_overlay_box.refresh_materials()
 
 
 func _set_light(prop_name: String, value: float) -> void:
 	_overlay_mesh.set(prop_name, value)
+	_overlay_box.set(prop_name, value)
 	_overlay_mesh.refresh_lighting()
+	_overlay_box.refresh_lighting()
