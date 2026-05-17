@@ -8,7 +8,7 @@ const MOCK_ROLLS := [
 ]
 
 var _overlay_mesh: DiceRollOverlay
-var _overlay_box: DiceRollOverlay
+var _overlay_textured: DiceRollOverlay
 var _strip_envelope: float = 530.0
 
 
@@ -22,10 +22,10 @@ func _ready() -> void:
 
 	var overlay_script = load("res://scripts/combat/dice_roll_overlay.gd")
 	_overlay_mesh = overlay_script.new()
-	_overlay_box  = overlay_script.new()
-	_overlay_box.force_box_fallback = true
+	_overlay_textured  = overlay_script.new()
+	_overlay_textured.use_textured_meshes = true
 	add_child(_overlay_mesh)
-	add_child(_overlay_box)
+	add_child(_overlay_textured)
 	_layout_strip(_strip_envelope)
 
 	var panel := PanelContainer.new()
@@ -40,8 +40,9 @@ func _ready() -> void:
 	panel.add_child(root_vbox)
 
 	var title := Label.new()
-	title.text = "Dice Roll Overlay Tuner"
+	title.text = "Dice Roll Overlay Tuner — top strip: legacy dice-box meshes (atlas + Decal); bottom strip: OpenGameArt textured (CC0)"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	root_vbox.add_child(title)
 
 	_add_separator(root_vbox)
@@ -53,6 +54,16 @@ func _ready() -> void:
 	_btn(btn_row, "Re-roll d2", func(): _do_reroll("d2"))
 	_btn(btn_row, "Re-roll d3", func(): _do_reroll("d3"))
 	_btn(btn_row, "Re-roll d4", func(): _do_reroll("d4"))
+
+	var plain_toggle := CheckButton.new()
+	plain_toggle.text = "Plain material"
+	plain_toggle.toggled.connect(func(pressed: bool):
+		_overlay_mesh.use_plain_debug_material = pressed
+		_overlay_textured.use_plain_debug_material = pressed
+		_overlay_mesh.refresh_materials()
+		_overlay_textured.refresh_materials())
+	btn_row.add_child(plain_toggle)
+
 	root_vbox.add_child(btn_row)
 
 	_add_separator(root_vbox)
@@ -79,27 +90,27 @@ func _ready() -> void:
 	var anim_col := _make_section(cols, "Animation")
 	_spin(anim_col, "Float H",   0.5, 10.0, 3.7,  0.1,  func(v):
 		_overlay_mesh.float_height  = v
-		_overlay_box.float_height   = v)
+		_overlay_textured.float_height   = v)
 	_spin(anim_col, "Float Dur", 0.05, 2.0, 0.25, 0.05, func(v):
 		_overlay_mesh.float_duration = v
-		_overlay_box.float_duration  = v)
+		_overlay_textured.float_duration  = v)
 	_spin(anim_col, "Spin Dur",  0.05, 4.0, 0.3,  0.05, func(v):
 		_overlay_mesh.spin_duration  = v
-		_overlay_box.spin_duration   = v)
+		_overlay_textured.spin_duration   = v)
 	_spin(anim_col, "Spin Rot",  0.5, 10.0, 5.5,  0.5,  func(v):
 		_overlay_mesh.spin_rotations = v
-		_overlay_box.spin_rotations  = v)
+		_overlay_textured.spin_rotations  = v)
 	_spin(anim_col, "Stagger",   0.0,  0.5, 0.08, 0.01, func(v):
 		_overlay_mesh.stagger_delay  = v
-		_overlay_box.stagger_delay   = v)
+		_overlay_textured.stagger_delay   = v)
 
 	var scene_col := _make_section(cols, "Scene")
 	_spin(scene_col, "Die Scale",  1.0,  20.0,  6.0, 0.5,  func(v):
 		_overlay_mesh.die_visual_scale = v
-		_overlay_box.die_visual_scale  = v)
+		_overlay_textured.die_visual_scale  = v)
 	_spin(scene_col, "Spacing",    0.5,   8.0,  2.0, 0.1,  func(v):
 		_overlay_mesh.die_spacing      = v
-		_overlay_box.die_spacing       = v)
+		_overlay_textured.die_spacing       = v)
 	_spin(scene_col, "Strip H",   80.0, 800.0, 530.0, 10.0, func(v):
 		_layout_strip(v))
 
@@ -133,7 +144,7 @@ func _layout_strip(strip_h: float) -> void:
 	var half := strip_h / 2.0
 	var top_y := screen.y - strip_h
 	_overlay_mesh.set_strip_rect(Rect2(0.0, top_y,        screen.x, half))
-	_overlay_box.set_strip_rect( Rect2(0.0, top_y + half, screen.x, half))
+	_overlay_textured.set_strip_rect( Rect2(0.0, top_y + half, screen.x, half))
 
 
 func _make_section(parent: HBoxContainer, title: String) -> VBoxContainer:
@@ -188,9 +199,9 @@ func _status(msg: String) -> void:
 func _do_roll() -> void:
 	var roll_seed := randi()
 	_overlay_mesh.set_rng_seed(roll_seed)
-	_overlay_box.set_rng_seed(roll_seed)
+	_overlay_textured.set_rng_seed(roll_seed)
 	_overlay_mesh.start_roll(MOCK_ROLLS)
-	_overlay_box.start_roll(MOCK_ROLLS)
+	_overlay_textured.start_roll(MOCK_ROLLS)
 	_status("Rolling...")
 
 
@@ -198,28 +209,28 @@ func _do_reroll(die_id: String) -> void:
 	var new_value := randi_range(1, 20)
 	var roll_seed := randi()
 	_overlay_mesh.set_rng_seed(roll_seed)
-	_overlay_box.set_rng_seed(roll_seed)
+	_overlay_textured.set_rng_seed(roll_seed)
 	_overlay_mesh.trigger_reroll(die_id, new_value)
-	_overlay_box.trigger_reroll(die_id, new_value)
+	_overlay_textured.trigger_reroll(die_id, new_value)
 	_status("Re-rolling %s..." % die_id)
 
 
 func _set_cam(mutate: Callable) -> void:
 	if _overlay_mesh.camera != null:
 		mutate.call(_overlay_mesh.camera)
-	if _overlay_box.camera != null:
-		mutate.call(_overlay_box.camera)
+	if _overlay_textured.camera != null:
+		mutate.call(_overlay_textured.camera)
 
 
 func _set_material(prop_name: String, value: float) -> void:
 	_overlay_mesh.set(prop_name, value)
-	_overlay_box.set(prop_name, value)
+	_overlay_textured.set(prop_name, value)
 	_overlay_mesh.refresh_materials()
-	_overlay_box.refresh_materials()
+	_overlay_textured.refresh_materials()
 
 
 func _set_light(prop_name: String, value: float) -> void:
 	_overlay_mesh.set(prop_name, value)
-	_overlay_box.set(prop_name, value)
+	_overlay_textured.set(prop_name, value)
 	_overlay_mesh.refresh_lighting()
-	_overlay_box.refresh_lighting()
+	_overlay_textured.refresh_lighting()

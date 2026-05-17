@@ -27,6 +27,19 @@ var ambient_lightness: float = 1.0
 # render-path comparison. Leave false in production.
 var force_box_fallback: bool = false
 
+# Debug: when true, _make_dice_material() strips the diffuse texture and
+# normal map, leaving only the base albedo color + roughness/metallic.
+# Lets you compare raw mesh geometry without the texture confounding the eye.
+# Leave false in production.
+var use_plain_debug_material: bool = false
+
+# When true, dice are loaded from assets/dice/meshes_textured/ (OpenGameArt
+# CC0 pack with per-die numbered UV-mapped textures) and the rolled digit is
+# placed by rotating the die so the matching face lands up — no Decal overlay.
+# When false (default), keeps the legacy dice-box meshes + procedural atlas +
+# Decal overlay path.
+var use_textured_meshes: bool = false
+
 var camera: Camera3D
 var sun_light: DirectionalLight3D
 var fill_light: DirectionalLight3D
@@ -150,7 +163,7 @@ func _begin_animation() -> void:
 
 func _animate_single(entry: Dictionary, delay: float, on_done: Callable) -> void:
 	var die_node: Node3D = entry["node"] as Node3D
-	var final_rotation := _random_landing_rotation()
+	var final_rotation := _landing_rotation_for_entry(entry)
 	var spin_x := 360.0 * spin_rotations * _random_spin_direction()
 	var spin_y := 360.0 * spin_rotations * _random_spin_direction()
 	var spin_z := 360.0 * spin_rotations * _random_spin_direction()
@@ -198,6 +211,14 @@ func _show_label(entry: Dictionary) -> void:
 	var old_sv: SubViewport = entry.get("label_sv") as SubViewport
 	if old_sv != null and is_instance_valid(old_sv):
 		old_sv.queue_free()
+
+	# When using textured meshes the numerals are baked into the UV-mapped faces.
+	# d6 lands deterministically via _D6_FACE_UP_DIRS so the rolled face is up;
+	# other dice still land randomly and would benefit from their own tables.
+	# Either way the Decal would double-stamp on top of the baked numeral, so we
+	# always skip it in textured mode — bake-only is the design intent.
+	if use_textured_meshes:
+		return
 
 	var node: Node3D = entry["node"] as Node3D
 	var value := int(entry["rolled_value"])
@@ -266,6 +287,59 @@ func _random_landing_rotation() -> Vector3:
 	return rotation
 
 
+# When using textured meshes, rotate the die so the rolled face lands up.
+# Tables below describe each die's local-space outward normal for face value N
+# (in the imported Godot mesh's frame — Z-up DAE imports become Y-up here).
+#
+# Only d6 is mapped end-to-end so far; other die types fall through to random
+# landing until their per-face UV→numeral table is built and verified.
+const _D6_FACE_UP_DIRS := {
+	1: Vector3( 0.0,  1.0,  0.0),
+	2: Vector3( 1.0,  0.0,  0.0),
+	3: Vector3( 0.0,  0.0,  1.0),
+	4: Vector3( 0.0,  0.0, -1.0),
+	5: Vector3(-1.0,  0.0,  0.0),
+	6: Vector3( 0.0, -1.0,  0.0),
+}
+
+
+func _landing_rotation_for_entry(entry: Dictionary) -> Vector3:
+	if not use_textured_meshes:
+		return _random_landing_rotation()
+	var sides := _sides_from_body_id(str(entry.get("body_id", "")))
+	var value := int(entry.get("rolled_value", 1))
+	var landing := _deterministic_landing_basis(sides, value)
+	if landing == null:
+		return _random_landing_rotation()
+	# Compose with a random Y-spin (around world vertical) so consecutive rolls
+	# don't all face the same compass direction. Spin applied AFTER landing so
+	# the rolled face remains up regardless of die topology.
+	var spin_y := float(_rng.randi_range(0, 3)) * 90.0
+	var spin_basis := Basis.from_euler(Vector3(0.0, deg_to_rad(spin_y), 0.0))
+	var final_basis: Basis = spin_basis * (landing as Basis)
+	return final_basis.get_euler() * (180.0 / PI)
+
+
+func _deterministic_landing_basis(sides: int, value: int):
+	# Returns a Basis aligning face `value` upward, or null if no table exists.
+	if sides == 6 and _D6_FACE_UP_DIRS.has(value):
+		return _basis_aligning(_D6_FACE_UP_DIRS[value], Vector3.UP)
+	return null
+
+
+func _basis_aligning(from_dir: Vector3, to_dir: Vector3) -> Basis:
+	from_dir = from_dir.normalized()
+	to_dir = to_dir.normalized()
+	if from_dir.is_equal_approx(to_dir):
+		return Basis()
+	if from_dir.is_equal_approx(-to_dir):
+		var axis := Vector3.RIGHT if absf(from_dir.dot(Vector3.RIGHT)) < 0.99 else Vector3.FORWARD
+		return Basis(axis, PI)
+	var axis2 := from_dir.cross(to_dir).normalized()
+	var angle := acos(clampf(from_dir.dot(to_dir), -1.0, 1.0))
+	return Basis(axis2, angle)
+
+
 func _clear_dice() -> void:
 	for entry in _die_entries:
 		var node = entry.get("node")
@@ -280,6 +354,10 @@ func _clear_dice() -> void:
 
 
 func _load_visual(sides: int, body_id: String = "") -> Node3D:
+	if use_textured_meshes:
+		var textured := _load_visual_textured(sides)
+		if textured != null:
+			return textured
 	var mat := _make_dice_material(body_id)
 	if not force_box_fallback:
 		var mesh_path := "res://assets/dice/meshes/d%d.glb" % sides
@@ -297,15 +375,67 @@ func _load_visual(sides: int, body_id: String = "") -> Node3D:
 	return mi
 
 
+func _load_visual_textured(sides: int) -> Node3D:
+	# OpenGameArt CC0 dice pack: per-die .dae meshes with UV-mapped numbered
+	# textures. Numerals are baked into the texture; do NOT use material_override
+	# (which would clobber UVs by replacing the entire material at runtime).
+	# Instead, set surface_0 material so it composites with the mesh's own UVs.
+	var mesh_path := "res://assets/dice/meshes_textured/d%d.dae" % sides
+	if not ResourceLoader.exists(mesh_path):
+		return null
+	var packed := load(mesh_path) as PackedScene
+	if packed == null:
+		return null
+	var instance := packed.instantiate()
+	var mat := _make_textured_material(sides)
+	_apply_textured_material_recursive(instance, mat)
+	return instance
+
+
+func _make_textured_material(sides: int) -> StandardMaterial3D:
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = _scaled_color(Color(1.0, 1.0, 1.0), texture_lightness)
+	mat.roughness = material_roughness
+	mat.metallic = material_metallic
+	mat.metallic_specular = material_specular
+
+	if use_plain_debug_material:
+		# Skip numeral texture so the raw mesh shape is visible.
+		mat.albedo_color = _scaled_color(Color(0.7, 0.72, 0.78), texture_lightness)
+		return mat
+
+	var tex_path := "res://assets/dice/meshes_textured/textures/d%d_Numbers.png" % sides
+	if ResourceLoader.exists(tex_path):
+		mat.albedo_texture = load(tex_path)
+		# The numbered textures are 2048x2048 white-on-grey; keep filtering smooth.
+		mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	return mat
+
+
+func _apply_textured_material_recursive(node: Node, mat: StandardMaterial3D) -> void:
+	if node is MeshInstance3D:
+		var mi := node as MeshInstance3D
+		var n := mi.mesh.get_surface_count() if mi.mesh != null else 0
+		for i in range(n):
+			mi.set_surface_override_material(i, mat)
+	for child in node.get_children():
+		_apply_textured_material_recursive(child, mat)
+
+
 func _make_dice_material(body_id: String) -> StandardMaterial3D:
 	var mat := StandardMaterial3D.new()
+	mat.albedo_color = _scaled_color(_base_color_for_body(body_id), texture_lightness)
+	mat.roughness = material_roughness
+	mat.metallic = material_metallic
+	mat.metallic_specular = material_specular
+
+	if use_plain_debug_material:
+		return mat
 
 	var use_light := body_id.contains("bone") or body_id.contains("crystal")
 	var diffuse_path := "res://assets/dice/diffuse-%s.png" % ("light" if use_light else "dark")
 	if ResourceLoader.exists(diffuse_path):
 		mat.albedo_texture = load(diffuse_path)
-
-	mat.albedo_color = _scaled_color(_base_color_for_body(body_id), texture_lightness)
 
 	var normal_path := "res://assets/dice/normal.png"
 	if ResourceLoader.exists(normal_path):
@@ -313,9 +443,6 @@ func _make_dice_material(body_id: String) -> StandardMaterial3D:
 		mat.normal_texture = load(normal_path)
 		mat.normal_scale = texture_normal_scale
 
-	mat.roughness = material_roughness
-	mat.metallic = material_metallic
-	mat.metallic_specular = material_specular
 	return mat
 
 
@@ -392,7 +519,12 @@ func refresh_materials() -> void:
 		var visual: Node = entry.get("visual") as Node
 		if visual == null or not is_instance_valid(visual):
 			continue
-		_apply_material_recursive(visual, _make_dice_material(str(entry.get("body_id", ""))))
+		if use_textured_meshes:
+			var body_id := str(entry.get("body_id", ""))
+			var sides := _sides_from_body_id(body_id)
+			_apply_textured_material_recursive(visual, _make_textured_material(sides))
+		else:
+			_apply_material_recursive(visual, _make_dice_material(str(entry.get("body_id", ""))))
 
 
 func refresh_lighting() -> void:
