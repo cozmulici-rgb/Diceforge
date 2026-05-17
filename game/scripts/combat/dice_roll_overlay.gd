@@ -308,7 +308,7 @@ func _landing_rotation_for_entry(entry: Dictionary) -> Vector3:
 		return _random_landing_rotation()
 	var sides := _sides_from_body_id(str(entry.get("body_id", "")))
 	var value := int(entry.get("rolled_value", 1))
-	var landing := _deterministic_landing_basis(sides, value)
+	var landing = _deterministic_landing_basis(sides, value)
 	if landing == null:
 		return _random_landing_rotation()
 	# Compose with a random Y-spin (around world vertical) so consecutive rolls
