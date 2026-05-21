@@ -1,6 +1,8 @@
-[gd_scene load_steps=2 format=3 uid="uid://dice_tuner_test"]
+[gd_scene load_steps=2 format=3 uid="uid://c8vjqs3a5myxt"]
 
 [ext_resource type="Script" path="res://scripts/test_dice_tuner.gd" id="1"]
 
 [node name="TestDiceTuner" type="Control"]
+layout_mode = 3
+anchors_preset = 0
 script = ExtResource("1")

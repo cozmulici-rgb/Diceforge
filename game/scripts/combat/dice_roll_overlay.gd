@@ -22,6 +22,13 @@ var fill_energy: float = 0.35
 var ambient_energy: float = 0.9
 var ambient_lightness: float = 1.0
 
+# Camera lens. When orthographic is true, FOV is ignored and the camera uses
+# Camera3D.PROJECTION_ORTHOGONAL with `camera_ortho_size` as the visible
+# vertical extent (in world units). Useful for an icon-style top-down look
+# without perspective foreshortening.
+var camera_orthographic: bool = false
+var camera_ortho_size: float = 12.0
+
 # Debug: when true, _load_visual() always returns a BoxMesh fallback,
 # skipping the .glb mesh lookup. Used by test_dice_tuner for side-by-side
 # render-path comparison. Leave false in production.
@@ -79,6 +86,7 @@ func _build_scene() -> void:
 	camera.position = Vector3(0.0, 11.5, 3.4)
 	camera.rotation_degrees = Vector3(-67.0, 0.0, 0.0)
 	camera.fov = 50.0
+	_apply_camera_projection()
 	_viewport.add_child(camera)
 
 	sun_light = DirectionalLight3D.new()
@@ -525,6 +533,21 @@ func refresh_materials() -> void:
 			_apply_textured_material_recursive(visual, _make_textured_material(sides))
 		else:
 			_apply_material_recursive(visual, _make_dice_material(str(entry.get("body_id", ""))))
+
+
+func refresh_camera() -> void:
+	if camera != null:
+		_apply_camera_projection()
+
+
+func _apply_camera_projection() -> void:
+	if camera == null:
+		return
+	if camera_orthographic:
+		camera.projection = Camera3D.PROJECTION_ORTHOGONAL
+		camera.size = camera_ortho_size
+	else:
+		camera.projection = Camera3D.PROJECTION_PERSPECTIVE
 
 
 func refresh_lighting() -> void:

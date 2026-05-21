@@ -87,6 +87,26 @@ func _ready() -> void:
 	_spin(cam_col, "Near",  0.005,   2.0,  0.05, 0.005, func(v): _set_cam(func(c): c.near = v))
 	_spin(cam_col, "Far",    20.0, 500.0, 400.0, 5.0, func(v): _set_cam(func(c): c.far = v))
 
+	var ortho_row := HBoxContainer.new()
+	ortho_row.add_theme_constant_override("separation", 6)
+	cam_col.add_child(ortho_row)
+	var ortho_lbl := Label.new()
+	ortho_lbl.text = "Ortho"
+	ortho_lbl.custom_minimum_size.x = 64
+	ortho_row.add_child(ortho_lbl)
+	var ortho_btn := CheckButton.new()
+	ortho_btn.toggled.connect(func(pressed: bool):
+		_overlay_mesh.camera_orthographic = pressed
+		_overlay_textured.camera_orthographic = pressed
+		_overlay_mesh.refresh_camera()
+		_overlay_textured.refresh_camera())
+	ortho_row.add_child(ortho_btn)
+	_spin(cam_col, "Ortho Sz", 1.0, 40.0, 12.0, 0.5, func(v):
+		_overlay_mesh.camera_ortho_size = v
+		_overlay_textured.camera_ortho_size = v
+		_overlay_mesh.refresh_camera()
+		_overlay_textured.refresh_camera())
+
 	var anim_col := _make_section(cols, "Animation")
 	_spin(anim_col, "Float H",   0.5, 10.0, 3.7,  0.1,  func(v):
 		_overlay_mesh.float_height  = v

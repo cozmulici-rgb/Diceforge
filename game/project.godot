@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="Facetbound"
-run/main_scene="res://scenes/app_root.tscn"
+run/main_scene="res://scenes/test_dice_tuner.tscn"
 config/features=PackedStringArray("4.3")
 
 [display]
