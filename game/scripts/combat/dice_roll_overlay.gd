@@ -8,12 +8,8 @@ var strip_height: float     = 530.0
 var die_visual_scale: float = 6.0
 var die_spacing: float      = 2.0
 var float_height: float     = 3.7
-var float_duration: float   = 0.25   # retained for tuner compatibility (durations are physics-derived)
-var spin_duration: float    = 0.3    # retained for tuner compatibility (spin is physics-driven)
 var spin_rotations: float   = 5.5    # target spin rate scale; turns per first airborne arc
 var stagger_delay: float    = 0.08
-var bounce_height_ratio: float   = 0.5   # retained for tuner compatibility (use `restitution` instead)
-var bounce_duration_ratio: float = 0.5   # retained for tuner compatibility (derived from gravity)
 # Real-dice physics tunables. Driven each frame via _process so the motion is
 # a proper ballistic integration (gravity + multi-bounce decay + single-axis
 # tumble), instead of a tween chain. See research notes in the PR description.
@@ -342,11 +338,7 @@ func _show_label(entry: Dictionary) -> void:
 	if old_sv != null and is_instance_valid(old_sv):
 		old_sv.queue_free()
 
-	# When using textured meshes the numerals are baked into the UV-mapped faces.
-	# d6 lands deterministically via _D6_FACE_UP_DIRS so the rolled face is up;
-	# other dice still land randomly and would benefit from their own tables.
-	# Either way the Decal would double-stamp on top of the baked numeral, so we
-	# always skip it in textured mode — bake-only is the design intent.
+	# Skip the Decal in textured mode so it doesn't double-stamp the baked numeral.
 	if use_textured_meshes:
 		return
 
@@ -413,48 +405,12 @@ func _random_landing_rotation() -> Vector3:
 	return rotation
 
 
-# When using textured meshes, rotate the die so the rolled face lands up.
-# Tables below describe each die's local-space outward normal for face value N
-# (in the imported Godot mesh's frame — Z-up DAE imports become Y-up here).
-#
-# Only d6 is mapped end-to-end so far; other die types fall through to random
-# landing until their per-face UV→numeral table is built and verified.
-const _D6_FACE_UP_DIRS := {
-	1: Vector3( 0.0,  1.0,  0.0),
-	2: Vector3( 1.0,  0.0,  0.0),
-	3: Vector3( 0.0,  0.0,  1.0),
-	4: Vector3( 0.0,  0.0, -1.0),
-	5: Vector3(-1.0,  0.0,  0.0),
-	6: Vector3( 0.0, -1.0,  0.0),
-}
-
-
 func _landing_rotation_for_entry(_entry: Dictionary) -> Vector3:
 	# Landing orientation is intentionally non-deterministic: the visual face
 	# that ends up on top is independent of the gameplay rolled_value. This
 	# matches a real die toss where the resting orientation is random; the
 	# gameplay outcome is shown via the digit label / Decal, not the mesh face.
 	return _random_landing_rotation()
-
-
-func _deterministic_landing_basis(sides: int, value: int):
-	# Returns a Basis aligning face `value` upward, or null if no table exists.
-	if sides == 6 and _D6_FACE_UP_DIRS.has(value):
-		return _basis_aligning(_D6_FACE_UP_DIRS[value], Vector3.UP)
-	return null
-
-
-func _basis_aligning(from_dir: Vector3, to_dir: Vector3) -> Basis:
-	from_dir = from_dir.normalized()
-	to_dir = to_dir.normalized()
-	if from_dir.is_equal_approx(to_dir):
-		return Basis()
-	if from_dir.is_equal_approx(-to_dir):
-		var axis := Vector3.RIGHT if absf(from_dir.dot(Vector3.RIGHT)) < 0.99 else Vector3.FORWARD
-		return Basis(axis, PI)
-	var axis2 := from_dir.cross(to_dir).normalized()
-	var angle := acos(clampf(from_dir.dot(to_dir), -1.0, 1.0))
-	return Basis(axis2, angle)
 
 
 func _clear_dice() -> void:

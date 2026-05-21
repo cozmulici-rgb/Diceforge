@@ -80,7 +80,7 @@ The model is grounded in standard rigid-body physics literature and the followin
 
 ## 4. Trade-offs and Non-Goals
 
-- **Determinism vs. realism.** The simulation is deliberately non-deterministic. The gameplay roll result (`rolled_value` from the combat engine) is conveyed through the digit Decal / textured face that is rendered separately. A previous iteration forced d6 dice to land on the matching face (`_D6_FACE_UP_DIRS` table) — that table is retained in the file but no longer consulted by `_landing_rotation_for_entry`.
+- **Determinism vs. realism.** The simulation is deliberately non-deterministic. The gameplay roll result (`rolled_value` from the combat engine) is conveyed through the digit Decal / textured face that is rendered separately. A previous iteration forced d6 dice to land on the matching face via a `_D6_FACE_UP_DIRS` table; that table now lives only in the runtime test (`game/tests/test_dice_roll_overlay_runtime.gd`) as an assertion helper.
 - **Single-axis spin.** A real die thrown with both spin and torque-applying impacts will precess and change its angular-momentum direction. We do not model collision torque; the spin axis is fixed at launch and only its magnitude damps on impact. This is visually indistinguishable for the short duration the dice are in flight and avoids needing an inertia tensor.
 - **Flat ground only.** Dice never collide with each other or with strip edges. They share a 1-D vertical phase space; their X positions come from `_spread_x` and stay constant.
 - **No air drag.** `vy` only loses energy on impact, not during flight. With sub-second arcs this is imperceptible.

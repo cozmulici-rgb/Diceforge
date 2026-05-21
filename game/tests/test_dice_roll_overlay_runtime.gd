@@ -9,6 +9,18 @@ extends SceneTree
 
 const OverlayScript := preload("res://scripts/combat/dice_roll_overlay.gd")
 
+# d6 face-up direction table — outward normal of each face in the imported
+# mesh's local frame. Used here to validate that a landing rotation puts *some*
+# face at world UP; the runtime overlay no longer needs this table.
+const D6_FACE_UP_DIRS := {
+	1: Vector3( 0.0,  1.0,  0.0),
+	2: Vector3( 1.0,  0.0,  0.0),
+	3: Vector3( 0.0,  0.0,  1.0),
+	4: Vector3( 0.0,  0.0, -1.0),
+	5: Vector3(-1.0,  0.0,  0.0),
+	6: Vector3( 0.0, -1.0,  0.0),
+}
+
 
 func _init() -> void:
 	var overlay := OverlayScript.new()
@@ -27,7 +39,7 @@ func _init() -> void:
 		var euler: Vector3 = overlay._landing_rotation_for_entry(entry)
 		var basis := Basis.from_euler(Vector3(deg_to_rad(euler.x), deg_to_rad(euler.y), deg_to_rad(euler.z)))
 		var best := -2.0
-		for face_local in overlay._D6_FACE_UP_DIRS.values():
+		for face_local in D6_FACE_UP_DIRS.values():
 			var dot: float = (basis * (face_local as Vector3)).dot(Vector3.UP)
 			if dot > best:
 				best = dot
