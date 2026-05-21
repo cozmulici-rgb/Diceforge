@@ -8,10 +8,21 @@ var strip_height: float     = 530.0
 var die_visual_scale: float = 6.0
 var die_spacing: float      = 2.0
 var float_height: float     = 3.7
-var float_duration: float   = 0.25
-var spin_duration: float    = 0.3
-var spin_rotations: float   = 5.5
+var float_duration: float   = 0.25   # retained for tuner compatibility (durations are physics-derived)
+var spin_duration: float    = 0.3    # retained for tuner compatibility (spin is physics-driven)
+var spin_rotations: float   = 5.5    # target spin rate scale; turns per first airborne arc
 var stagger_delay: float    = 0.08
+var bounce_height_ratio: float   = 0.5   # retained for tuner compatibility (use `restitution` instead)
+var bounce_duration_ratio: float = 0.5   # retained for tuner compatibility (derived from gravity)
+# Real-dice physics tunables. Driven each frame via _process so the motion is
+# a proper ballistic integration (gravity + multi-bounce decay + single-axis
+# tumble), instead of a tween chain. See research notes in the PR description.
+var gravity: float = 120.0              # world units / s². Cannon-es tutorial uses ~50; 120 reads as a heavier die.
+var restitution: float = 0.55           # coefficient of restitution on landing (real dice ≈ 0.3–0.6).
+var angular_damping: float = 0.6        # fraction of spin retained after each bounce.
+var max_bounces: int = 4                # hard cap; physical dice usually rest within 2–4 bounces.
+var min_bounce_height: float = 0.05     # in world units; below this we settle instead of bouncing.
+var settle_duration: float = 0.1        # SLERP from current basis → face-up orientation on final landing.
 var texture_lightness: float = 1.0
 var texture_normal_scale: float = 1.2
 var material_roughness: float = 0.35
@@ -58,11 +69,15 @@ var _die_entries: Array = []
 var _rng := RandomNumberGenerator.new()
 
 
+var _pending_count: int = 0
+
+
 func _ready() -> void:
 	layer = 10
 	_rng.randomize()
 	_build_scene()
 	hide()
+	set_process(true)
 
 
 func _build_scene() -> void:
@@ -145,63 +160,170 @@ func trigger_reroll(die_id: String, new_value: int) -> void:
 		if str(entry["die_id"]) != die_id:
 			continue
 		entry["rolled_value"] = new_value
-		var e: Dictionary = entry
-		_animate_single(e, 0.0, func(): _show_label(e))
+		_pending_count += 1
+		_init_die_anim(entry, 0.0, func(): _show_label(entry))
 		break
 
 
-# ── Animation ──────────────────────────────────────────────────────────────────
+# ── Animation (ballistic integration) ──────────────────────────────────────────
+#
+# Each die has its own physics state stored under entry["anim"]. The state is
+# stepped every frame in _process(): vertical velocity is integrated against
+# gravity, the die rotates around a single random angular-momentum axis, and on
+# each ground contact the velocity is multiplied by `restitution` (coefficient
+# of restitution) and the angular speed by `angular_damping`. After max_bounces
+# (or once a predicted bounce would be too small) the die slerps from its
+# current chaotic basis into a random face-up landing basis over
+# settle_duration. This mirrors how a real die behaves: ballistic free-fall,
+# multiple decaying bounces, and a brief settling tumble at rest.
 
 func _begin_animation() -> void:
 	var count := _die_entries.size()
 	if count == 0:
 		return
-	var done := [0]
+	_pending_count = count
 	for i in range(count):
 		var entry: Dictionary = _die_entries[i]
 		var delay := i * stagger_delay
-		var e: Dictionary = entry
-		_animate_single(e, delay, func():
-			_show_label(e)
-			done[0] += 1
-			if done[0] >= count:
-				_on_all_done()
-		)
+		_init_die_anim(entry, delay, func(): _show_label(entry))
 
 
-func _animate_single(entry: Dictionary, delay: float, on_done: Callable) -> void:
+func _init_die_anim(entry: Dictionary, delay: float, on_done: Callable) -> void:
 	var die_node: Node3D = entry["node"] as Node3D
-	var final_rotation := _landing_rotation_for_entry(entry)
-	var spin_x := 360.0 * spin_rotations * _random_spin_direction()
-	var spin_y := 360.0 * spin_rotations * _random_spin_direction()
-	var spin_z := 360.0 * spin_rotations * _random_spin_direction()
-	# Float down starts early enough to land exactly when spin ends.
-	var down_start := maxf(delay + float_duration, delay + spin_duration - float_duration)
-	var end_time   := delay + spin_duration
+	die_node.position.y = 0.0
+	# Pre-launch: give each die a random resting orientation so the strip looks
+	# varied while staggered dice are still waiting their turn.
+	var pre_basis := Basis.from_euler(Vector3(
+		_rng.randf() * TAU, _rng.randf() * TAU, _rng.randf() * TAU
+	))
+	die_node.transform.basis = pre_basis
+	entry["anim"] = {
+		"delay": delay,
+		"active": false,
+		"settling": false,
+		"settle_t": 0.0,
+		"settle_from": pre_basis,
+		"final_basis": Basis(),
+		"vy": 0.0,
+		"axis": Vector3.UP,
+		"spin": 0.0,
+		"basis": pre_basis,
+		"bounce_index": 0,
+		"on_done": on_done,
+		"finished": false,
+	}
 
-	var tw := get_tree().create_tween()
-	tw.set_parallel(true)
 
-	# Float up
-	tw.tween_property(die_node, "position:y", float_height, float_duration) \
-	  .set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD).set_delay(delay)
+func _kick_die(entry: Dictionary) -> void:
+	var die_node: Node3D = entry["node"] as Node3D
+	var anim: Dictionary = entry["anim"] as Dictionary
+	# Initial upward velocity required to reach float_height under gravity:
+	# v0 = sqrt(2 * g * h)  (classic kinematic, since v² = u² - 2gh and v=0 at apex)
+	var v0 := sqrt(2.0 * maxf(gravity, 0.001) * maxf(float_height, 0.0))
+	# Angular momentum direction: a single uniformly random unit vector. Real
+	# rigid-body rotation in free fall is around one axis, not three.
+	var axis := _random_unit_vector()
+	# Spin rate: scale spin_rotations into rad/sec so the first arc covers
+	# roughly that many full turns. Randomize ±30% so dice don't all tumble at
+	# the same rate.
+	var airtime := 2.0 * v0 / maxf(gravity, 0.001)
+	var spin_rate := TAU * spin_rotations * _rng.randf_range(0.7, 1.3) / maxf(airtime, 0.001)
+	var final_euler := _landing_rotation_for_entry(entry)
+	var final_basis := Basis.from_euler(Vector3(
+		deg_to_rad(final_euler.x), deg_to_rad(final_euler.y), deg_to_rad(final_euler.z)
+	))
+	anim["vy"] = v0
+	anim["axis"] = axis
+	anim["spin"] = spin_rate
+	anim["basis"] = die_node.transform.basis
+	anim["final_basis"] = final_basis
+	anim["bounce_index"] = 0
+	anim["active"] = true
 
-	# Spin all axes, then settle into a random face-up orientation.
-	tw.tween_property(die_node, "rotation_degrees:x", final_rotation.x + spin_x, spin_duration * 0.55) \
-	  .set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_CUBIC).set_delay(delay)
-	tw.tween_property(die_node, "rotation_degrees:y", final_rotation.y + spin_y, spin_duration * 0.55) \
-	  .set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_CUBIC).set_delay(delay)
-	tw.tween_property(die_node, "rotation_degrees:z", final_rotation.z + spin_z, spin_duration * 0.55) \
-	  .set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_CUBIC).set_delay(delay)
 
-	tw.tween_property(die_node, "rotation_degrees", final_rotation, spin_duration * 0.45) \
-	  .set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD).set_delay(delay + spin_duration * 0.55)
+func _process(delta: float) -> void:
+	if _die_entries.is_empty():
+		return
+	for entry in _die_entries:
+		_step_die(entry, delta)
 
-	# Float down — lands at same XZ, Y=0
-	tw.tween_property(die_node, "position:y", 0.0, float_duration) \
-	  .set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD).set_delay(down_start)
 
-	tw.tween_callback(on_done).set_delay(end_time)
+func _step_die(entry: Dictionary, delta: float) -> void:
+	var anim_v = entry.get("anim")
+	if anim_v == null:
+		return
+	var anim: Dictionary = anim_v as Dictionary
+	if bool(anim.get("finished", false)):
+		return
+	var die_node = entry.get("node")
+	if die_node == null or not is_instance_valid(die_node):
+		anim["finished"] = true
+		return
+	var node: Node3D = die_node as Node3D
+
+	# Stagger countdown — kick the die as soon as its delay reaches zero.
+	# Includes delay == 0 on the very first step (the lead die in the strip).
+	if not bool(anim["active"]) and not bool(anim["settling"]):
+		anim["delay"] -= delta
+		if anim["delay"] <= 0.0:
+			_kick_die(entry)
+		else:
+			return
+
+	# Final slerp into resting face-up orientation
+	if bool(anim["settling"]):
+		anim["settle_t"] += delta
+		var dur := maxf(settle_duration, 0.0001)
+		var t: float = clampf(anim["settle_t"] / dur, 0.0, 1.0)
+		var from_b: Basis = anim["settle_from"] as Basis
+		var to_b: Basis = anim["final_basis"] as Basis
+		node.transform.basis = from_b.slerp(to_b, t)
+		node.position.y = 0.0
+		if t >= 1.0:
+			anim["settling"] = false
+			anim["finished"] = true
+			(anim["on_done"] as Callable).call()
+			_pending_count -= 1
+			if _pending_count <= 0:
+				_on_all_done()
+		return
+
+	if not bool(anim["active"]):
+		return
+
+	# Ballistic integration: vy -= g*dt, y += vy*dt
+	anim["vy"] -= gravity * delta
+	node.position.y += anim["vy"] * delta
+
+	# Single-axis tumble around the angular-momentum direction.
+	var basis: Basis = anim["basis"] as Basis
+	basis = basis.rotated(anim["axis"] as Vector3, (anim["spin"] as float) * delta)
+	anim["basis"] = basis
+	node.transform.basis = basis
+
+	# Ground contact
+	if node.position.y <= 0.0 and anim["vy"] < 0.0:
+		node.position.y = 0.0
+		var rebound_v: float = -(anim["vy"] as float) * restitution
+		var next_bounce_h: float = (rebound_v * rebound_v) / (2.0 * maxf(gravity, 0.001))
+		var bounces: int = anim["bounce_index"] as int
+		if bounces >= max_bounces or next_bounce_h < min_bounce_height:
+			anim["active"] = false
+			anim["settling"] = true
+			anim["settle_t"] = 0.0
+			anim["settle_from"] = basis
+		else:
+			anim["bounce_index"] = bounces + 1
+			anim["vy"] = rebound_v
+			anim["spin"] = (anim["spin"] as float) * angular_damping
+
+
+func _random_unit_vector() -> Vector3:
+	# Marsaglia-style uniform on the unit sphere.
+	var theta := _rng.randf() * TAU
+	var z := _rng.randf_range(-1.0, 1.0)
+	var r := sqrt(maxf(1.0 - z * z, 0.0))
+	return Vector3(r * cos(theta), z, r * sin(theta))
 
 
 func _on_all_done() -> void:
@@ -277,10 +399,6 @@ func _show_label(entry: Dictionary) -> void:
 	entry["label"] = decal
 
 
-func _random_spin_direction() -> float:
-	return 1.0 if _rng.randf() > 0.5 else -1.0
-
-
 func _random_landing_rotation() -> Vector3:
 	var face_rotations := [
 		Vector3(0.0, 0.0, 0.0),
@@ -311,21 +429,12 @@ const _D6_FACE_UP_DIRS := {
 }
 
 
-func _landing_rotation_for_entry(entry: Dictionary) -> Vector3:
-	if not use_textured_meshes:
-		return _random_landing_rotation()
-	var sides := _sides_from_body_id(str(entry.get("body_id", "")))
-	var value := int(entry.get("rolled_value", 1))
-	var landing = _deterministic_landing_basis(sides, value)
-	if landing == null:
-		return _random_landing_rotation()
-	# Compose with a random Y-spin (around world vertical) so consecutive rolls
-	# don't all face the same compass direction. Spin applied AFTER landing so
-	# the rolled face remains up regardless of die topology.
-	var spin_y := float(_rng.randi_range(0, 3)) * 90.0
-	var spin_basis := Basis.from_euler(Vector3(0.0, deg_to_rad(spin_y), 0.0))
-	var final_basis: Basis = spin_basis * (landing as Basis)
-	return final_basis.get_euler() * (180.0 / PI)
+func _landing_rotation_for_entry(_entry: Dictionary) -> Vector3:
+	# Landing orientation is intentionally non-deterministic: the visual face
+	# that ends up on top is independent of the gameplay rolled_value. This
+	# matches a real die toss where the resting orientation is random; the
+	# gameplay outcome is shown via the digit label / Decal, not the mesh face.
+	return _random_landing_rotation()
 
 
 func _deterministic_landing_basis(sides: int, value: int):

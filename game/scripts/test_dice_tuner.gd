@@ -111,18 +111,27 @@ func _ready() -> void:
 	_spin(anim_col, "Float H",   0.5, 10.0, 3.7,  0.1,  func(v):
 		_overlay_mesh.float_height  = v
 		_overlay_textured.float_height   = v)
-	_spin(anim_col, "Float Dur", 0.05, 2.0, 0.25, 0.05, func(v):
-		_overlay_mesh.float_duration = v
-		_overlay_textured.float_duration  = v)
-	_spin(anim_col, "Spin Dur",  0.05, 4.0, 0.3,  0.05, func(v):
-		_overlay_mesh.spin_duration  = v
-		_overlay_textured.spin_duration   = v)
+	_spin(anim_col, "Gravity",  10.0, 400.0, 120.0, 5.0, func(v):
+		_overlay_mesh.gravity = v
+		_overlay_textured.gravity = v)
 	_spin(anim_col, "Spin Rot",  0.5, 10.0, 5.5,  0.5,  func(v):
 		_overlay_mesh.spin_rotations = v
 		_overlay_textured.spin_rotations  = v)
 	_spin(anim_col, "Stagger",   0.0,  0.5, 0.08, 0.01, func(v):
 		_overlay_mesh.stagger_delay  = v
 		_overlay_textured.stagger_delay   = v)
+	_spin(anim_col, "Restitut",  0.0,  0.95, 0.55, 0.05, func(v):
+		_overlay_mesh.restitution = v
+		_overlay_textured.restitution = v)
+	_spin(anim_col, "Ang Damp",  0.0,  1.0, 0.6,  0.05, func(v):
+		_overlay_mesh.angular_damping = v
+		_overlay_textured.angular_damping = v)
+	_spin(anim_col, "Max Bnce",  1.0,  10.0, 4.0,  1.0,  func(v):
+		_overlay_mesh.max_bounces = int(v)
+		_overlay_textured.max_bounces = int(v))
+	_spin(anim_col, "Settle",    0.0,  0.5, 0.1,  0.02, func(v):
+		_overlay_mesh.settle_duration = v
+		_overlay_textured.settle_duration = v)
 
 	var scene_col := _make_section(cols, "Scene")
 	_spin(scene_col, "Die Scale",  1.0,  20.0,  6.0, 0.5,  func(v):
