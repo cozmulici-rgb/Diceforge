@@ -2,116 +2,434 @@
   "id": "floor_01_rooms",
   "name": "Fractured Approach Graph",
   "rooms": [
-	{
-	  "id": "floor_01_start",
-	  "name": "Gate of Splinters",
-	  "type": "start",
-	  "description": "The first floor opens into a split corridor with multiple safe approaches to the boss chamber.",
-	  "position": [120, 220],
-	  "encounter_id": ""
-	},
-	{
-	  "id": "floor_01_fight",
-	  "name": "Echo Span",
-	  "type": "encounter",
-	  "description": "The aggressive path opens on a narrow span that commits the run to early pressure.",
-	  "position": [320, 140],
-	  "encounter_id": "tutorial_slime",
-	  "combat_map_id": "map-f01-01",
-	  "combat_map_name": "Fracture Bridge",
-	  "combat_map_theme": "Broken crystal bridge suspended over void wind.",
-	  "combat_map_summary": "Early aggression test with a compressed front and no safe lateral reset."
-	},
-	{
-	  "id": "floor_01_shop",
-	  "name": "Shard Broker",
-	  "type": "shop",
-	  "description": "A quiet merchant alcove offers a safe branch.",
-	  "position": [320, 300],
-	  "encounter_id": "",
-	  "reward_source_id": "tutorial_vendor"
-	},
-	{
-	  "id": "floor_01_boss",
-	  "name": "Overseer Gate",
-	  "type": "boss",
-	  "description": "The first floor closes on a ceremonial dais where the Overseer holds the last seal.",
-	  "position": [960, 220],
-	  "encounter_id": "floor_01_overseer",
-	  "combat_map_id": "map-f01-boss",
-	  "combat_map_name": "Overseer Dais",
-	  "combat_map_theme": "Ceremonial arena with a dominant centerline and flanking dead space.",
-	  "combat_map_summary": "Boss presentation map that pays off the floor's split-route approach with a clean duel stage."
-	},
-	{
-	  "id": "floor_01_gallery",
-	  "name": "Needle Gallery",
-	  "type": "encounter",
-	  "description": "A line of shard pillars turns the direct route into a patient mid-floor duel.",
-	  "position": [540, 120],
-	  "encounter_id": "tutorial_slime",
-	  "combat_map_id": "map-f01-02",
-	  "combat_map_name": "Needle Gallery",
-	  "combat_map_theme": "Long gallery lane punctured by crystal spines and echo cover.",
-	  "combat_map_summary": "A sequencing fight that stretches the route before the convergence chamber."
-	},
-	{
-	  "id": "floor_01_vault",
-	  "name": "Vault Stair",
-	  "type": "encounter",
-	  "description": "The safer branch bends upward into a choke staircase with no clean retreat.",
-	  "position": [540, 320],
-	  "encounter_id": "tutorial_slime",
-	  "combat_map_id": "map-f01-03",
-	  "combat_map_name": "Vault Stair",
-	  "combat_map_theme": "Stepped ascent framed by vault ribs and shard dust.",
-	  "combat_map_summary": "A recovery-route fight that still forces a committed climb back into danger."
-	},
-	{
-	  "id": "floor_01_choir",
-	  "name": "Choir of Ash Glass",
-	  "type": "encounter",
-	  "description": "Both branches collapse into a resonant convergence chamber before the boss seal.",
-	  "position": [760, 220],
-	  "encounter_id": "tutorial_slime",
-	  "combat_map_id": "map-f01-04",
-	  "combat_map_name": "Choir of Ash Glass",
-	  "combat_map_theme": "Circular chamber with reflective ash-glass ribs and a hot center lane.",
-	  "combat_map_summary": "Convergence arena that confirms the floor's route identity before the gatekeeper."
-	}
+    {
+      "id": "floor_01_start",
+      "name": "Gate of Splinters",
+      "type": "start",
+      "description": "The first floor opens into a split corridor with multiple safe approaches to the boss chamber.",
+      "position": [120, 220],
+      "encounter_id": ""
+    },
+    {
+      "id": "floor_01_fight",
+      "name": "Echo Span",
+      "type": "encounter",
+      "description": "The aggressive path opens on a narrow span that commits the run to early pressure.",
+      "position": [320, 140],
+      "encounter_id": "tutorial_slime",
+      "combat_map_id": "map-f01-01",
+      "combat_map_name": "Fracture Bridge",
+      "combat_map_theme": "Broken crystal bridge suspended over void wind.",
+      "combat_map_summary": "Early aggression test with a compressed front and no safe lateral reset."
+    },
+    {
+      "id": "floor_01_shop",
+      "name": "Shard Broker",
+      "type": "shop",
+      "description": "A quiet merchant alcove offers a safe branch.",
+      "position": [320, 300],
+      "encounter_id": "",
+      "reward_source_id": "tutorial_vendor"
+    },
+    {
+      "id": "floor_01_boss",
+      "name": "Overseer Gate",
+      "type": "boss",
+      "description": "The first floor closes on a ceremonial dais where the Overseer holds the last seal.",
+      "position": [960, 220],
+      "encounter_id": "floor_01_overseer",
+      "combat_map_id": "map-f01-boss",
+      "combat_map_name": "Overseer Dais",
+      "combat_map_theme": "Ceremonial arena with a dominant centerline and flanking dead space.",
+      "combat_map_summary": "Boss presentation map that pays off the floor's split-route approach with a clean duel stage."
+    },
+    {
+      "id": "floor_01_gallery",
+      "name": "Needle Gallery",
+      "type": "encounter",
+      "description": "A line of shard pillars turns the direct route into a patient mid-floor duel.",
+      "position": [540, 120],
+      "encounter_id": "tutorial_slime",
+      "combat_map_id": "map-f01-02",
+      "combat_map_name": "Needle Gallery",
+      "combat_map_theme": "Long gallery lane punctured by crystal spines and echo cover.",
+      "combat_map_summary": "A sequencing fight that stretches the route before the convergence chamber."
+    },
+    {
+      "id": "floor_01_vault",
+      "name": "Vault Stair",
+      "type": "encounter",
+      "description": "The safer branch bends upward into a choke staircase with no clean retreat.",
+      "position": [540, 320],
+      "encounter_id": "tutorial_slime",
+      "combat_map_id": "map-f01-03",
+      "combat_map_name": "Vault Stair",
+      "combat_map_theme": "Stepped ascent framed by vault ribs and shard dust.",
+      "combat_map_summary": "A recovery-route fight that still forces a committed climb back into danger."
+    },
+    {
+      "id": "floor_01_choir",
+      "name": "Choir of Ash Glass",
+      "type": "encounter",
+      "description": "Both branches collapse into a resonant convergence chamber before the boss seal.",
+      "position": [760, 220],
+      "encounter_id": "tutorial_slime",
+      "combat_map_id": "map-f01-04",
+      "combat_map_name": "Choir of Ash Glass",
+      "combat_map_theme": "Circular chamber with reflective ash-glass ribs and a hot center lane.",
+      "combat_map_summary": "Convergence arena that confirms the floor's route identity before the gatekeeper."
+    },
+    {
+      "id": "floor_01_amber_bridge",
+      "name": "Amber Bridge",
+      "type": "encounter",
+      "description": "A bright bridge of fused amber opens the first extended detour off the fight lane.",
+      "position": [420, 60],
+      "encounter_id": "floor_01_amber_bridge_encounter",
+      "combat_map_id": "map-f01-05",
+      "combat_map_name": "Amber Bridge",
+      "combat_map_theme": "A narrow amber span with exposed sides and a single steady crossing line.",
+      "combat_map_summary": "Opening detour fight that rewards clean pressure and lane control."
+    },
+    {
+      "id": "floor_01_glass_causeway",
+      "name": "Glass Causeway",
+      "type": "encounter",
+      "description": "The bridge fractures into a glass causeway that keeps the route moving forward.",
+      "position": [600, 50],
+      "encounter_id": "floor_01_glass_causeway_encounter",
+      "combat_map_id": "map-f01-06",
+      "combat_map_name": "Glass Causeway",
+      "combat_map_theme": "Split glass lane with mirrored edges and fragile sightlines.",
+      "combat_map_summary": "A second pressure check that makes the player advance under risk."
+    },
+    {
+      "id": "floor_01_ash_gallery",
+      "name": "Ash Gallery",
+      "type": "event",
+      "description": "Ash drifts through a sealed gallery where the path briefly turns ceremonial.",
+      "position": [780, 90],
+      "encounter_id": "",
+      "reward_source_id": "tutorial_shrine"
+    },
+    {
+      "id": "floor_01_shard_walk",
+      "name": "Shard Walk",
+      "type": "encounter",
+      "description": "A narrow shard walk lines the corridor with brittle hazard stone.",
+      "position": [960, 130],
+      "encounter_id": "floor_01_shard_walk_encounter",
+      "combat_map_id": "map-f01-07",
+      "combat_map_name": "Shard Walk",
+      "combat_map_theme": "Thin traverse framed by broken crystal ridges and dead air.",
+      "combat_map_summary": "Mid-route encounter that asks for patience before the final handoff."
+    },
+    {
+      "id": "floor_01_final_anteroom",
+      "name": "Final Anteroom",
+      "type": "encounter",
+      "description": "The last detour before convergence narrows into a prepared anteroom.",
+      "position": [1140, 170],
+      "encounter_id": "floor_01_final_anteroom_encounter",
+      "combat_map_id": "map-f01-08",
+      "combat_map_name": "Final Anteroom",
+      "combat_map_theme": "A poised staging room with a hard centerline and no safe retreat.",
+      "combat_map_summary": "Late-floor encounter that funnels the route toward the choir chamber."
+    },
+    {
+      "id": "floor_01_salt_basin",
+      "name": "Salt Basin",
+      "type": "encounter",
+      "description": "Salt pools along the floor and hardens the second branch into a punishing basin.",
+      "position": [420, 320],
+      "encounter_id": "floor_01_salt_basin_encounter",
+      "combat_map_id": "map-f01-09",
+      "combat_map_name": "Salt Basin",
+      "combat_map_theme": "A dry basin with hard white channels and a low, open horizon.",
+      "combat_map_summary": "Branching route opener that punishes slow repositioning."
+    },
+    {
+      "id": "floor_01_veil_market",
+      "name": "Veil Market",
+      "type": "shop",
+      "description": "A masked market stall stands where the corridor would have split again.",
+      "position": [600, 290],
+      "encounter_id": "",
+      "reward_source_id": "tutorial_vendor"
+    },
+    {
+      "id": "floor_01_cinder_lift",
+      "name": "Cinder Lift",
+      "type": "encounter",
+      "description": "An exposed lift shaft glows with cinder heat as it carries the route upward.",
+      "position": [780, 250],
+      "encounter_id": "floor_01_cinder_lift_encounter",
+      "combat_map_id": "map-f01-10",
+      "combat_map_name": "Cinder Lift",
+      "combat_map_theme": "Vertical shaft arena with rising thermal shimmer and tight edges.",
+      "combat_map_summary": "A tempo fight that asks the player to keep momentum on the climb."
+    },
+    {
+      "id": "floor_01_rune_crossing",
+      "name": "Rune Crossing",
+      "type": "event",
+      "description": "Ancient runes interrupt the route and make the crossing feel intentionally sealed.",
+      "position": [960, 270],
+      "encounter_id": "",
+      "reward_source_id": "tutorial_shrine"
+    },
+    {
+      "id": "floor_01_bone_lantern",
+      "name": "Bone Lantern",
+      "type": "encounter",
+      "description": "A hanging lantern of bone light marks the end of the second branch.",
+      "position": [1140, 310],
+      "encounter_id": "floor_01_bone_lantern_encounter",
+      "combat_map_id": "map-f01-11",
+      "combat_map_name": "Bone Lantern",
+      "combat_map_theme": "A lit corridor with pale ribs overhead and minimal cover.",
+      "combat_map_summary": "A closing fight that keeps the branch tense right before convergence."
+    },
+    {
+      "id": "floor_01_broken_lantern",
+      "name": "Broken Lantern",
+      "type": "encounter",
+      "description": "The third branch opens under a shattered lantern and a thin, dim lane.",
+      "position": [420, 470],
+      "encounter_id": "floor_01_broken_lantern_encounter",
+      "combat_map_id": "map-f01-12",
+      "combat_map_name": "Broken Lantern",
+      "combat_map_theme": "A dim spill of light with heavy shadow pockets on both sides.",
+      "combat_map_summary": "An off-route duel that makes the shop branch feel unstable."
+    },
+    {
+      "id": "floor_01_shiver_archive",
+      "name": "Shiver Archive",
+      "type": "encounter",
+      "description": "Cold stacks of archive stone line a route built for careful reading.",
+      "position": [600, 430],
+      "encounter_id": "floor_01_shiver_archive_encounter",
+      "combat_map_id": "map-f01-13",
+      "combat_map_name": "Shiver Archive",
+      "combat_map_theme": "A chilled archive aisle with narrow shelving and brittle silence.",
+      "combat_map_summary": "A methodical fight that leans into the route's colder pace."
+    },
+    {
+      "id": "floor_01_penumbra_ward",
+      "name": "Penumbra Ward",
+      "type": "shop",
+      "description": "A warded alcove offers a safe trade space before the last steps inward.",
+      "position": [780, 390],
+      "encounter_id": "",
+      "reward_source_id": "tutorial_vendor"
+    },
+    {
+      "id": "floor_01_mirror_step",
+      "name": "Mirror Step",
+      "type": "encounter",
+      "description": "A mirrored ledge reflects the lane and makes every step feel exposed.",
+      "position": [960, 350],
+      "encounter_id": "floor_01_mirror_step_encounter",
+      "combat_map_id": "map-f01-14",
+      "combat_map_name": "Mirror Step",
+      "combat_map_theme": "Reflected walkway with a duplicated center line and sharp sightlines.",
+      "combat_map_summary": "A branch midpoint that punishes sloppy positioning and resets."
+    },
+    {
+      "id": "floor_01_still_sanctum",
+      "name": "Still Sanctum",
+      "type": "event",
+      "description": "A silent sanctum holds the branch still before the final approach resumes.",
+      "position": [1140, 390],
+      "encounter_id": "",
+      "reward_source_id": "tutorial_shrine"
+    },
+    {
+      "id": "floor_01_ember_warren",
+      "name": "Ember Warren",
+      "type": "encounter",
+      "description": "A fourth route burns out of the gallery side into a dug ember warren.",
+      "position": [420, 150],
+      "encounter_id": "floor_01_ember_warren_encounter",
+      "combat_map_id": "map-f01-15",
+      "combat_map_name": "Ember Warren",
+      "combat_map_theme": "Low tunnel with ember vents and a short, heated center lane.",
+      "combat_map_summary": "A tight combat map that keeps the side route feeling hostile."
+    },
+    {
+      "id": "floor_01_fracture_scriptorium",
+      "name": "Fracture Scriptorium",
+      "type": "encounter",
+      "description": "The route bends through a broken scriptorium where the walls keep splitting.",
+      "position": [600, 170],
+      "encounter_id": "floor_01_fracture_scriptorium_encounter",
+      "combat_map_id": "map-f01-16",
+      "combat_map_name": "Fracture Scriptorium",
+      "combat_map_theme": "A split archive hall with long paper lanes and cracked aisles.",
+      "combat_map_summary": "A longer pressure room that slows the player's advance."
+    },
+    {
+      "id": "floor_01_vortex_gate",
+      "name": "Vortex Gate",
+      "type": "encounter",
+      "description": "A gate of spinning air pulls the last branch toward the choir chamber.",
+      "position": [780, 190],
+      "encounter_id": "floor_01_vortex_gate_encounter",
+      "combat_map_id": "map-f01-17",
+      "combat_map_name": "Vortex Gate",
+      "combat_map_theme": "Swirling gate arena with a pulled center and unstable edges.",
+      "combat_map_summary": "A late fight that compresses the route before the last link."
+    },
+    {
+      "id": "floor_01_veil_niche",
+      "name": "Veil Niche",
+      "type": "shop",
+      "description": "A niche behind the gate offers the last pause before the route closes.",
+      "position": [960, 210],
+      "encounter_id": "",
+      "reward_source_id": "tutorial_vendor"
+    },
+    {
+      "id": "floor_01_relay_spine",
+      "name": "Relay Spine",
+      "type": "encounter",
+      "description": "A relay spine of stone and wire carries the route into the choir chamber.",
+      "position": [1140, 230],
+      "encounter_id": "floor_01_relay_spine_encounter",
+      "combat_map_id": "map-f01-18",
+      "combat_map_name": "Relay Spine",
+      "combat_map_theme": "A narrow transfer spine with hard angles and no room to idle.",
+      "combat_map_summary": "The last ordinary fight before the new branch rejoins the main route."
+    }
   ],
   "links": [
-	{
-	  "from": "floor_01_start",
-	  "to": "floor_01_fight"
-	},
-	{
-	  "from": "floor_01_start",
-	  "to": "floor_01_shop"
-	},
-	{
-	  "from": "floor_01_fight",
-	  "to": "floor_01_gallery"
-	},
-	{
-	  "from": "floor_01_fight",
-	  "to": "floor_01_vault"
-	},
-	{
-	  "from": "floor_01_shop",
-	  "to": "floor_01_vault"
-	},
-	{
-	  "from": "floor_01_gallery",
-	  "to": "floor_01_choir"
-	},
-	{
-	  "from": "floor_01_vault",
-	  "to": "floor_01_choir"
-	},
-	{
-	  "from": "floor_01_choir",
-	  "to": "floor_01_boss"
-	}
+    {
+      "from": "floor_01_start",
+      "to": "floor_01_fight"
+    },
+    {
+      "from": "floor_01_start",
+      "to": "floor_01_shop"
+    },
+    {
+      "from": "floor_01_fight",
+      "to": "floor_01_gallery"
+    },
+    {
+      "from": "floor_01_fight",
+      "to": "floor_01_vault"
+    },
+    {
+      "from": "floor_01_shop",
+      "to": "floor_01_vault"
+    },
+    {
+      "from": "floor_01_gallery",
+      "to": "floor_01_choir"
+    },
+    {
+      "from": "floor_01_vault",
+      "to": "floor_01_choir"
+    },
+    {
+      "from": "floor_01_choir",
+      "to": "floor_01_boss"
+    },
+    {
+      "from": "floor_01_fight",
+      "to": "floor_01_amber_bridge"
+    },
+    {
+      "from": "floor_01_amber_bridge",
+      "to": "floor_01_glass_causeway"
+    },
+    {
+      "from": "floor_01_glass_causeway",
+      "to": "floor_01_ash_gallery"
+    },
+    {
+      "from": "floor_01_ash_gallery",
+      "to": "floor_01_shard_walk"
+    },
+    {
+      "from": "floor_01_shard_walk",
+      "to": "floor_01_final_anteroom"
+    },
+    {
+      "from": "floor_01_final_anteroom",
+      "to": "floor_01_choir"
+    },
+    {
+      "from": "floor_01_fight",
+      "to": "floor_01_salt_basin"
+    },
+    {
+      "from": "floor_01_salt_basin",
+      "to": "floor_01_veil_market"
+    },
+    {
+      "from": "floor_01_veil_market",
+      "to": "floor_01_cinder_lift"
+    },
+    {
+      "from": "floor_01_cinder_lift",
+      "to": "floor_01_rune_crossing"
+    },
+    {
+      "from": "floor_01_rune_crossing",
+      "to": "floor_01_bone_lantern"
+    },
+    {
+      "from": "floor_01_bone_lantern",
+      "to": "floor_01_choir"
+    },
+    {
+      "from": "floor_01_shop",
+      "to": "floor_01_broken_lantern"
+    },
+    {
+      "from": "floor_01_broken_lantern",
+      "to": "floor_01_shiver_archive"
+    },
+    {
+      "from": "floor_01_shiver_archive",
+      "to": "floor_01_penumbra_ward"
+    },
+    {
+      "from": "floor_01_penumbra_ward",
+      "to": "floor_01_mirror_step"
+    },
+    {
+      "from": "floor_01_mirror_step",
+      "to": "floor_01_still_sanctum"
+    },
+    {
+      "from": "floor_01_still_sanctum",
+      "to": "floor_01_choir"
+    },
+    {
+      "from": "floor_01_gallery",
+      "to": "floor_01_ember_warren"
+    },
+    {
+      "from": "floor_01_ember_warren",
+      "to": "floor_01_fracture_scriptorium"
+    },
+    {
+      "from": "floor_01_fracture_scriptorium",
+      "to": "floor_01_vortex_gate"
+    },
+    {
+      "from": "floor_01_vortex_gate",
+      "to": "floor_01_veil_niche"
+    },
+    {
+      "from": "floor_01_veil_niche",
+      "to": "floor_01_relay_spine"
+    },
+    {
+      "from": "floor_01_relay_spine",
+      "to": "floor_01_choir"
+    }
   ]
 }

@@ -1,0 +1,642 @@
+{
+  "id": "floor_01_expansion_enemies",
+  "definitions": [
+    {
+      "id": "amber_bridge_husk",
+      "name": "Amber Bridge Husk",
+      "hp": 20,
+      "max_hp": 20,
+      "starting_block": 0,
+      "intent": "Amber Clamp",
+      "damage": 4,
+      "statuses": [],
+      "ai_pattern": [
+        {
+          "action": "attack",
+          "damage": 4,
+          "label": "Amber Clamp"
+        },
+        {
+          "action": "multi_hit",
+          "hits": 2,
+          "damage_per_hit": 2,
+          "label": "Amber Shards"
+        }
+      ]
+    },
+    {
+      "id": "glass_causeway_spiker",
+      "name": "Glass Causeway Spiker",
+      "hp": 18,
+      "max_hp": 18,
+      "starting_block": 1,
+      "intent": "Glass Piercer",
+      "damage": 3,
+      "statuses": [],
+      "ai_pattern": [
+        {
+          "action": "attack",
+          "damage": 3,
+          "label": "Glass Piercer"
+        },
+        {
+          "action": "debuff",
+          "status": "poison",
+          "stacks": 1,
+          "duration": 2,
+          "label": "Shiver Poison"
+        }
+      ]
+    },
+    {
+      "id": "ash_gallery_witch",
+      "name": "Ash Gallery Witch",
+      "hp": 22,
+      "max_hp": 22,
+      "starting_block": 0,
+      "intent": "Cinder Hex",
+      "damage": 3,
+      "statuses": [],
+      "ai_pattern": [
+        {
+          "action": "debuff",
+          "status": "burn",
+          "stacks": 1,
+          "duration": 2,
+          "label": "Cinder Hex"
+        },
+        {
+          "action": "attack",
+          "damage": 3,
+          "label": "Ash Needle"
+        }
+      ]
+    },
+    {
+      "id": "shard_walk_sentry",
+      "name": "Shard Walk Sentry",
+      "hp": 24,
+      "max_hp": 24,
+      "starting_block": 2,
+      "intent": "Sentry Volley",
+      "damage": 4,
+      "statuses": [],
+      "ai_pattern": [
+        {
+          "action": "attack",
+          "damage": 4,
+          "label": "Sentry Volley"
+        },
+        {
+          "action": "lock",
+          "label": "Stone Brace"
+        }
+      ]
+    },
+    {
+      "id": "final_anteroom_colossus",
+      "name": "Final Anteroom Colossus",
+      "hp": 30,
+      "max_hp": 30,
+      "starting_block": 1,
+      "intent": "Anteroom Crush",
+      "damage": 6,
+      "statuses": [],
+      "ai_pattern": [
+        {
+          "action": "attack",
+          "damage": 6,
+          "label": "Anteroom Crush"
+        },
+        {
+          "action": "multi_hit",
+          "hits": 3,
+          "damage_per_hit": 2,
+          "label": "Stone Fragments"
+        }
+      ]
+    },
+    {
+      "id": "salt_basin_knell",
+      "name": "Salt Basin Knell",
+      "hp": 19,
+      "max_hp": 19,
+      "starting_block": 0,
+      "intent": "Brine Toll",
+      "damage": 3,
+      "statuses": [],
+      "ai_pattern": [
+        {
+          "action": "debuff",
+          "status": "freeze",
+          "stacks": 1,
+          "duration": 1,
+          "label": "Brine Toll"
+        },
+        {
+          "action": "attack",
+          "damage": 3,
+          "label": "Salt Flick"
+        }
+      ]
+    },
+    {
+      "id": "veil_market_cutpurse",
+      "name": "Veil Market Cutpurse",
+      "hp": 17,
+      "max_hp": 17,
+      "starting_block": 0,
+      "intent": "Quick Lift",
+      "damage": 4,
+      "statuses": [],
+      "ai_pattern": [
+        {
+          "action": "attack",
+          "damage": 4,
+          "label": "Quick Lift"
+        },
+        {
+          "action": "attack",
+          "damage": 2,
+          "label": "Palm Cut"
+        }
+      ]
+    },
+    {
+      "id": "cinder_lift_carapace",
+      "name": "Cinder Lift Carapace",
+      "hp": 27,
+      "max_hp": 27,
+      "starting_block": 2,
+      "intent": "Lift Scorch",
+      "damage": 5,
+      "statuses": [],
+      "ai_pattern": [
+        {
+          "action": "attack",
+          "damage": 5,
+          "label": "Lift Scorch"
+        },
+        {
+          "action": "debuff",
+          "status": "burn",
+          "stacks": 1,
+          "duration": 2,
+          "label": "Cinder Wake"
+        }
+      ]
+    },
+    {
+      "id": "rune_crossing_oracle",
+      "name": "Rune Crossing Oracle",
+      "hp": 21,
+      "max_hp": 21,
+      "starting_block": 0,
+      "intent": "Seal Sight",
+      "damage": 3,
+      "statuses": [],
+      "ai_pattern": [
+        {
+          "action": "debuff",
+          "status": "stun",
+          "stacks": 1,
+          "duration": 1,
+          "label": "Seal Sight"
+        },
+        {
+          "action": "attack",
+          "damage": 3,
+          "label": "Rune Peck"
+        }
+      ]
+    },
+    {
+      "id": "bone_lantern_ascetic",
+      "name": "Bone Lantern Ascetic",
+      "hp": 23,
+      "max_hp": 23,
+      "starting_block": 1,
+      "intent": "Lantern Tap",
+      "damage": 4,
+      "statuses": [],
+      "ai_pattern": [
+        {
+          "action": "lock",
+          "label": "Lantern Ward"
+        },
+        {
+          "action": "attack",
+          "damage": 4,
+          "label": "Lantern Tap"
+        }
+      ]
+    },
+    {
+      "id": "broken_lantern_mireling",
+      "name": "Broken Lantern Mireling",
+      "hp": 16,
+      "max_hp": 16,
+      "starting_block": 0,
+      "intent": "Mud Snap",
+      "damage": 3,
+      "statuses": [],
+      "ai_pattern": [
+        {
+          "action": "attack",
+          "damage": 3,
+          "label": "Mud Snap"
+        },
+        {
+          "action": "debuff",
+          "status": "poison",
+          "stacks": 1,
+          "duration": 2,
+          "label": "Mire Film"
+        }
+      ]
+    },
+    {
+      "id": "shiver_archive_scrivener",
+      "name": "Shiver Archive Scrivener",
+      "hp": 20,
+      "max_hp": 20,
+      "starting_block": 0,
+      "intent": "Script Slash",
+      "damage": 4,
+      "statuses": [],
+      "ai_pattern": [
+        {
+          "action": "attack",
+          "damage": 4,
+          "label": "Script Slash"
+        },
+        {
+          "action": "multi_hit",
+          "hits": 2,
+          "damage_per_hit": 2,
+          "label": "Page Cuts"
+        }
+      ]
+    },
+    {
+      "id": "penumbra_ward_mirrorfiend",
+      "name": "Penumbra Ward Mirrorfiend",
+      "hp": 25,
+      "max_hp": 25,
+      "starting_block": 1,
+      "intent": "Mirror Chill",
+      "damage": 3,
+      "statuses": [],
+      "ai_pattern": [
+        {
+          "action": "debuff",
+          "status": "freeze",
+          "stacks": 1,
+          "duration": 1,
+          "label": "Mirror Chill"
+        },
+        {
+          "action": "attack",
+          "damage": 3,
+          "label": "Shard Glance"
+        }
+      ]
+    },
+    {
+      "id": "mirror_step_howler",
+      "name": "Mirror Step Howler",
+      "hp": 19,
+      "max_hp": 19,
+      "starting_block": 0,
+      "intent": "Howl Split",
+      "damage": 4,
+      "statuses": [],
+      "ai_pattern": [
+        {
+          "action": "attack",
+          "damage": 4,
+          "label": "Howl Split"
+        },
+        {
+          "action": "debuff",
+          "status": "stun",
+          "stacks": 1,
+          "duration": 1,
+          "label": "Mirror Echo"
+        }
+      ]
+    },
+    {
+      "id": "still_sanctum_priest",
+      "name": "Still Sanctum Priest",
+      "hp": 24,
+      "max_hp": 24,
+      "starting_block": 2,
+      "intent": "Sanctum Rite",
+      "damage": 3,
+      "statuses": [],
+      "ai_pattern": [
+        {
+          "action": "lock",
+          "label": "Sanctum Rite"
+        },
+        {
+          "action": "debuff",
+          "status": "burn",
+          "stacks": 1,
+          "duration": 2,
+          "label": "Consecrate"
+        }
+      ]
+    },
+    {
+      "id": "ember_warren_maw",
+      "name": "Ember Warren Maw",
+      "hp": 28,
+      "max_hp": 28,
+      "starting_block": 0,
+      "intent": "Maw Bite",
+      "damage": 5,
+      "statuses": [],
+      "ai_pattern": [
+        {
+          "action": "multi_hit",
+          "hits": 2,
+          "damage_per_hit": 3,
+          "label": "Ember Bite"
+        },
+        {
+          "action": "attack",
+          "damage": 5,
+          "label": "Maw Bite"
+        }
+      ]
+    },
+    {
+      "id": "fracture_scriptorium_brute",
+      "name": "Fracture Scriptorium Brute",
+      "hp": 29,
+      "max_hp": 29,
+      "starting_block": 1,
+      "intent": "Shelf Break",
+      "damage": 6,
+      "statuses": [],
+      "ai_pattern": [
+        {
+          "action": "attack",
+          "damage": 6,
+          "label": "Shelf Break"
+        },
+        {
+          "action": "attack",
+          "damage": 4,
+          "label": "Broken Tome"
+        }
+      ]
+    },
+    {
+      "id": "vortex_gate_reaver",
+      "name": "Vortex Gate Reaver",
+      "hp": 26,
+      "max_hp": 26,
+      "starting_block": 0,
+      "intent": "Gate Reap",
+      "damage": 4,
+      "statuses": [],
+      "ai_pattern": [
+        {
+          "action": "debuff",
+          "status": "freeze",
+          "stacks": 1,
+          "duration": 1,
+          "label": "Vortex Chill"
+        },
+        {
+          "action": "attack",
+          "damage": 4,
+          "label": "Gate Reap"
+        }
+      ]
+    },
+    {
+      "id": "veil_niche_warden",
+      "name": "Veil Niche Warden",
+      "hp": 32,
+      "max_hp": 32,
+      "starting_block": 2,
+      "intent": "Ward Pressure",
+      "damage": 5,
+      "statuses": [],
+      "ai_pattern": [
+        {
+          "action": "lock",
+          "label": "Ward Pressure"
+        },
+        {
+          "action": "attack",
+          "damage": 5,
+          "label": "Niche Strike"
+        }
+      ]
+    },
+    {
+      "id": "relay_spine_herald",
+      "name": "Relay Spine Herald",
+      "hp": 34,
+      "max_hp": 34,
+      "starting_block": 1,
+      "intent": "Herald Volley",
+      "damage": 5,
+      "statuses": [],
+      "ai_pattern": [
+        {
+          "action": "multi_hit",
+          "hits": 3,
+          "damage_per_hit": 2,
+          "label": "Herald Volley"
+        },
+        {
+          "action": "debuff",
+          "status": "poison",
+          "stacks": 1,
+          "duration": 2,
+          "label": "Signal Toxin"
+        }
+      ]
+    },
+    {
+      "id": "amber_bridge_siphon",
+      "name": "Amber Bridge Siphon",
+      "hp": 21,
+      "max_hp": 21,
+      "starting_block": 1,
+      "intent": "Siphon Lance",
+      "damage": 4,
+      "statuses": [],
+      "enemy_dice": [
+        {
+          "id": "amber_bridge_siphon_d8",
+          "label": "Siphon D8",
+          "body_id": "forged_d8",
+          "face_set": ["strike", "guard", "focus", "strike", "surge", "heavy_strike", "guard", "strike"]
+        },
+        {
+          "id": "amber_bridge_siphon_d6",
+          "label": "Bridge D6",
+          "body_id": "standard_d6",
+          "face_set": ["strike", "guard", "focus", "strike", "surge", "guard"]
+        },
+        {
+          "id": "amber_bridge_siphon_d6b",
+          "label": "Latch D6",
+          "body_id": "standard_d6",
+          "face_set": ["focus", "strike", "guard", "surge", "strike", "guard"]
+        }
+      ],
+      "ai_pattern": [
+        {
+          "action": "attack",
+          "damage": 4,
+          "label": "Siphon Lance"
+        },
+        {
+          "action": "lock",
+          "label": "Amber Clamp"
+        }
+      ]
+    },
+    {
+      "id": "glass_causeway_prism",
+      "name": "Glass Causeway Prism",
+      "hp": 19,
+      "max_hp": 19,
+      "starting_block": 0,
+      "intent": "Prism Scatter",
+      "damage": 3,
+      "statuses": [],
+      "enemy_dice": [
+        {
+          "id": "glass_causeway_prism_d8",
+          "label": "Prism D8",
+          "body_id": "forged_d8",
+          "face_set": ["strike", "strike", "focus", "guard", "surge", "heavy_strike", "guard", "surge"]
+        },
+        {
+          "id": "glass_causeway_prism_d6",
+          "label": "Shard D6",
+          "body_id": "standard_d6",
+          "face_set": ["strike", "guard", "focus", "strike", "surge", "guard"]
+        },
+        {
+          "id": "glass_causeway_prism_d6b",
+          "label": "Chime D6",
+          "body_id": "standard_d6",
+          "face_set": ["focus", "strike", "guard", "surge", "guard", "strike"]
+        }
+      ],
+      "ai_pattern": [
+        {
+          "action": "attack",
+          "damage": 3,
+          "label": "Prism Scatter"
+        },
+        {
+          "action": "debuff",
+          "status": "poison",
+          "stacks": 1,
+          "duration": 2,
+          "label": "Glass Venom"
+        }
+      ]
+    },
+    {
+      "id": "veil_market_hexer",
+      "name": "Veil Market Hexer",
+      "hp": 18,
+      "max_hp": 18,
+      "starting_block": 0,
+      "intent": "Hex Cut",
+      "damage": 3,
+      "statuses": [],
+      "enemy_dice": [
+        {
+          "id": "veil_market_hexer_d8",
+          "label": "Hex D8",
+          "body_id": "forged_d8",
+          "face_set": ["strike", "focus", "guard", "strike", "surge", "heavy_strike", "guard", "focus"]
+        },
+        {
+          "id": "veil_market_hexer_d6",
+          "label": "Knife D6",
+          "body_id": "standard_d6",
+          "face_set": ["strike", "guard", "focus", "strike", "surge", "guard"]
+        }
+      ],
+      "ai_pattern": [
+        {
+          "action": "debuff",
+          "status": "burn",
+          "stacks": 1,
+          "duration": 2,
+          "label": "Hex Cut"
+        },
+        {
+          "action": "attack",
+          "damage": 3,
+          "label": "Market Slash"
+        }
+      ]
+    },
+    {
+      "id": "relay_spine_harrier",
+      "name": "Relay Spine Harrier",
+      "hp": 35,
+      "max_hp": 35,
+      "starting_block": 1,
+      "intent": "Harrier Volley",
+      "damage": 5,
+      "statuses": [],
+      "enemy_dice": [
+        {
+          "id": "relay_spine_harrier_d8",
+          "label": "Harrier D8",
+          "body_id": "forged_d8",
+          "face_set": ["strike", "strike", "focus", "guard", "surge", "heavy_strike", "strike", "surge"]
+        },
+        {
+          "id": "relay_spine_harrier_d6",
+          "label": "Volley D6",
+          "body_id": "standard_d6",
+          "face_set": ["strike", "guard", "focus", "strike", "surge", "guard"]
+        },
+        {
+          "id": "relay_spine_harrier_d6b",
+          "label": "Spine D6",
+          "body_id": "standard_d6",
+          "face_set": ["strike", "focus", "guard", "strike", "surge", "guard"]
+        },
+        {
+          "id": "relay_spine_harrier_d6c",
+          "label": "Relay D6",
+          "body_id": "standard_d6",
+          "face_set": ["focus", "strike", "guard", "surge", "strike", "guard"]
+        }
+      ],
+      "ai_pattern": [
+        {
+          "action": "multi_hit",
+          "hits": 3,
+          "damage_per_hit": 2,
+          "label": "Harrier Volley"
+        },
+        {
+          "action": "debuff",
+          "status": "poison",
+          "stacks": 1,
+          "duration": 2,
+          "label": "Signal Toxin"
+        }
+      ]
+    }
+  ]
+}

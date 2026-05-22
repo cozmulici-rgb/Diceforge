@@ -28,7 +28,7 @@ func run() -> Array[String]:
 		failures.append("floor_02 should load with its expected boss room")
 
 	var room_graph = catalog.load_room_graph("floor_01_rooms")
-	if not (room_graph is Dictionary) or (room_graph.get("rooms", []) as Array).size() != 7:
+	if not (room_graph is Dictionary) or (room_graph.get("rooms", []) as Array).size() != 27:
 		failures.append("floor_01 room graph should load with the expanded combat-map route")
 	elif str(((room_graph.get("rooms", []) as Array)[1] as Dictionary).get("combat_map_id", "")) == "":
 		failures.append("expanded encounter rooms should expose combat map metadata")

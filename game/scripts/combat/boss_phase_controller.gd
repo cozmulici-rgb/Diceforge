@@ -18,6 +18,7 @@ func initialize_enemy_state(enemy_definition: Dictionary) -> Dictionary:
 		"block": int(first_phase.get("starting_block", enemy_definition.get("starting_block", 0))),
 		"intent_label": str(first_phase.get("intent", enemy_definition.get("intent", "Strike"))),
 		"intent_damage": int(first_phase.get("damage", enemy_definition.get("damage", 0))),
+		"enemy_dice": (first_phase.get("enemy_dice", enemy_definition.get("enemy_dice", [])) as Array).duplicate(true),
 	}
 
 
@@ -37,6 +38,8 @@ func advance_phase(enemy_state: Dictionary) -> Dictionary:
 	updated_enemy_state["block"] = int(next_phase.get("starting_block", 0))
 	updated_enemy_state["intent_label"] = str(next_phase.get("intent", "Strike"))
 	updated_enemy_state["intent_damage"] = int(next_phase.get("damage", 0))
+	if next_phase.has("enemy_dice"):
+		updated_enemy_state["enemy_dice"] = (next_phase.get("enemy_dice", []) as Array).duplicate(true)
 	return {
 		"transitioned": true,
 		"enemy_state": updated_enemy_state,

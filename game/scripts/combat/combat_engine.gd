@@ -47,6 +47,7 @@ func initialize_battle(player_data: Dictionary, enemy_def: Dictionary) -> Dictio
 			"statuses": (enemy_def.get("statuses", []) as Array).duplicate(true),
 			"ai_pattern": (enemy_def.get("ai_pattern", []) as Array).duplicate(true),
 			"phases": (enemy_def.get("phases", []) as Array).duplicate(true),
+			"enemy_dice": (enemy_def.get("enemy_dice", []) as Array).duplicate(true),
 			"phase_index": 0,
 			"is_boss": bool(enemy_def.get("is_boss", false)),
 			"final_boss": bool(enemy_def.get("final_boss", false)),
@@ -278,8 +279,22 @@ func prepare_enemy_turn() -> void:
 	var action := _enemy_ai.select_action(enemy, int(_state.get("turn_index", 1)))
 	var enemy_roll_rng: RandomNumberGenerator = RandomNumberGenerator.new()
 	enemy_roll_rng.randomize()
+	var enemy_dice: Array = (enemy.get("enemy_dice", []) as Array).duplicate(true)
+	var has_dice_pool := not enemy_dice.is_empty()
+	_state["enemy_rolls"] = build_enemy_rolls(
+		action,
+		int(_state.get("turn_index", 1)),
+		maxi(enemy_dice.size(), 3),
+		enemy_roll_rng,
+		enemy_dice
+	)
+	if has_dice_pool:
+		enemy["intent_label"] = str(action.get("label", enemy.get("intent_label", "Strike")))
+		action = _action_with_enemy_roll_damage(action)
+		enemy["intent_damage"] = _enemy_action_damage_total(action) if ["attack", "multi_hit"].has(str(action.get("action", "attack"))) else 0
+		enemy["block"] = _clamping.clamp_block(int(enemy.get("block", 0)) + _enemy_roll_block_total(_state["enemy_rolls"] as Array))
+		_state["enemy"] = enemy
 	_state["pending_enemy_action"] = action
-	_state["enemy_rolls"] = build_enemy_rolls(action, int(_state.get("turn_index", 1)), 3, enemy_roll_rng)
 	_state["phase"] = "enemy_roll"
 
 
@@ -298,9 +313,11 @@ func resolve_prepared_enemy_turn() -> void:
 
 	var player: Dictionary = (_state.get("player", {}) as Dictionary).duplicate(true)
 	var enemy: Dictionary = (_state.get("enemy", {}) as Dictionary).duplicate(true)
+	var has_dice_pool := not (enemy.get("enemy_dice", []) as Array).is_empty()
+	var resolved_action := _action_with_enemy_roll_damage(action) if has_dice_pool else action
 	var player_before_action := player.duplicate(true)
-	player = _enemy_ai.resolve_action(action, player, {})
-	var enemy_effect_summary := _build_enemy_action_summary(action, player_before_action, player)
+	player = _enemy_ai.resolve_action(resolved_action, player, {})
+	var enemy_effect_summary := _build_enemy_action_summary(resolved_action, player_before_action, player)
 	_state["player"] = player
 	_state["enemy"] = enemy
 	_state["phase"] = "enemy_action"
@@ -309,29 +326,59 @@ func resolve_prepared_enemy_turn() -> void:
 		"step_kind": "enemy_action",
 		"die_id": null,
 		"rolled_value": null,
-		"resolved_face": str(action.get("label", "")),
+		"resolved_face": str(resolved_action.get("label", "")),
 		"family": "enemy",
-		"effect": str(action.get("action", "")),
-		"base_value": int(action.get("damage", 0)),
+		"effect": str(resolved_action.get("action", "")),
+		"base_value": _enemy_action_damage_total(resolved_action),
 		"modifiers_applied": [],
-		"outcome": _describe_enemy_action(action, enemy_effect_summary),
+		"outcome": _describe_enemy_action(resolved_action, enemy_effect_summary),
 		"effect_summary": enemy_effect_summary,
 		"rerolled_from": null,
 	})
 
 
-func build_enemy_rolls(action: Dictionary, turn_index: int, roll_count: int = 3, rng = null) -> Array:
+func build_enemy_rolls(action: Dictionary, turn_index: int, roll_count: int = 3, rng = null, dice_pool: Array = []) -> Array:
+	var pool: Array = (dice_pool as Array).duplicate(true)
+	if not pool.is_empty():
+		var face_defs: Dictionary = _catalog.get_part_definitions("face")
+		var body_defs: Dictionary = _catalog.get_part_definitions("body")
+		var roll_seeds: Array = []
+		var local_rng = rng
+		if local_rng == null:
+			local_rng = RandomNumberGenerator.new()
+			local_rng.randomize()
+		for die in pool:
+			var die_data: Dictionary = die as Dictionary
+			var body_id := str(die_data.get("body_id", "standard_d6"))
+			var body_def: Dictionary = body_defs.get(body_id, {})
+			var face_set := (die_data.get("face_set", []) as Array).duplicate(true)
+			var side_count := int(body_def.get("sides", face_set.size()))
+			side_count = maxi(side_count, max(face_set.size(), 1))
+			roll_seeds.append(int(local_rng.randi_range(1, side_count)))
+		var rolled := _dice_resolver.roll_dice(pool, face_defs, body_defs, roll_seeds)
+		if bool(rolled.get("ok", false)):
+			var preview_rolls: Array = []
+			var rolled_faces: Array = (rolled.get("rolled_faces", []) as Array).duplicate(true)
+			for index in range(rolled_faces.size()):
+				preview_rolls.append(_build_enemy_roll_entry_from_face(
+					rolled_faces[index] as Dictionary,
+					action,
+					turn_index,
+					index
+				))
+			return preview_rolls
+
 	var count := maxi(roll_count, 1)
-	var preview_rolls: Array = []
-	var local_rng = rng
-	if local_rng == null:
-		local_rng = RandomNumberGenerator.new()
-		local_rng.randomize()
+	var preview_rolls_fallback: Array = []
+	var fallback_rng = rng
+	if fallback_rng == null:
+		fallback_rng = RandomNumberGenerator.new()
+		fallback_rng.randomize()
 
 	for roll_index in range(count):
-		var rolled_value := int(local_rng.randi_range(1, 6))
-		preview_rolls.append(_build_enemy_roll_entry(action, turn_index, roll_index, rolled_value))
-	return preview_rolls
+		var rolled_value := int(fallback_rng.randi_range(1, 6))
+		preview_rolls_fallback.append(_build_enemy_roll_entry(action, turn_index, roll_index, rolled_value))
+	return preview_rolls_fallback
 
 
 func end_enemy_turn() -> void:
@@ -436,6 +483,98 @@ func _build_enemy_roll_entry(action: Dictionary, turn_index: int, roll_index: in
 		"damage": damage,
 		"damage_total": total_damage,
 	}
+
+
+func _build_enemy_roll_entry_from_face(source: Dictionary, action: Dictionary, turn_index: int, roll_index: int) -> Dictionary:
+	var action_type := str(action.get("action", "attack"))
+	var label := str(action.get("label", source.get("face_label", "Enemy Action")))
+	var rolled_value := int(source.get("rolled_value", 0))
+	var effect := str(source.get("effect", _enemy_effect_for_face(str(source.get("face_id", action_type)))))
+	var value := int(source.get("value", 1))
+	var damage := rolled_value * value if effect == "damage" else 0
+	var block := rolled_value * value if effect == "block" else 0
+	return {
+		"die_id": str(source.get("die_id", "enemy_turn_%d_%d" % [turn_index, roll_index])),
+		"die_label": str(source.get("die_label", "Enemy Die %d" % (roll_index + 1))),
+		"rolled_value": rolled_value,
+		"face_id": str(source.get("face_id", action_type)),
+		"face_family": str(source.get("face_family", _enemy_family_for_action(action_type))),
+		"face_label": str(source.get("face_label", label)),
+		"energy_cost": 0,
+		"effect": effect,
+		"value": value,
+		"effect_label": effect.capitalize(),
+		"action_label": label,
+		"action_type": action_type,
+		"hits": 1,
+		"damage": damage,
+		"block": block,
+		"damage_total": damage,
+	}
+
+
+func _enemy_family_for_action(action_type: String) -> String:
+	match action_type:
+		"attack", "multi_hit":
+			return "attack"
+		"debuff", "lock":
+			return "utility"
+		_:
+			return "enemy"
+
+
+func _enemy_effect_for_face(face_id: String) -> String:
+	match face_id:
+		"guard", "focus", "bulwark":
+			return "block"
+		"strike", "surge", "heavy_strike":
+			return "damage"
+		_:
+			return "utility"
+
+
+func _action_with_enemy_roll_damage(action: Dictionary) -> Dictionary:
+	var updated := action.duplicate(true)
+	var action_type := str(updated.get("action", "attack"))
+	if not ["attack", "multi_hit"].has(action_type):
+		return updated
+
+	var components: Array[int] = []
+	for roll in (_state.get("enemy_rolls", []) as Array):
+		var entry: Dictionary = roll as Dictionary
+		if str(entry.get("effect", "")) != "damage":
+			continue
+		components.append(maxi(int(entry.get("damage", entry.get("rolled_value", 0))), 0))
+
+	var total := 0
+	for component in components:
+		total += component
+	updated["damage_components"] = components
+	updated["damage"] = total
+	updated["hits"] = maxi(components.size(), 1)
+	return updated
+
+
+func _enemy_roll_block_total(enemy_rolls: Array) -> int:
+	var total := 0
+	for roll in enemy_rolls:
+		var entry: Dictionary = roll as Dictionary
+		if str(entry.get("effect", "")) != "block":
+			continue
+		total += maxi(int(entry.get("block", int(entry.get("rolled_value", 0)) * maxi(int(entry.get("value", 1)), 1))), 0)
+	return total
+
+
+func _enemy_action_damage_total(action: Dictionary) -> int:
+	var total := 0
+	var components: Array = (action.get("damage_components", []) as Array)
+	for component in components:
+		total += maxi(int(component), 0)
+	if action.has("damage_components"):
+		return total
+	if str(action.get("action", "attack")) == "multi_hit":
+		return maxi(int(action.get("hits", 1)), 1) * maxi(int(action.get("damage_per_hit", action.get("damage", 0))), 0)
+	return maxi(int(action.get("damage", 0)), 0)
 
 
 func _record_roll_entry(entry: Dictionary, rerolled_from: Variant) -> void:
@@ -663,11 +802,13 @@ func _describe_resolution_outcome(entry: Dictionary, effect_summary: Dictionary,
 func _build_enemy_action_summary(action: Dictionary, player_before: Dictionary, player_after: Dictionary) -> Dictionary:
 	var action_name := str(action.get("action", "attack"))
 	if action_name == "attack":
-		return _effect_resolver._damage_summary(player_before, player_after, int(action.get("damage", 0)), 0, "player")
+		return _effect_resolver._damage_summary(player_before, player_after, _enemy_action_damage_total(action), 0, "player")
 	if action_name == "multi_hit":
 		var hits := maxi(int(action.get("hits", 1)), 1)
+		var raw_damage := _enemy_action_damage_total(action)
 		var damage_per_hit := int(action.get("damage_per_hit", action.get("damage", 0)))
-		var raw_damage := hits * damage_per_hit
+		if action.has("damage_components"):
+			damage_per_hit = int(raw_damage / maxi(hits, 1))
 		var summary := _effect_resolver._damage_summary(player_before, player_after, raw_damage, 0, "player")
 		summary["hits"] = hits
 		summary["damage_per_hit"] = damage_per_hit

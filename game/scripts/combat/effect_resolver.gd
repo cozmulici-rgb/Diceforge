@@ -27,7 +27,7 @@ func resolve_face(face: Dictionary, rolled_value: int, player: Dictionary, enemy
 
 		"block":
 			var block_before := int(updated_player.get("block", 0))
-			var added_block := rolled_value * value
+			var added_block := rolled_value * value + int(face.get("bonus_block", 0))
 			updated_player["block"] = _clamping.clamp_block(block_before + added_block)
 			effect_summary = {
 				"target": "player",
