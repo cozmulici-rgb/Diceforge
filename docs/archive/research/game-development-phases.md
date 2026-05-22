@@ -27,7 +27,7 @@ The checked-in project is currently a repository bootstrap and Godot shell rathe
 
 - `game/project.godot` points the application to `res://scenes/main.tscn`.
 - `game/scenes/main.tscn` instantiates a single `Node2D` with `res://scripts/main.gd`.
-- `game/scripts/main.gd` prints `Facetbound bootstrap scene ready` during `_ready()`.
+- `game/scripts/main.gd` prints `Diceforge bootstrap scene ready` during `_ready()`.
 - `README.md` states the current project exists to validate the toolchain rather than gameplay.
 
 No exploration, combat, dice building, progression, enemy logic, UI flows, save systems, or content pipelines are implemented in the current codebase.

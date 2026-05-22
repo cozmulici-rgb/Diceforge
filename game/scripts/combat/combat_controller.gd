@@ -8,7 +8,7 @@ const EnemyEncounterModelScript = preload("res://scripts/combat/enemy_encounter_
 const BossPhaseControllerScript = preload("res://scripts/combat/boss_phase_controller.gd")
 const CombatEngineScript = preload("res://scripts/combat/combat_engine.gd")
 const ModifierRegistryScript = preload("res://scripts/modifiers/modifier_registry.gd")
-const FacetboundThemeScript = preload("res://scripts/ui/facetbound_theme.gd")
+const DiceforgeThemeScript = preload("res://scripts/ui/diceforge_theme.gd")
 
 signal combat_finished(encounter_result)
 signal combat_state_updated(combat_state)
@@ -71,7 +71,7 @@ var _meta_shard_total: int = 0
 
 
 func _ready() -> void:
-	theme = FacetboundThemeScript.build()
+	theme = DiceforgeThemeScript.build()
 	_apply_theme()
 	if roll_button != null:
 		roll_button.pressed.connect(_on_roll_pressed)
@@ -710,7 +710,7 @@ func _make_die_card(roll: Dictionary, read_only: bool = false, controls_enabled:
 		slot_pill.text = "→ Assign"
 	slot_pill.flat = true
 	slot_pill.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	slot_pill.add_theme_color_override("font_color", FacetboundThemeScript.ACCENT_GOLD)
+	slot_pill.add_theme_color_override("font_color", DiceforgeThemeScript.ACCENT_GOLD)
 	slot_pill.disabled = not can_interact
 	slot_pill.pressed.connect(func() -> void:
 		cycle_die_slot(combat_state, die_id)
@@ -1088,14 +1088,14 @@ func _apply_theme() -> void:
 	]:
 		var lbl: Label = get_node_or_null(node_path)
 		if lbl != null:
-			lbl.add_theme_color_override("font_color", FacetboundThemeScript.ACCENT_CYAN)
+			lbl.add_theme_color_override("font_color", DiceforgeThemeScript.ACCENT_CYAN)
 
 	var energy_icon: Label = get_node_or_null("RootMargin/MainRow/RightPanel/PlayerVBox/PlayerEnergyRow/EnergyIcon")
 	if energy_icon != null:
-		energy_icon.add_theme_color_override("font_color", FacetboundThemeScript.ACCENT_CYAN)
+		energy_icon.add_theme_color_override("font_color", DiceforgeThemeScript.ACCENT_CYAN)
 
 	if _shard_icon != null:
-		_shard_icon.add_theme_color_override("font_color", FacetboundThemeScript.ACCENT_GOLD)
+		_shard_icon.add_theme_color_override("font_color", DiceforgeThemeScript.ACCENT_GOLD)
 	if _shard_count_label != null:
 		_shard_count_label.theme_type_variation = &"FacetMeta"
 

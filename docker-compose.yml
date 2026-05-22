@@ -5,7 +5,7 @@ services:
       dockerfile: docker/dev/Dockerfile
       args:
         GODOT_VERSION: ${GODOT_VERSION:-4.3-stable}
-    image: facetbound-dev:${GODOT_VERSION:-4.3-stable}
+    image: diceforge-dev:${GODOT_VERSION:-4.3-stable}
     working_dir: /workspace
     volumes:
       - .:/workspace
@@ -19,14 +19,14 @@ services:
       dockerfile: docker/export/Dockerfile
       args:
         GODOT_VERSION: ${GODOT_VERSION:-4.3-stable}
-    image: facetbound-export:${GODOT_VERSION:-4.3-stable}
+    image: diceforge-export:${GODOT_VERSION:-4.3-stable}
     working_dir: /workspace
     volumes:
       - .:/workspace
     environment:
       GODOT_PROJECT_PATH: /workspace/game
       GODOT_EXPORT_PRESET: Linux/X11
-      GODOT_EXPORT_PATH: /workspace/dist/facetbound.x86_64
+      GODOT_EXPORT_PATH: /workspace/dist/diceforge.x86_64
     command: bash
 
   gui:
@@ -36,7 +36,7 @@ services:
       args:
         GODOT_VERSION: ${GODOT_VERSION:-4.3-stable}
         INSTALL_EXPORT_TEMPLATES: 0
-    image: facetbound-gui:${GODOT_VERSION:-4.3-stable}
+    image: diceforge-gui:${GODOT_VERSION:-4.3-stable}
     working_dir: /workspace
     volumes:
       - .:/workspace
@@ -60,7 +60,7 @@ services:
       args:
         GODOT_VERSION: ${GODOT_VERSION:-4.3-stable}
         INSTALL_EXPORT_TEMPLATES: 0
-    image: facetbound-gui:${GODOT_VERSION:-4.3-stable}
+    image: diceforge-gui:${GODOT_VERSION:-4.3-stable}
     container_name: diceforge-dice-tuner
     working_dir: /workspace
     volumes:
@@ -85,7 +85,7 @@ services:
       args:
         GODOT_VERSION: ${GODOT_VERSION:-4.3-stable}
         INSTALL_EXPORT_TEMPLATES: 0
-    image: facetbound-editor:${GODOT_VERSION:-4.3-stable}
+    image: diceforge-editor:${GODOT_VERSION:-4.3-stable}
     working_dir: /workspace
     volumes:
       - .:/workspace

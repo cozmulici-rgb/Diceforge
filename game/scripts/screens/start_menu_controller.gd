@@ -1,6 +1,6 @@
 extends Control
 
-const FacetboundThemeScript = preload("res://scripts/ui/facetbound_theme.gd")
+const DiceforgeThemeScript = preload("res://scripts/ui/diceforge_theme.gd")
 
 # ---- Palette (matches design) ----
 const ACCENT_BRIGHT := Color("6ebeff")
@@ -106,7 +106,7 @@ func _ready() -> void:
 
 
 func _apply_theme() -> void:
-	theme = FacetboundThemeScript.build()
+	theme = DiceforgeThemeScript.build()
 	archetype_options.theme_type_variation = &"FacetOptionButton"
 	summary_label.theme_type_variation = &"FacetBodyMuted"
 

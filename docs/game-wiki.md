@@ -1,12 +1,12 @@
-# Facetbound Wiki
+# Diceforge Wiki
 
-This wiki summarizes the current Facetbound prototype as it exists in this repository. It is meant to be a readable reference for the game's world, systems, content, and progression rather than a strict implementation contract.
+This wiki summarizes the current Diceforge prototype as it exists in this repository. It is meant to be a readable reference for the game's world, systems, content, and progression rather than a strict implementation contract.
 
 For exact rules, see [game-rules.md](/Users/vcozmulici/workspace/ai/Diceforge/docs/game-rules.md). For setup and local validation, see [setup.md](/Users/vcozmulici/workspace/ai/Diceforge/docs/setup.md).
 
 ## Overview
 
-Facetbound is a single-player, dice-driven roguelike built in Godot 4. The current prototype already supports a full loop:
+Diceforge is a single-player, dice-driven roguelike built in Godot 4. The current prototype already supports a full loop:
 
 - start a run
 - move through connected rooms
@@ -142,7 +142,7 @@ Each active die can include:
 
 ## Combat
 
-Combat logic for Facetbound is defined in [`design/combat-algorithm.md`](/Users/vcozmulici/workspace/ai/Diceforge/docs/design/combat-algorithm.md). That document is the single source of truth for turn structure, roll and sequencing phases, per-die resolution, status timing, damage rules, and determinism.
+Combat logic for Diceforge is defined in [`design/combat-algorithm.md`](/Users/vcozmulici/workspace/ai/Diceforge/docs/design/combat-algorithm.md). That document is the single source of truth for turn structure, roll and sequencing phases, per-die resolution, status timing, damage rules, and determinism.
 
 This wiki only covers content that combat consumes — encounters, enemies, bosses, and rewards — in the sections that follow.
 

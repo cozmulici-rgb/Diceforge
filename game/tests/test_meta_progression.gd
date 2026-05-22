@@ -5,7 +5,7 @@ const MetaProgressionControllerScript = preload("res://scripts/progression/meta_
 const MetaStateScript = preload("res://scripts/progression/meta_state.gd")
 const PersistenceServiceScript = preload("res://scripts/persistence/persistence_service.gd")
 
-const TEST_BASE_PATH := "user://facetbound_test_meta"
+const TEST_BASE_PATH := "user://diceforge_test_meta"
 
 
 func run() -> Array[String]:

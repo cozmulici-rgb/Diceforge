@@ -113,8 +113,8 @@ make export
 
 This command runs verification first, then exports:
 
-- `dist/facetbound.x86_64`
-- `dist/facetbound.pck`
+- `dist/diceforge.x86_64`
+- `dist/diceforge.pck`
 
 ### `make screenshots`
 
@@ -143,7 +143,7 @@ The current capture sequence includes:
 New contributors can confirm the local setup with this sequence:
 
 1. Run `make help` and confirm the command list is printed.
-2. Run `make test` and confirm the full Facetbound headless suite passes, including persistence, progression, modifiers, and Daily Void tests.
+2. Run `make test` and confirm the full Diceforge headless suite passes, including persistence, progression, modifiers, and Daily Void tests.
 3. Run `make verify` and confirm project import, smoke startup, and the shared test harness all succeed.
 4. Run `make export` and confirm both Linux export files appear under `dist/`.
 5. Run `make screenshots` and confirm PNG screenshots appear under `dist/screenshots/`.

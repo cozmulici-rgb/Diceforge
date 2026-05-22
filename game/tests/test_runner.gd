@@ -34,7 +34,7 @@ var _failure_count := 0
 
 
 func _initialize() -> void:
-	print("Running Facetbound headless tests")
+	print("Running Diceforge headless tests")
 
 	for path in TEST_SCRIPT_PATHS:
 		var test_name: String = path.get_file().get_basename()
@@ -76,8 +76,8 @@ func _initialize() -> void:
 			push_error("FAIL %s: %s" % [test_name, failure])
 
 	if _failure_count == 0:
-		print("All Facetbound tests passed")
+		print("All Diceforge tests passed")
 	else:
-		push_error("%d Facetbound test assertion(s) failed" % _failure_count)
+		push_error("%d Diceforge test assertion(s) failed" % _failure_count)
 
 	quit(_failure_count)

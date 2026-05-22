@@ -20,7 +20,7 @@ This PR introduces a comprehensive UI theming system and automated screenshot ca
 - Visual updates to all 7 game screens
 
 ### Modified Files
-- `game/scripts/ui/facetbound_theme.gd` - NEW: 328-line theme system
+- `game/scripts/ui/diceforge_theme.gd` - NEW: 328-line theme system
 - `docs/game-wiki.md` - NEW: Complete game documentation
 - `scripts/take_screenshots.sh` - Enhanced with UI automation
 - All screen controllers updated to apply theme
@@ -32,7 +32,7 @@ This PR introduces a comprehensive UI theming system and automated screenshot ca
 ### Strengths
 
 #### 1. Theme System Architecture
-**Location:** `game/scripts/ui/facetbound_theme.gd:1-329`
+**Location:** `game/scripts/ui/diceforge_theme.gd:1-329`
 
 - Well-organized static factory pattern
 - Clear color palette with semantic naming
@@ -62,14 +62,14 @@ const TEXT_PRIMARY := Color("e7e3da")
 
 All screen controllers follow the same pattern:
 ```gdscript
-const FacetboundThemeScript = preload("res://scripts/ui/facetbound_theme.gd")
+const DiceforgeThemeScript = preload("res://scripts/ui/diceforge_theme.gd")
 
 func _ready() -> void:
     _apply_theme()
     # ... other setup
 
 func _apply_theme() -> void:
-    theme = FacetboundThemeScript.build()
+    theme = DiceforgeThemeScript.build()
     panel.theme_type_variation = &"FacetCard"
     # ... apply variations
 ```
@@ -85,7 +85,7 @@ func _apply_theme() -> void:
 
 #### 1. Theme System - Magic Numbers
 
-**Location:** `game/scripts/ui/facetbound_theme.gd:82-96`
+**Location:** `game/scripts/ui/diceforge_theme.gd:82-96`
 
 **Issue:** Many hardcoded values make maintenance difficult.
 
@@ -111,7 +111,7 @@ var panel := _make_panel_style(BG_PANEL, ACCENT_GOLD_DIM, BORDER_THIN,
 
 #### 2. Inline Color Definitions
 
-**Location:** `game/scripts/ui/facetbound_theme.gd:86,92,95,98`
+**Location:** `game/scripts/ui/diceforge_theme.gd:86,92,95,98`
 
 **Issue:** Some colors use inline strings instead of constants.
 
@@ -137,7 +137,7 @@ const BG_STATUS := Color("121a20")
 ```gdscript
 # Called every time a screen loads
 func _apply_theme() -> void:
-    theme = FacetboundThemeScript.build()  # New Theme object created
+    theme = DiceforgeThemeScript.build()  # New Theme object created
 ```
 
 **Recommendation:** Implement singleton pattern:
@@ -146,14 +146,14 @@ func _apply_theme() -> void:
 # In app_root.gd or new theme_manager.gd autoload
 static var _global_theme: Theme = null
 
-static func get_facetbound_theme() -> Theme:
+static func get_diceforge_theme() -> Theme:
     if _global_theme == null:
-        _global_theme = FacetboundThemeScript.build()
+        _global_theme = DiceforgeThemeScript.build()
     return _global_theme
 
 # In controllers
 func _apply_theme() -> void:
-    theme = AppRoot.get_facetbound_theme()
+    theme = AppRoot.get_diceforge_theme()
     panel.theme_type_variation = &"FacetCard"
 ```
 
@@ -165,7 +165,7 @@ func _apply_theme() -> void:
 
 ```gdscript
 func _apply_theme() -> void:
-    theme = FacetboundThemeScript.build()
+    theme = DiceforgeThemeScript.build()
     panel.theme_type_variation = &"FacetCard"  # Could fail if panel is null
     title_label.theme_type_variation = &"FacetTitle"
 ```
@@ -176,7 +176,7 @@ func _apply_theme() -> void:
     if not is_node_ready():
         await ready
 
-    theme = FacetboundThemeScript.build()
+    theme = DiceforgeThemeScript.build()
 
     if panel:
         panel.theme_type_variation = &"FacetCard"
@@ -314,7 +314,7 @@ The screenshot script:
 ### Priority 1: High Impact, Low Effort
 
 1. **Add theme constants for spacing and sizing**
-   - Location: `game/scripts/ui/facetbound_theme.gd`
+   - Location: `game/scripts/ui/diceforge_theme.gd`
    - Impact: Improves maintainability significantly
    - Effort: 30 minutes
 
@@ -324,7 +324,7 @@ The screenshot script:
    - Effort: 15 minutes
 
 3. **Extract inline color definitions to constants**
-   - Location: `game/scripts/ui/facetbound_theme.gd`
+   - Location: `game/scripts/ui/diceforge_theme.gd`
    - Impact: Consistency and maintainability
    - Effort: 20 minutes
 

@@ -19,4 +19,4 @@ offset_bottom = 96.0
 
 [node name="StatusLabel" type="Label" parent="HUD/MarginContainer"]
 layout_mode = 2
-text = "Booting Facetbound..."
+text = "Booting Diceforge..."

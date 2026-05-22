@@ -31,7 +31,7 @@ cd "$GAME_PATH"
 echo "Importing project assets for headless capture"
 godot --headless --path . --import
 
-echo "Launching Facetbound from ${GAME_PATH}"
+echo "Launching Diceforge from ${GAME_PATH}"
 godot --display-driver x11 --rendering-driver opengl3 --path . &
 GODOT_PID=$!
 
@@ -56,7 +56,7 @@ press_key() {
 }
 
 focus_game() {
-    xdotool search --name "Facetbound" windowfocus --sync 2>/dev/null || true
+    xdotool search --name "Diceforge" windowfocus --sync 2>/dev/null || true
     sleep 0.3
 }
 

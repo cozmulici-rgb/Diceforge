@@ -9,7 +9,7 @@ The fix is a global Escape handler that returns the player to the start menu fro
 ## 2. Goals
 
 - Pressing Escape during a run (`exploration`, `combat`, `reward`, `forge`) opens a confirmation dialog. Confirming returns to the start menu via the existing `_show_start_menu()` flow.
-- Pressing Escape on the start menu opens a "Quit Facetbound?" confirmation. Confirming calls `get_tree().quit()`.
+- Pressing Escape on the start menu opens a "Quit Diceforge?" confirmation. Confirming calls `get_tree().quit()`.
 - Pressing Escape on the progression (run-complete) screen returns to the start menu immediately, with no dialog. The run is already over and there is nothing to lose.
 - Pressing Escape while a confirmation dialog is already open closes the dialog (Godot's built-in `ConfirmationDialog` behavior — no extra code).
 - Cover the new behavior with deterministic tests in `game/tests/`.
@@ -67,7 +67,7 @@ func _handle_escape() -> void:
         "progression":
             _show_start_menu()
         "start_menu":
-            _show_confirm("Quit Facetbound?", "", _on_quit_confirmed)
+            _show_confirm("Quit Diceforge?", "", _on_quit_confirmed)
         "exploration", "combat", "reward", "forge":
             _show_confirm(
                 "Return to main menu?",
@@ -119,7 +119,7 @@ Using `ConfirmationDialog` (a built-in `AcceptDialog` subclass) gets us:
 
 | Current screen | Escape result |
 |---|---|
-| `start_menu` | "Quit Facetbound?" confirm → `get_tree().quit()` |
+| `start_menu` | "Quit Diceforge?" confirm → `get_tree().quit()` |
 | `exploration` | "Return to main menu?" confirm → `_show_start_menu()` |
 | `combat` | "Return to main menu?" confirm → `_show_start_menu()` |
 | `reward` | "Return to main menu?" confirm → `_show_start_menu()` |
@@ -131,7 +131,7 @@ Using `ConfirmationDialog` (a built-in `AcceptDialog` subclass) gets us:
 
 `game/tests/test_escape_to_main_menu.gd` covers:
 
-1. Start menu + Escape → confirm dialog visible, title is "Quit Facetbound?".
+1. Start menu + Escape → confirm dialog visible, title is "Quit Diceforge?".
 2. Start menu + Escape + cancel → dialog hidden, still on start menu, no quit.
 3. Exploration + Escape → confirm dialog visible.
 4. Exploration + Escape + confirm → start menu visible, exploration screen freed.

@@ -26,7 +26,7 @@ test:
 	$(DOCKER_COMPOSE) run --rm export bash /workspace/scripts/run-godot-tests.sh
 
 export:
-	$(DOCKER_COMPOSE) run --rm export bash -lc "bash /workspace/scripts/verify-headless-build.sh && mkdir -p /workspace/dist && godot --headless --path /workspace/game --export-release \"Linux/X11\" /workspace/dist/facetbound.x86_64"
+	$(DOCKER_COMPOSE) run --rm export bash -lc "bash /workspace/scripts/verify-headless-build.sh && mkdir -p /workspace/dist && godot --headless --path /workspace/game --export-release \"Linux/X11\" /workspace/dist/diceforge.x86_64"
 
 screenshots:
 	$(DOCKER_COMPOSE) run --rm export bash /workspace/scripts/take_screenshots.sh

@@ -1,6 +1,6 @@
 extends Control
 
-const FacetboundThemeScript = preload("res://scripts/ui/facetbound_theme.gd")
+const DiceforgeThemeScript = preload("res://scripts/ui/diceforge_theme.gd")
 
 signal forge_complete()
 
@@ -170,7 +170,7 @@ func _to_string_array(values: Array) -> Array[String]:
 
 
 func _apply_theme() -> void:
-	theme = FacetboundThemeScript.build()
+	theme = DiceforgeThemeScript.build()
 	title_label.theme_type_variation = &"FacetTitle"
 	summary_label.theme_type_variation = &"FacetSubtitle"
 	dice_label.theme_type_variation = &"FacetBodyMuted"

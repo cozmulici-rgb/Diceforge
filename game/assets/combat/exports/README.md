@@ -1,6 +1,6 @@
 # Diceforge Combat Screen Assets
 
-Generated combat art plates for the Facetbound combat screen.
+Generated combat art plates for the Diceforge combat screen.
 
 ## Backgrounds
 - `bg-combat-void-dais-v1.png` — primary combat backdrop with an obsidian ritual dais and restrained side detail

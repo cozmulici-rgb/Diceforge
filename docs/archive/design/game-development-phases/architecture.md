@@ -8,7 +8,7 @@ This design defines the target architecture needed to deliver the six game devel
 
 ```mermaid
 graph TD
-    Player["Player<br/>Modified: interacts with all gameplay phases"] --> Game["Facetbound Godot Client<br/>Modified: grows from bootstrap into playable game"]
+    Player["Player<br/>Modified: interacts with all gameplay phases"] --> Game["Diceforge Godot Client<br/>Modified: grows from bootstrap into playable game"]
     Designer["Developer / Content Author<br/>Modified: creates content definitions and balance data"] --> Game
     Game --> LocalSave["Local Save Storage<br/>Created: run and meta progression persistence"]
     Game --> BuildFlow["Local Verify/Export Tooling<br/>Unchanged: Docker + make + headless verification"]

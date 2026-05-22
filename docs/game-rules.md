@@ -1,12 +1,12 @@
-# Facetbound Prototype Rules
+# Diceforge Prototype Rules
 
-This document describes the current gameplay rules for the Facetbound prototype in this repository. It focuses on the rules that are implemented now, with light references to intended structure where that helps explain the loop.
+This document describes the current gameplay rules for the Diceforge prototype in this repository. It focuses on the rules that are implemented now, with light references to intended structure where that helps explain the loop.
 
 For combat logic specifically — turn structure, per-die resolution, status timing, determinism rules — see [`docs/design/combat-algorithm.md`](/Users/vcozmulici/workspace/ai/Diceforge/docs/design/combat-algorithm.md). That doc is the target combat specification; section 9 of it summarizes how the target spec differs from the prototype rules described here.
 
 ## 1. Objective
 
-Facetbound is a single-player dice-driven roguelike prototype. The player enters a run, clears rooms, defeats bosses, claims rewards, mutates dice in the forge, and either dies or completes the current run path.
+Diceforge is a single-player dice-driven roguelike prototype. The player enters a run, clears rooms, defeats bosses, claims rewards, mutates dice in the forge, and either dies or completes the current run path.
 
 At the end of a run, the player earns Echo Shards and may unlock additional parts for future runs.
 

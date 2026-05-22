@@ -35,7 +35,7 @@ func _init(catalog, base_path_override: String = "") -> void:
 	_reward_controller = RewardControllerScript.new(catalog)
 	_forge_assembly_system = ForgeAssemblySystemScript.new(catalog)
 	_dungeon_generator = DungeonGeneratorScript.new(catalog)
-	var storage_base_path := base_path_override if base_path_override != "" else "user://facetbound"
+	var storage_base_path := base_path_override if base_path_override != "" else "user://diceforge"
 	persistence_service = PersistenceServiceScript.new(catalog, storage_base_path)
 	meta_progression_controller = MetaProgressionControllerScript.new(catalog)
 	daily_void_mode_adapter = DailyVoidModeAdapterScript.new(catalog)

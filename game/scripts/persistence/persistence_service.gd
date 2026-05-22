@@ -9,7 +9,7 @@ var save_schema
 var base_path: String
 
 
-func _init(catalog = null, base_path_override: String = "user://facetbound") -> void:
+func _init(catalog = null, base_path_override: String = "user://diceforge") -> void:
 	content_catalog = catalog
 	save_schema = SaveSchemaScript.new()
 	base_path = base_path_override.trim_suffix("/")

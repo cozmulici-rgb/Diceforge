@@ -4,7 +4,7 @@ const ContentCatalogScript = preload("res://scripts/content/content_catalog.gd")
 const GameStateCoordinatorScript = preload("res://scripts/core/game_state_coordinator.gd")
 const PersistenceServiceScript = preload("res://scripts/persistence/persistence_service.gd")
 
-const TEST_BASE_PATH := "user://facetbound_test_persistence"
+const TEST_BASE_PATH := "user://diceforge_test_persistence"
 
 
 func run() -> Array[String]:

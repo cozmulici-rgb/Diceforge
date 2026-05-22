@@ -1,5 +1,4 @@
-**Game Title Idea: "Facetbound: Echoes of the Void"**  
-(Or alternatives: "Diceforge Legacy", "RuneRoller Rogues", "Synergy Dice Descent". I like Facetbound because it evokes swapping faces + binding powerful synergies in a cursed, ever-shifting dungeon.)
+**Game Title: "Diceforge: Echoes of the Void"**
 
 ### Core Pitch (30-second hook)
 You’re a “Facetwalker” — a rogue dice-smith trapped in the ever-rewinding Void Labyrinth. Every run you scavenge dice **Bodies**, **Faces**, and **Runes**, then forge them into living dice that literally roll your actions in combat. Roll a perfect 6 on a flaming skull face with an “Explosion” rune and the entire screen erupts. Miss-roll and your own dice backfire hilariously. It’s Dicey Dungeons meets Slay the Spire meets Binding of Isaac, but the dice are your character, your spells, and your weapons all at once.

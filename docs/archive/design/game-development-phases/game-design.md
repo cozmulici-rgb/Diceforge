@@ -1,10 +1,10 @@
-# Game Design Document: Facetbound
+# Game Design Document: Diceforge
 
 ## 1. Product Summary
 
 ### Working Title
 
-Facetbound: Echoes of the Void
+Diceforge: Echoes of the Void
 
 ### Genre
 

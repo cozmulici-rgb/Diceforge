@@ -1,7 +1,7 @@
 extends Control
 
 const RoomGraphScript = preload("res://scripts/exploration/room_graph.gd")
-const FacetboundThemeScript = preload("res://scripts/ui/facetbound_theme.gd")
+const DiceforgeThemeScript = preload("res://scripts/ui/diceforge_theme.gd")
 const MapBackdropTexture = preload("res://assets/exploration/exports/map-backdrop-v1.png")
 const MapOverlayTexture = preload("res://assets/exploration/exports/map-overlay-v1.png")
 
@@ -89,7 +89,7 @@ func setup(coordinator, catalog, session) -> void:
 
 
 func _apply_theme() -> void:
-	theme = FacetboundThemeScript.build()
+	theme = DiceforgeThemeScript.build()
 	primary_action_button.theme_type_variation = &"FacetPrimaryButton"
 	sidebar_panel.theme_type_variation = &"FacetCard"
 	map_shell.theme_type_variation = &"FacetCard"

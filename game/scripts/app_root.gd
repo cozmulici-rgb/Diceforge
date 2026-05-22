@@ -59,7 +59,7 @@ func _show_exploration(run_session) -> void:
 	exploration_screen.setup(game_state_coordinator, content_catalog, run_session)
 	exploration_screen.session_updated.connect(_on_session_updated)
 	exploration_screen.encounter_started.connect(_on_encounter_started)
-	print("Facetbound app root initialized with session %s" % run_session.session_id)
+	print("Diceforge app root initialized with session %s" % run_session.session_id)
 
 
 func _show_combat(combat_state) -> void:
@@ -292,7 +292,7 @@ func _handle_escape() -> void:
 		"return_to_menu":
 			_show_start_menu()
 		"show_quit_confirm":
-			_show_confirm("Quit Facetbound?", "", _on_quit_confirmed)
+			_show_confirm("Quit Diceforge?", "", _on_quit_confirmed)
 		"show_return_confirm":
 			_show_confirm(
 				"Return to main menu?",

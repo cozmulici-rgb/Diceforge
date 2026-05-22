@@ -427,7 +427,7 @@ const ContentCatalogScript = preload("res://scripts/content/content_catalog.gd")
 const GameStateCoordinatorScript = preload("res://scripts/core/game_state_coordinator.gd")
 const PersistenceServiceScript = preload("res://scripts/persistence/persistence_service.gd")
 
-const TEST_BASE_PATH := "user://facetbound_test_named_runs"
+const TEST_BASE_PATH := "user://diceforge_test_named_runs"
 
 
 func run() -> Array[String]:
@@ -860,7 +860,7 @@ Create `game/scripts/screens/continue_runs_dialog.gd`:
 class_name ContinueRunsDialog
 extends AcceptDialog
 
-const FacetboundThemeScript = preload("res://scripts/ui/facetbound_theme.gd")
+const DiceforgeThemeScript = preload("res://scripts/ui/diceforge_theme.gd")
 
 signal resume_requested(slot_id: String)
 signal rename_requested(slot_id: String, new_name: String)
@@ -885,7 +885,7 @@ func _init() -> void:
 
 
 func _ready() -> void:
-	theme = FacetboundThemeScript.build()
+	theme = DiceforgeThemeScript.build()
 	var root := VBoxContainer.new()
 	root.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	root.size_flags_vertical = Control.SIZE_EXPAND_FILL

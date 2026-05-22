@@ -201,7 +201,7 @@ func _handle_escape() -> void:
 		"return_to_menu":
 			_show_start_menu()
 		"show_quit_confirm":
-			_show_confirm("Quit Facetbound?", "", _on_quit_confirmed)
+			_show_confirm("Quit Diceforge?", "", _on_quit_confirmed)
 		"show_return_confirm":
 			_show_confirm(
 				"Return to main menu?",
@@ -294,7 +294,7 @@ Then open `http://localhost:6080/vnc.html` in a browser.
 
 1. Wait for the start menu to render.
 2. Press Escape.
-3. Expected: a "Quit Facetbound?" confirmation dialog appears.
+3. Expected: a "Quit Diceforge?" confirmation dialog appears.
 4. Click Cancel. Expected: dialog closes, still on the start menu.
 5. Press Escape again. Expected: same dialog reappears.
 6. Click OK. Expected: the game window closes.

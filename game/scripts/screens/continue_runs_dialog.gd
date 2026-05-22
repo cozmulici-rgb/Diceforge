@@ -1,7 +1,7 @@
 class_name ContinueRunsDialog
 extends AcceptDialog
 
-const FacetboundThemeScript = preload("res://scripts/ui/facetbound_theme.gd")
+const DiceforgeThemeScript = preload("res://scripts/ui/diceforge_theme.gd")
 
 signal resume_requested(slot_id: String)
 signal rename_requested(slot_id: String, new_name: String)
@@ -26,7 +26,7 @@ func _init() -> void:
 
 
 func _ready() -> void:
-	theme = FacetboundThemeScript.build()
+	theme = DiceforgeThemeScript.build()
 	var root := VBoxContainer.new()
 	root.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	root.size_flags_vertical = Control.SIZE_EXPAND_FILL

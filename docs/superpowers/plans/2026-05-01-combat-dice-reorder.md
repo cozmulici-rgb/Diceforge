@@ -248,7 +248,7 @@ Expected output includes:
 ```
 PASS test_combat_dice_reorder
 ```
-and the overall summary line `All Facetbound tests passed`.
+and the overall summary line `All Diceforge tests passed`.
 
 If any other test now fails, investigate before proceeding — the change is additive and should not break existing assertions.
 
@@ -418,7 +418,7 @@ When the die is unassigned, `current_index` stays at `-1`, so `next_index` becom
 
 Run: `make test`
 
-Expected: `PASS test_combat_dice_reorder` and `All Facetbound tests passed`.
+Expected: `PASS test_combat_dice_reorder` and `All Diceforge tests passed`.
 
 - [ ] **Step 3: Commit Task 3 + Task 4 together**
 
@@ -525,7 +525,7 @@ func _test_swap_propagates_to_engine_queue() -> Array[String]:
 
 Run: `make test`
 
-Expected: `PASS test_combat_dice_reorder` and `All Facetbound tests passed`. This test should pass on first run because Tasks 2 and 4 already wired the swap through. If it fails with "engine resolution queue should differ after swap" or "both orders are <X>", the swap did not propagate — go back and verify `move_die_in_order` mutates `state.roll_results` in place, not a duplicate.
+Expected: `PASS test_combat_dice_reorder` and `All Diceforge tests passed`. This test should pass on first run because Tasks 2 and 4 already wired the swap through. If it fails with "engine resolution queue should differ after swap" or "both orders are <X>", the swap did not propagate — go back and verify `move_die_in_order` mutates `state.roll_results` in place, not a duplicate.
 
 - [ ] **Step 4: Commit**
 
@@ -562,7 +562,7 @@ In `_make_die_card`, locate the trailing block (lines 498–504):
 		slot_lbl.text = "→ %s" % _format_assigned_slot(assigned_slot_id)
 		slot_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		slot_lbl.theme_type_variation = &"FacetMeta"
-		slot_lbl.add_theme_color_override("font_color", FacetboundThemeScript.ACCENT_GOLD)
+		slot_lbl.add_theme_color_override("font_color", DiceforgeThemeScript.ACCENT_GOLD)
 		vbox.add_child(slot_lbl)
 
 	return card
@@ -601,7 +601,7 @@ Replace it with:
 		slot_pill.text = "→ Assign"
 	slot_pill.flat = true
 	slot_pill.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	slot_pill.add_theme_color_override("font_color", FacetboundThemeScript.ACCENT_GOLD)
+	slot_pill.add_theme_color_override("font_color", DiceforgeThemeScript.ACCENT_GOLD)
 	slot_pill.disabled = not is_assignment_phase
 	slot_pill.pressed.connect(func() -> void:
 		cycle_die_slot(combat_state, die_id)
@@ -632,7 +632,7 @@ The new row is added unconditionally (not gated on `is_assigned`), because the u
 
 Run: `make test`
 
-Expected: `All Facetbound tests passed`. The unit test for `_make_die_card` does not exist (UI), so the only signal here is the rest of the suite still passing.
+Expected: `All Diceforge tests passed`. The unit test for `_make_die_card` does not exist (UI), so the only signal here is the rest of the suite still passing.
 
 - [ ] **Step 3: Run the headless verification gate**
 
@@ -676,7 +676,7 @@ EOF
 
 After all tasks are complete:
 
-- [ ] **Run the full headless test suite once more**: `make test` → `All Facetbound tests passed`
+- [ ] **Run the full headless test suite once more**: `make test` → `All Diceforge tests passed`
 - [ ] **Confirm `make verify` is green**: `make verify` → exits 0
 - [ ] **Confirm screenshots show the new controls**: open `dist/screenshots/05_combat_action.png` and verify the three dice cards each have a `◀ / slot pill / ▶` row.
 - [ ] **Push the branch and update the existing PR** (PR #4 on `feat/ui-theme-and-screenshots`):

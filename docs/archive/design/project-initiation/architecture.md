@@ -1,6 +1,6 @@
 # Architecture Design: Project Initiation
 
-**Ticket:** Define the initial game stack and Docker-based project bootstrapping for the Facetbound prototype
+**Ticket:** Define the initial game stack and Docker-based project bootstrapping for the Diceforge prototype
 **Date:** 2026-03-21
 
 ## Context Diagram
@@ -20,7 +20,7 @@ graph TD
 
 ```mermaid
 graph TD
-    subgraph Repo["Facetbound Repository"]
+    subgraph Repo["Diceforge Repository"]
         GameProject["Godot 4 Project [created]"]
         Tooling["Docker/Compose/Make Tooling [created]"]
         Docs["Pipeline Docs [modified]"]

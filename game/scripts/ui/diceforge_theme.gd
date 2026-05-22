@@ -1,4 +1,4 @@
-class_name FacetboundTheme
+class_name DiceforgeTheme
 extends Node
 
 const BG_DEEP := Color("0b0f14")

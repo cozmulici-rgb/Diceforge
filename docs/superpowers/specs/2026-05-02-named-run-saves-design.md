@@ -76,7 +76,7 @@ defeat).
 ### Slot identity
 
 - `slot_id` is stable, internal, and used as the JSON filename:
-  `user://facetbound/runs/<slot_id>.json`.
+  `user://diceforge/runs/<slot_id>.json`.
 - Generation: `run_<unix>_<archetype_id_short>` where `unix` is the creation
   time in seconds and `archetype_id_short` is the archetype id with `-`
   replaced by `_` and truncated to 16 characters. Collisions are avoided by
@@ -175,7 +175,7 @@ parsed payload, falling back to `slot_id` for legacy/corrupt files.
 ### Continue popup (new)
 
 - `game/scripts/screens/continue_runs_dialog.gd` — extends
-  `AcceptDialog` (or `Window`); themed via `FacetboundTheme`.
+  `AcceptDialog` (or `Window`); themed via `DiceforgeTheme`.
 - Configured via `configure(summaries: Array)`.
 - Emits:
   - `resume_requested(slot_id: String)`

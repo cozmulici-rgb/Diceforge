@@ -1,6 +1,6 @@
 # ADRs: Project Initiation
 
-**Ticket:** Define the initial game stack and Docker-based project bootstrapping for the Facetbound prototype
+**Ticket:** Define the initial game stack and Docker-based project bootstrapping for the Diceforge prototype
 **Date:** 2026-03-21
 
 ## ADR-001: Use Godot 4 with GDScript for the Prototype

@@ -1,6 +1,6 @@
-# Facetbound
+# Diceforge
 
-Facetbound is a Godot 4 prototype for a 2D dice-driven roguelike. The repository now includes a playable end-to-end prototype with exploration, deterministic dice combat, rewards, forge mutations, floor progression, persistence, meta progression, Daily Void mode, and a Docker-based local build flow for headless validation and Linux desktop export.
+Diceforge is a Godot 4 prototype for a 2D dice-driven roguelike. The repository now includes a playable end-to-end prototype with exploration, deterministic dice combat, rewards, forge mutations, floor progression, persistence, meta progression, Daily Void mode, and a Docker-based local build flow for headless validation and Linux desktop export.
 
 ## Stack
 
@@ -40,7 +40,7 @@ The project can be executed on Windows through Docker Desktop. The simplest opti
 - `make test`
   `docker compose run --rm export bash /workspace/scripts/run-godot-tests.sh`
 - `make export`
-  `docker compose run --rm export bash -lc "bash /workspace/scripts/verify-headless-build.sh && mkdir -p /workspace/dist && godot --headless --path /workspace/game --export-release \"Linux/X11\" /workspace/dist/facetbound.x86_64"`
+  `docker compose run --rm export bash -lc "bash /workspace/scripts/verify-headless-build.sh && mkdir -p /workspace/dist && godot --headless --path /workspace/game --export-release \"Linux/X11\" /workspace/dist/diceforge.x86_64"`
 - `make screenshots`
   `docker compose run --rm export bash /workspace/scripts/take_screenshots.sh`
 
@@ -50,7 +50,7 @@ The project can be executed on Windows through Docker Desktop. The simplest opti
 2. Clone the repository into your Windows user directory or inside your WSL home directory.
 3. Open the repository in `PowerShell`, `Windows Terminal`, or a WSL shell.
 4. Run `docker compose run --rm export bash /workspace/scripts/run-godot-tests.sh` to confirm the environment works.
-5. Run `docker compose run --rm export bash -lc "bash /workspace/scripts/verify-headless-build.sh && mkdir -p /workspace/dist && godot --headless --path /workspace/game --export-release \"Linux/X11\" /workspace/dist/facetbound.x86_64"` to build the Linux desktop artifact.
+5. Run `docker compose run --rm export bash -lc "bash /workspace/scripts/verify-headless-build.sh && mkdir -p /workspace/dist && godot --headless --path /workspace/game --export-release \"Linux/X11\" /workspace/dist/diceforge.x86_64"` to build the Linux desktop artifact.
 
 ### Windows notes
 
@@ -70,7 +70,7 @@ You can also execute the project directly from the Godot editor without Docker.
 4. Open the imported project.
 5. Press `F5` or click `Run Project`.
 
-The configured startup scene is `res://scenes/app_root.tscn`, so the game boots into the normal Facetbound flow automatically.
+The configured startup scene is `res://scenes/app_root.tscn`, so the game boots into the normal Diceforge flow automatically.
 
 ### Native CLI launch
 
@@ -161,8 +161,8 @@ This boots `res://scenes/test_dice_tuner.tscn` instead of the normal game flow, 
 
 After a successful `make export`, the repository produces:
 
-- `dist/facetbound.x86_64`
-- `dist/facetbound.pck`
+- `dist/diceforge.x86_64`
+- `dist/diceforge.pck`
 
 ## Notes
 

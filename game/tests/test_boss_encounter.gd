@@ -6,7 +6,7 @@ const GameStateCoordinatorScript = preload("res://scripts/core/game_state_coordi
 const PersistenceServiceScript = preload("res://scripts/persistence/persistence_service.gd")
 const RunSessionScript = preload("res://scripts/core/run_session.gd")
 
-const _TEST_BASE_PATH := "user://facetbound_test_boss"
+const _TEST_BASE_PATH := "user://diceforge_test_boss"
 
 
 func run() -> Array[String]:
@@ -51,7 +51,7 @@ func run() -> Array[String]:
 	if bool(boss_result.get("run_complete", false)):
 		failures.append("the first floor boss should not mark the entire run complete")
 
-	var coordinator = GameStateCoordinatorScript.new(catalog, "user://facetbound_test_boss")
+	var coordinator = GameStateCoordinatorScript.new(catalog, "user://diceforge_test_boss")
 	var session = coordinator.create_run_session("starter_facetwalker")
 	if session == null or session is Dictionary:
 		failures.append("boss encounter completion test requires a valid run session")
