@@ -5,6 +5,12 @@
 game/.godot/
 dist/*
 !dist/.gitkeep
+game/screenshot_*.png
+game/screenshot_*.png.import
+game/test_*.png
+game/test_*.png.import
+game/tuner_screenshot.png
+game/tuner_screenshot.png.import
 tmp/
 .claude/
 logs/

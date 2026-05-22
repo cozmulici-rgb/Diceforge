@@ -60,6 +60,7 @@ signal combat_state_updated(combat_state)
 @onready var _log_header: Label = $RootMargin/MainRow/RightPanel/PlayerVBox/LogHeader
 @onready var _log_scroll: ScrollContainer = $RootMargin/MainRow/RightPanel/PlayerVBox/LogScroll
 @onready var _combat_log_list: VBoxContainer = $RootMargin/MainRow/RightPanel/PlayerVBox/LogScroll/CombatLogList
+@onready var _dice_roll_overlay = $DiceRollOverlay
 
 var content_catalog
 var dice_model = DiceModelScript.new()
@@ -76,6 +77,8 @@ func _ready() -> void:
 		roll_button.pressed.connect(_on_roll_pressed)
 	if resolve_button != null:
 		resolve_button.pressed.connect(_on_resolve_pressed)
+	if _dice_roll_overlay != null:
+		_dice_roll_overlay.roll_complete.connect(_on_dice_roll_complete)
 	_render()
 
 
@@ -1063,6 +1066,13 @@ func _on_roll_pressed() -> void:
 		if slot_id != "":
 			assign_die_to_action(combat_state, str((roll as Dictionary).get("die_id", "")), slot_id)
 	combat_state_updated.emit(combat_state)
+	if _dice_roll_overlay != null:
+		_dice_roll_overlay.start_roll(combat_state.roll_results)
+	else:
+		_render()
+
+
+func _on_dice_roll_complete() -> void:
 	_render()
 
 
@@ -1283,6 +1293,7 @@ func _build_roll_results_from_engine(rolled_faces: Array) -> Array:
 			"face_id": str(face.get("face_id", "")),
 			"face_family": str(face.get("face_family", "utility")),
 			"face_label": str(face.get("face_label", face.get("face_id", ""))),
+			"body_id": str(face.get("body_id", "standard_d6")),
 			"assigned_slot_id": "",
 		})
 	return results

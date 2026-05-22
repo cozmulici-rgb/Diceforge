@@ -102,6 +102,8 @@ godot --path game res://scenes/app_root.tscn
   Runs headless Godot validation against the project in `game/`, including the deterministic gameplay test harness.
 - `make gui`
   Runs the game in Docker with a browser-viewable noVNC session at `http://localhost:6080/vnc.html`.
+- `docker compose up --build dice-tuner`
+  Runs the dice roll overlay tuner scene (`res://scenes/test_dice_tuner.tscn`) in Docker with a browser-viewable noVNC session at `http://localhost:6082/vnc.html`. Useful for side-by-side debugging of the mesh and textured dice render paths.
 - `make test`
   Runs the deterministic Godot-native gameplay tests headlessly in the export container.
 - `make export`
@@ -124,6 +126,20 @@ http://localhost:6080/vnc.html
 ```
 
 This launches Godot inside Docker under `Xvfb`, publishes the virtual display through `x11vnc`, and serves it to the browser with `noVNC`.
+
+To launch the dice roll overlay tuner the same way, use the `dice-tuner` service:
+
+```bash
+docker compose up --build dice-tuner
+```
+
+Then open:
+
+```text
+http://localhost:6082/vnc.html
+```
+
+This boots `res://scenes/test_dice_tuner.tscn` instead of the normal game flow, giving you the side-by-side mesh vs. textured dice debug UI.
 
 ## Current Feature Set
 
@@ -157,4 +173,4 @@ After a successful `make export`, the repository produces:
 - The shared headless test harness covers content validation, exploration, combat, bosses, forge flow, persistence, progression, modifiers, and Daily Void mode.
 - Docker screenshot capture is available through `make screenshots` for environments that cannot run a native Godot editor or export locally.
 
-More setup detail is in [setup.md](/Users/vcozmulici/workspace/ai/Diceforge/docs/setup.md). Gameplay rules are summarized in [game-rules.md](/Users/vcozmulici/workspace/ai/Diceforge/docs/game-rules.md).
+More setup detail is in [setup.md](/Users/vcozmulici/workspace/ai/Diceforge/docs/setup.md). Gameplay rules are summarized in [game-rules.md](/Users/vcozmulici/workspace/ai/Diceforge/docs/game-rules.md). The 3D dice roll overlay's ballistic physics model is documented in [dice-roll-physics.md](/Users/vcozmulici/workspace/ai/Diceforge/docs/design/dice-roll-physics.md).

@@ -52,3 +52,61 @@ services:
     stdin_open: true
     tty: true
     command: bash /workspace/scripts/run-browser-game.sh
+
+  dice-tuner:
+    build:
+      context: .
+      dockerfile: docker/export/Dockerfile
+      args:
+        GODOT_VERSION: ${GODOT_VERSION:-4.3-stable}
+        INSTALL_EXPORT_TEMPLATES: 0
+    image: facetbound-gui:${GODOT_VERSION:-4.3-stable}
+    container_name: diceforge-dice-tuner
+    working_dir: /workspace
+    volumes:
+      - .:/workspace
+    environment:
+      GODOT_PROJECT_PATH: /workspace/game
+      GODOT_MAIN_SCENE: res://scenes/test_dice_tuner.tscn
+      DISPLAY_NUM: ":99"
+      SCREEN_GEOMETRY: 1920x1080x24
+      HTTP_PORT: "6082"
+      VNC_PORT: "5902"
+    ports:
+      - "127.0.0.1:6082:6082"
+    stdin_open: true
+    tty: true
+    command: bash /workspace/scripts/run-browser-game.sh
+
+  editor:
+    build:
+      context: .
+      dockerfile: docker/export/Dockerfile
+      args:
+        GODOT_VERSION: ${GODOT_VERSION:-4.3-stable}
+        INSTALL_EXPORT_TEMPLATES: 0
+    image: facetbound-editor:${GODOT_VERSION:-4.3-stable}
+    working_dir: /workspace
+    volumes:
+      - .:/workspace
+      - editor-config:/root/.config/godot
+      - editor-cache:/root/.cache/godot
+      - editor-local:/root/.local/share/godot
+    environment:
+      GODOT_PROJECT_PATH: /workspace/game
+      DISPLAY_NUM: ":99"
+      SCREEN_GEOMETRY: 1920x1080x24
+      HTTP_PORT: "6081"
+      VNC_PORT: "5901"
+      LIBGL_ALWAYS_SOFTWARE: "1"
+      MESA_GL_VERSION_OVERRIDE: "4.5"
+    ports:
+      - "127.0.0.1:6081:6081"
+    stdin_open: true
+    tty: true
+    command: bash /workspace/scripts/run-browser-editor.sh
+
+volumes:
+  editor-config:
+  editor-cache:
+  editor-local:

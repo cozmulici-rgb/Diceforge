@@ -18,6 +18,8 @@ RUN apt-get update \
         libasound2t64 \
         libfontconfig1 \
         libgl1 \
+        libgl1-mesa-dri \
+        libglx-mesa0 \
         libx11-6 \
         libxcursor1 \
         libxext6 \
@@ -30,6 +32,7 @@ RUN apt-get update \
         scrot \
         unzip \
         websockify \
+        x11-utils \
         xdotool \
         x11vnc \
         xvfb \
