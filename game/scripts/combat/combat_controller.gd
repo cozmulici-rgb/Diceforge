@@ -914,11 +914,25 @@ func _refresh_combat_log() -> void:
 		child.queue_free()
 
 	var log_lines: Array = _build_combat_log_lines()
-	var recent := log_lines.slice(max(log_lines.size() - 14, 0), log_lines.size())
-	for line in recent:
+	var start := maxi(log_lines.size() - 20, 0)
+	var min_start := maxi(log_lines.size() - 30, 0)
+	while start > min_start:
+		var item: Dictionary = log_lines[start] as Dictionary
+		if str(item.get("kind", "")) == "header":
+			break
+		start -= 1
+	var recent := log_lines.slice(start, log_lines.size())
+	for entry in recent:
+		var line_data: Dictionary = entry as Dictionary
 		var lbl := Label.new()
-		lbl.text = str(line)
-		lbl.theme_type_variation = &"FacetInfo"
+		lbl.text = str(line_data.get("text", ""))
+		match str(line_data.get("kind", "body")):
+			"header":
+				lbl.theme_type_variation = &"FacetSectionLabel"
+			"tally":
+				lbl.theme_type_variation = &"FacetMeta"
+			_:
+				lbl.theme_type_variation = &"FacetInfo"
 		lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		_combat_log_list.add_child(lbl)
@@ -927,14 +941,73 @@ func _refresh_combat_log() -> void:
 
 
 func _build_combat_log_lines() -> Array:
+	var output: Array = []
 	if _engine != null:
 		var entries: Array = _engine.get_log().get_entries()
 		if not entries.is_empty():
-			var lines: Array = []
-			for entry in entries:
-				lines.append(_format_battle_log_entry(entry as Dictionary))
-			return lines
-	return (combat_state.turn_log as Array).duplicate(true)
+			return _group_log_entries_by_turn(entries)
+	for line in (combat_state.turn_log as Array):
+		output.append({"kind": "body", "text": str(line)})
+	return output
+
+
+func _group_log_entries_by_turn(entries: Array) -> Array:
+	var output: Array = []
+	var current_turn := -1
+	var current_segment := ""
+	var dmg_dealt := 0
+	var dmg_taken := 0
+	var block_gained := 0
+
+	for entry in entries:
+		var item: Dictionary = entry as Dictionary
+		var step_kind := str(item.get("step_kind", ""))
+		var turn := int(item.get("turn", -1))
+
+		if step_kind == "battle_start":
+			output.append({"kind": "body", "text": _format_battle_log_entry(item)})
+			continue
+
+		var segment := current_segment
+		if step_kind == "roll" or step_kind == "resolution":
+			segment = "player"
+		elif step_kind == "enemy_action":
+			segment = "enemy"
+
+		if turn != current_turn or segment != current_segment:
+			_append_turn_tally(output, current_segment, dmg_dealt, dmg_taken, block_gained)
+			dmg_dealt = 0
+			dmg_taken = 0
+			block_gained = 0
+			current_turn = turn
+			current_segment = segment
+			var actor_label := "Your Turn" if segment == "player" else "Enemy"
+			output.append({"kind": "header", "text": "── Turn %d · %s ──" % [turn, actor_label]})
+
+		var summary: Dictionary = item.get("effect_summary", {}) as Dictionary
+		if step_kind == "resolution":
+			dmg_dealt += maxi(int(summary.get("hp_damage", 0)), 0)
+			block_gained += maxi(int(summary.get("block_gained", 0)), 0)
+		elif step_kind == "enemy_action":
+			dmg_taken += maxi(int(summary.get("hp_damage", 0)), 0)
+
+		output.append({"kind": "body", "text": _format_battle_log_entry(item)})
+
+	_append_turn_tally(output, current_segment, dmg_dealt, dmg_taken, block_gained)
+	return output
+
+
+func _append_turn_tally(output: Array, segment: String, dmg_dealt: int, dmg_taken: int, block_gained: int) -> void:
+	if segment == "player":
+		var parts: Array[String] = []
+		if dmg_dealt > 0:
+			parts.append("%d dmg dealt" % dmg_dealt)
+		if block_gained > 0:
+			parts.append("%d block" % block_gained)
+		if not parts.is_empty():
+			output.append({"kind": "tally", "text": "  Turn total: " + " · ".join(parts)})
+	elif segment == "enemy" and dmg_taken > 0:
+		output.append({"kind": "tally", "text": "  Turn total: %d dmg taken" % dmg_taken})
 
 
 func _format_battle_log_entry(entry: Dictionary) -> String:
