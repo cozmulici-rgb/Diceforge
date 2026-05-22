@@ -27,12 +27,11 @@ func resolve_action(action: Dictionary, player: Dictionary, _context: Dictionary
 	var updated_player := player.duplicate(true)
 	match str(action.get("action", "attack")):
 		"attack":
-			updated_player = _clamping.apply_damage_to_entity(updated_player, int(action.get("damage", 0)))
+			for damage in _damage_components(action):
+				updated_player = _clamping.apply_damage_to_entity(updated_player, damage)
 		"multi_hit":
-			var hits := maxi(int(action.get("hits", 1)), 1)
-			var damage_per_hit := int(action.get("damage_per_hit", action.get("damage", 0)))
-			for _hit in range(hits):
-				updated_player = _clamping.apply_damage_to_entity(updated_player, damage_per_hit)
+			for damage in _damage_components(action):
+				updated_player = _clamping.apply_damage_to_entity(updated_player, damage)
 		"debuff":
 			var statuses := (updated_player.get("statuses", []) as Array).duplicate(true)
 			statuses = _status_engine.add_status(statuses, {
@@ -45,6 +44,25 @@ func resolve_action(action: Dictionary, player: Dictionary, _context: Dictionary
 		"lock":
 			pass
 	return updated_player
+
+
+func _damage_components(action: Dictionary) -> Array[int]:
+	var provided: Array = (action.get("damage_components", []) as Array).duplicate(true)
+	if not provided.is_empty():
+		var components: Array[int] = []
+		for component in provided:
+			components.append(maxi(int(component), 0))
+		return components
+
+	if str(action.get("action", "attack")) == "multi_hit":
+		var hits := maxi(int(action.get("hits", 1)), 1)
+		var damage_per_hit := maxi(int(action.get("damage_per_hit", action.get("damage", 0))), 0)
+		var components: Array[int] = []
+		for _hit in range(hits):
+			components.append(damage_per_hit)
+		return components
+
+	return [maxi(int(action.get("damage", 0)), 0)]
 
 
 func _timing_for_player_status(status_id: String) -> String:

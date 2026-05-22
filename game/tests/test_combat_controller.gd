@@ -97,14 +97,26 @@ func run() -> Array[String]:
 	if log_text.find("incoming 8, absorbed 0, remaining 8, enemy block 0 -> 0") == -1:
 		failures.append("combat log should include player damage absorption details")
 
+	var incoming_enemy_damage := _enemy_roll_damage_total((combat_state.engine_state.get("enemy_rolls", []) as Array))
+	var player_block_before_enemy := int(combat_state.player_block)
 	var enemy_result = controller.resolve_enemy_turn(combat_state)
 	if not bool(enemy_result.get("ok", false)):
 		failures.append("resolve_enemy_turn should succeed after the enemy dice are shown")
 	if combat_state.state != "player_roll":
 		failures.append("combat should advance to the next player roll after enemy resolution")
 	log_text = "\n".join(combat_state.turn_log)
-	if log_text.find("Enemy turn resolved: incoming 3, absorbed 3, remaining 0, player block 5 -> 2") == -1:
-		failures.append("combat log should include enemy damage absorption details")
+	var absorbed_enemy_damage := mini(player_block_before_enemy, incoming_enemy_damage)
+	var remaining_enemy_damage := maxi(incoming_enemy_damage - absorbed_enemy_damage, 0)
+	var block_after_enemy := maxi(player_block_before_enemy - absorbed_enemy_damage, 0)
+	var expected_enemy_log := "Enemy turn resolved: incoming %d, absorbed %d, remaining %d, player block %d -> %d" % [
+		incoming_enemy_damage,
+		absorbed_enemy_damage,
+		remaining_enemy_damage,
+		player_block_before_enemy,
+		block_after_enemy,
+	]
+	if log_text.find(expected_enemy_log) == -1:
+		failures.append("combat log should include enemy dice-derived damage details")
 
 	var skipped_controller = CombatControllerScript.new()
 	skipped_controller.content_catalog = catalog
@@ -217,6 +229,16 @@ func _test_enemy_rolls_wait_for_enemy_resolution(catalog) -> Array[String]:
 
 	controller.free()
 	return failures
+
+
+func _enemy_roll_damage_total(enemy_rolls: Array) -> int:
+	var total := 0
+	for roll in enemy_rolls:
+		var entry: Dictionary = roll as Dictionary
+		if str(entry.get("effect", "")) != "damage":
+			continue
+		total += maxi(int(entry.get("damage", entry.get("rolled_value", 0))), 0)
+	return total
 
 
 func _test_enemy_display_rolls_surface_actual_enemy_rolls(controller) -> Array[String]:
