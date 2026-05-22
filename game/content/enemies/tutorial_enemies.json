@@ -10,6 +10,26 @@
       "intent": "Gel Strike",
       "damage": 3,
       "statuses": [],
+      "enemy_dice": [
+        {
+          "id": "slime_ooze_d6",
+          "label": "Ooze Die",
+          "body_id": "standard_d6",
+          "face_set": ["strike", "guard", "focus", "strike", "surge", "guard"]
+        },
+        {
+          "id": "slime_bloat_d8",
+          "label": "Bloat Die",
+          "body_id": "forged_d8",
+          "face_set": ["strike", "strike", "guard", "focus", "surge", "heavy_strike", "guard", "surge"]
+        },
+        {
+          "id": "slime_ripple_d6",
+          "label": "Ripple Die",
+          "body_id": "standard_d6",
+          "face_set": ["focus", "strike", "guard", "strike", "guard", "surge"]
+        }
+      ],
       "ai_pattern": [
         {
           "action": "attack",

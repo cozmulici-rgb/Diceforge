@@ -1,0 +1,125 @@
+{
+  "id": "floor_01_expansion_encounters",
+  "definitions": [
+    {
+      "id": "floor_01_amber_bridge_encounter",
+      "name": "Amber Bridge Skirmish",
+      "enemy_id": "amber_bridge_husk",
+      "reward_table_id": "tutorial_slime_rewards"
+    },
+    {
+      "id": "floor_01_glass_causeway_encounter",
+      "name": "Glass Causeway Skirmish",
+      "enemy_id": "glass_causeway_prism",
+      "reward_table_id": "tutorial_slime_rewards"
+    },
+    {
+      "id": "floor_01_ash_gallery_encounter",
+      "name": "Ash Gallery Skirmish",
+      "enemy_id": "ash_gallery_witch",
+      "reward_table_id": "tutorial_slime_rewards"
+    },
+    {
+      "id": "floor_01_shard_walk_encounter",
+      "name": "Shard Walk Skirmish",
+      "enemy_id": "shard_walk_sentry",
+      "reward_table_id": "tutorial_slime_rewards"
+    },
+    {
+      "id": "floor_01_final_anteroom_encounter",
+      "name": "Final Anteroom Skirmish",
+      "enemy_id": "final_anteroom_colossus",
+      "reward_table_id": "tutorial_slime_rewards"
+    },
+    {
+      "id": "floor_01_salt_basin_encounter",
+      "name": "Salt Basin Skirmish",
+      "enemy_id": "salt_basin_knell",
+      "reward_table_id": "tutorial_slime_rewards"
+    },
+    {
+      "id": "floor_01_veil_market_encounter",
+      "name": "Veil Market Skirmish",
+      "enemy_id": "veil_market_hexer",
+      "reward_table_id": "tutorial_slime_rewards"
+    },
+    {
+      "id": "floor_01_cinder_lift_encounter",
+      "name": "Cinder Lift Skirmish",
+      "enemy_id": "cinder_lift_carapace",
+      "reward_table_id": "tutorial_slime_rewards"
+    },
+    {
+      "id": "floor_01_rune_crossing_encounter",
+      "name": "Rune Crossing Skirmish",
+      "enemy_id": "rune_crossing_oracle",
+      "reward_table_id": "tutorial_slime_rewards"
+    },
+    {
+      "id": "floor_01_bone_lantern_encounter",
+      "name": "Bone Lantern Skirmish",
+      "enemy_id": "bone_lantern_ascetic",
+      "reward_table_id": "tutorial_slime_rewards"
+    },
+    {
+      "id": "floor_01_broken_lantern_encounter",
+      "name": "Broken Lantern Skirmish",
+      "enemy_id": "broken_lantern_mireling",
+      "reward_table_id": "tutorial_slime_rewards"
+    },
+    {
+      "id": "floor_01_shiver_archive_encounter",
+      "name": "Shiver Archive Skirmish",
+      "enemy_id": "shiver_archive_scrivener",
+      "reward_table_id": "tutorial_slime_rewards"
+    },
+    {
+      "id": "floor_01_penumbra_ward_encounter",
+      "name": "Penumbra Ward Skirmish",
+      "enemy_id": "penumbra_ward_mirrorfiend",
+      "reward_table_id": "tutorial_slime_rewards"
+    },
+    {
+      "id": "floor_01_mirror_step_encounter",
+      "name": "Mirror Step Skirmish",
+      "enemy_id": "mirror_step_howler",
+      "reward_table_id": "tutorial_slime_rewards"
+    },
+    {
+      "id": "floor_01_still_sanctum_encounter",
+      "name": "Still Sanctum Skirmish",
+      "enemy_id": "still_sanctum_priest",
+      "reward_table_id": "tutorial_slime_rewards"
+    },
+    {
+      "id": "floor_01_ember_warren_encounter",
+      "name": "Ember Warren Skirmish",
+      "enemy_id": "ember_warren_maw",
+      "reward_table_id": "tutorial_slime_rewards"
+    },
+    {
+      "id": "floor_01_fracture_scriptorium_encounter",
+      "name": "Fracture Scriptorium Skirmish",
+      "enemy_id": "fracture_scriptorium_brute",
+      "reward_table_id": "tutorial_slime_rewards"
+    },
+    {
+      "id": "floor_01_vortex_gate_encounter",
+      "name": "Vortex Gate Skirmish",
+      "enemy_id": "vortex_gate_reaver",
+      "reward_table_id": "tutorial_slime_rewards"
+    },
+    {
+      "id": "floor_01_veil_niche_encounter",
+      "name": "Veil Niche Skirmish",
+      "enemy_id": "veil_niche_warden",
+      "reward_table_id": "tutorial_slime_rewards"
+    },
+    {
+      "id": "floor_01_relay_spine_encounter",
+      "name": "Relay Spine Skirmish",
+      "enemy_id": "relay_spine_harrier",
+      "reward_table_id": "tutorial_slime_rewards"
+    }
+  ]
+}

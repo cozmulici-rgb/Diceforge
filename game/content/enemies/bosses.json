@@ -11,6 +11,26 @@
       "damage": 4,
       "is_boss": true,
       "statuses": [],
+      "enemy_dice": [
+        {
+          "id": "shard_overseer_phase1_d8",
+          "label": "Facet D8",
+          "body_id": "forged_d8",
+          "face_set": ["strike", "guard", "focus", "strike", "surge", "heavy_strike", "guard", "strike"]
+        },
+        {
+          "id": "shard_overseer_phase1_d6",
+          "label": "Facet D6",
+          "body_id": "standard_d6",
+          "face_set": ["guard", "strike", "focus", "strike", "guard", "surge"]
+        },
+        {
+          "id": "shard_overseer_phase1_echo",
+          "label": "Echo D6",
+          "body_id": "standard_d6",
+          "face_set": ["focus", "guard", "strike", "surge", "strike", "guard"]
+        }
+      ],
       "ai_pattern": [
         {
           "action": "attack",
@@ -33,6 +53,26 @@
           "starting_block": 1,
           "intent": "Lattice Swipe",
           "damage": 4,
+          "enemy_dice": [
+            {
+              "id": "shard_overseer_phase1_d8",
+              "label": "Facet D8",
+              "body_id": "forged_d8",
+              "face_set": ["strike", "guard", "focus", "strike", "surge", "heavy_strike", "guard", "strike"]
+            },
+            {
+              "id": "shard_overseer_phase1_d6",
+              "label": "Facet D6",
+              "body_id": "standard_d6",
+              "face_set": ["guard", "strike", "focus", "strike", "guard", "surge"]
+            },
+            {
+              "id": "shard_overseer_phase1_echo",
+              "label": "Echo D6",
+              "body_id": "standard_d6",
+              "face_set": ["focus", "guard", "strike", "surge", "strike", "guard"]
+            }
+          ],
           "ai_pattern": [
             {
               "action": "attack",
@@ -55,6 +95,26 @@
           "starting_block": 0,
           "intent": "Refraction Pulse",
           "damage": 5,
+          "enemy_dice": [
+            {
+              "id": "shard_overseer_phase2_d8",
+              "label": "Refraction D8",
+              "body_id": "forged_d8",
+              "face_set": ["strike", "strike", "focus", "guard", "surge", "heavy_strike", "guard", "surge"]
+            },
+            {
+              "id": "shard_overseer_phase2_d6",
+              "label": "Prism D6",
+              "body_id": "standard_d6",
+              "face_set": ["strike", "focus", "guard", "strike", "surge", "guard"]
+            },
+            {
+              "id": "shard_overseer_phase2_guard",
+              "label": "Ward D6",
+              "body_id": "standard_d6",
+              "face_set": ["guard", "guard", "focus", "strike", "guard", "surge"]
+            }
+          ],
           "ai_pattern": [
             {
               "action": "attack",
@@ -82,6 +142,26 @@
       "is_boss": true,
       "final_boss": true,
       "statuses": [],
+      "enemy_dice": [
+        {
+          "id": "warden_phase1_d8",
+          "label": "Warden D8",
+          "body_id": "forged_d8",
+          "face_set": ["strike", "guard", "focus", "strike", "surge", "heavy_strike", "guard", "strike"]
+        },
+        {
+          "id": "warden_phase1_d6",
+          "label": "Seal D6",
+          "body_id": "standard_d6",
+          "face_set": ["guard", "strike", "focus", "strike", "guard", "surge"]
+        },
+        {
+          "id": "warden_phase1_d6b",
+          "label": "Chain D6",
+          "body_id": "standard_d6",
+          "face_set": ["focus", "strike", "guard", "surge", "strike", "guard"]
+        }
+      ],
       "ai_pattern": [
         {
           "action": "attack",
@@ -104,6 +184,26 @@
           "starting_block": 1,
           "intent": "Seal Break",
           "damage": 5,
+          "enemy_dice": [
+            {
+              "id": "warden_phase1_d8",
+              "label": "Warden D8",
+              "body_id": "forged_d8",
+              "face_set": ["strike", "guard", "focus", "strike", "surge", "heavy_strike", "guard", "strike"]
+            },
+            {
+              "id": "warden_phase1_d6",
+              "label": "Seal D6",
+              "body_id": "standard_d6",
+              "face_set": ["guard", "strike", "focus", "strike", "guard", "surge"]
+            },
+            {
+              "id": "warden_phase1_d6b",
+              "label": "Chain D6",
+              "body_id": "standard_d6",
+              "face_set": ["focus", "strike", "guard", "surge", "strike", "guard"]
+            }
+          ],
           "ai_pattern": [
             {
               "action": "attack",
@@ -126,6 +226,26 @@
           "starting_block": 0,
           "intent": "Warden's Fury",
           "damage": 6,
+          "enemy_dice": [
+            {
+              "id": "warden_phase2_d8",
+              "label": "Fury D8",
+              "body_id": "forged_d8",
+              "face_set": ["strike", "strike", "focus", "guard", "surge", "heavy_strike", "strike", "surge"]
+            },
+            {
+              "id": "warden_phase2_d6",
+              "label": "Fury D6",
+              "body_id": "standard_d6",
+              "face_set": ["strike", "guard", "focus", "strike", "surge", "guard"]
+            },
+            {
+              "id": "warden_phase2_d6b",
+              "label": "Curse D6",
+              "body_id": "standard_d6",
+              "face_set": ["focus", "guard", "strike", "surge", "guard", "strike"]
+            }
+          ],
           "ai_pattern": [
             {
               "action": "attack",
