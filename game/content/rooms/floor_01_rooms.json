@@ -2,116 +2,116 @@
   "id": "floor_01_rooms",
   "name": "Fractured Approach Graph",
   "rooms": [
-    {
-      "id": "floor_01_start",
-      "name": "Gate of Splinters",
-      "type": "start",
-      "description": "The first floor opens into a split corridor with multiple safe approaches to the boss chamber.",
-      "position": [120, 220],
-      "encounter_id": ""
-    },
-    {
-      "id": "floor_01_fight",
-      "name": "Echo Span",
-      "type": "encounter",
-      "description": "The aggressive path opens on a narrow span that commits the run to early pressure.",
-      "position": [320, 140],
-      "encounter_id": "tutorial_slime",
-      "combat_map_id": "map-f01-01",
-      "combat_map_name": "Fracture Bridge",
-      "combat_map_theme": "Broken crystal bridge suspended over void wind.",
-      "combat_map_summary": "Early aggression test with a compressed front and no safe lateral reset."
-    },
-    {
-      "id": "floor_01_shop",
-      "name": "Shard Broker",
-      "type": "shop",
-      "description": "A quiet merchant alcove offers a safe branch.",
-      "position": [320, 300],
-      "encounter_id": "",
-      "reward_source_id": "tutorial_vendor"
-    },
-    {
-      "id": "floor_01_boss",
-      "name": "Overseer Gate",
-      "type": "boss",
-      "description": "The first floor closes on a ceremonial dais where the Overseer holds the last seal.",
-      "position": [960, 220],
-      "encounter_id": "floor_01_overseer",
-      "combat_map_id": "map-f01-boss",
-      "combat_map_name": "Overseer Dais",
-      "combat_map_theme": "Ceremonial arena with a dominant centerline and flanking dead space.",
-      "combat_map_summary": "Boss presentation map that pays off the floor's split-route approach with a clean duel stage."
-    },
-    {
-      "id": "floor_01_gallery",
-      "name": "Needle Gallery",
-      "type": "encounter",
-      "description": "A line of shard pillars turns the direct route into a patient mid-floor duel.",
-      "position": [540, 120],
-      "encounter_id": "tutorial_slime",
-      "combat_map_id": "map-f01-02",
-      "combat_map_name": "Needle Gallery",
-      "combat_map_theme": "Long gallery lane punctured by crystal spines and echo cover.",
-      "combat_map_summary": "A sequencing fight that stretches the route before the convergence chamber."
-    },
-    {
-      "id": "floor_01_vault",
-      "name": "Vault Stair",
-      "type": "encounter",
-      "description": "The safer branch bends upward into a choke staircase with no clean retreat.",
-      "position": [540, 320],
-      "encounter_id": "tutorial_slime",
-      "combat_map_id": "map-f01-03",
-      "combat_map_name": "Vault Stair",
-      "combat_map_theme": "Stepped ascent framed by vault ribs and shard dust.",
-      "combat_map_summary": "A recovery-route fight that still forces a committed climb back into danger."
-    },
-    {
-      "id": "floor_01_choir",
-      "name": "Choir of Ash Glass",
-      "type": "encounter",
-      "description": "Both branches collapse into a resonant convergence chamber before the boss seal.",
-      "position": [760, 220],
-      "encounter_id": "tutorial_slime",
-      "combat_map_id": "map-f01-04",
-      "combat_map_name": "Choir of Ash Glass",
-      "combat_map_theme": "Circular chamber with reflective ash-glass ribs and a hot center lane.",
-      "combat_map_summary": "Convergence arena that confirms the floor's route identity before the gatekeeper."
-    }
+	{
+	  "id": "floor_01_start",
+	  "name": "Gate of Splinters",
+	  "type": "start",
+	  "description": "The first floor opens into a split corridor with multiple safe approaches to the boss chamber.",
+	  "position": [120, 220],
+	  "encounter_id": ""
+	},
+	{
+	  "id": "floor_01_fight",
+	  "name": "Echo Span",
+	  "type": "encounter",
+	  "description": "The aggressive path opens on a narrow span that commits the run to early pressure.",
+	  "position": [320, 140],
+	  "encounter_id": "tutorial_slime",
+	  "combat_map_id": "map-f01-01",
+	  "combat_map_name": "Fracture Bridge",
+	  "combat_map_theme": "Broken crystal bridge suspended over void wind.",
+	  "combat_map_summary": "Early aggression test with a compressed front and no safe lateral reset."
+	},
+	{
+	  "id": "floor_01_shop",
+	  "name": "Shard Broker",
+	  "type": "shop",
+	  "description": "A quiet merchant alcove offers a safe branch.",
+	  "position": [320, 300],
+	  "encounter_id": "",
+	  "reward_source_id": "tutorial_vendor"
+	},
+	{
+	  "id": "floor_01_boss",
+	  "name": "Overseer Gate",
+	  "type": "boss",
+	  "description": "The first floor closes on a ceremonial dais where the Overseer holds the last seal.",
+	  "position": [960, 220],
+	  "encounter_id": "floor_01_overseer",
+	  "combat_map_id": "map-f01-boss",
+	  "combat_map_name": "Overseer Dais",
+	  "combat_map_theme": "Ceremonial arena with a dominant centerline and flanking dead space.",
+	  "combat_map_summary": "Boss presentation map that pays off the floor's split-route approach with a clean duel stage."
+	},
+	{
+	  "id": "floor_01_gallery",
+	  "name": "Needle Gallery",
+	  "type": "encounter",
+	  "description": "A line of shard pillars turns the direct route into a patient mid-floor duel.",
+	  "position": [540, 120],
+	  "encounter_id": "tutorial_slime",
+	  "combat_map_id": "map-f01-02",
+	  "combat_map_name": "Needle Gallery",
+	  "combat_map_theme": "Long gallery lane punctured by crystal spines and echo cover.",
+	  "combat_map_summary": "A sequencing fight that stretches the route before the convergence chamber."
+	},
+	{
+	  "id": "floor_01_vault",
+	  "name": "Vault Stair",
+	  "type": "encounter",
+	  "description": "The safer branch bends upward into a choke staircase with no clean retreat.",
+	  "position": [540, 320],
+	  "encounter_id": "tutorial_slime",
+	  "combat_map_id": "map-f01-03",
+	  "combat_map_name": "Vault Stair",
+	  "combat_map_theme": "Stepped ascent framed by vault ribs and shard dust.",
+	  "combat_map_summary": "A recovery-route fight that still forces a committed climb back into danger."
+	},
+	{
+	  "id": "floor_01_choir",
+	  "name": "Choir of Ash Glass",
+	  "type": "encounter",
+	  "description": "Both branches collapse into a resonant convergence chamber before the boss seal.",
+	  "position": [760, 220],
+	  "encounter_id": "tutorial_slime",
+	  "combat_map_id": "map-f01-04",
+	  "combat_map_name": "Choir of Ash Glass",
+	  "combat_map_theme": "Circular chamber with reflective ash-glass ribs and a hot center lane.",
+	  "combat_map_summary": "Convergence arena that confirms the floor's route identity before the gatekeeper."
+	}
   ],
   "links": [
-    {
-      "from": "floor_01_start",
-      "to": "floor_01_fight"
-    },
-    {
-      "from": "floor_01_start",
-      "to": "floor_01_shop"
-    },
-    {
-      "from": "floor_01_fight",
-      "to": "floor_01_gallery"
-    },
-    {
-      "from": "floor_01_fight",
-      "to": "floor_01_vault"
-    },
-    {
-      "from": "floor_01_shop",
-      "to": "floor_01_vault"
-    },
-    {
-      "from": "floor_01_gallery",
-      "to": "floor_01_choir"
-    },
-    {
-      "from": "floor_01_vault",
-      "to": "floor_01_choir"
-    },
-    {
-      "from": "floor_01_choir",
-      "to": "floor_01_boss"
-    }
+	{
+	  "from": "floor_01_start",
+	  "to": "floor_01_fight"
+	},
+	{
+	  "from": "floor_01_start",
+	  "to": "floor_01_shop"
+	},
+	{
+	  "from": "floor_01_fight",
+	  "to": "floor_01_gallery"
+	},
+	{
+	  "from": "floor_01_fight",
+	  "to": "floor_01_vault"
+	},
+	{
+	  "from": "floor_01_shop",
+	  "to": "floor_01_vault"
+	},
+	{
+	  "from": "floor_01_gallery",
+	  "to": "floor_01_choir"
+	},
+	{
+	  "from": "floor_01_vault",
+	  "to": "floor_01_choir"
+	},
+	{
+	  "from": "floor_01_choir",
+	  "to": "floor_01_boss"
+	}
   ]
 }

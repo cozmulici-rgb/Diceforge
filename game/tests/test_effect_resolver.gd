@@ -12,10 +12,15 @@ func run() -> Array[String]:
 	var damage_result := resolver.resolve_face({"effect": "damage", "value": 2, "energy_cost": 0}, 4, player.duplicate(true), enemy.duplicate(true), [], {})
 	if int(((damage_result.get("enemy", {}) as Dictionary).get("hp", -1))) != 15:
 		failures.append("damage should apply after block")
+	var damage_summary: Dictionary = (damage_result.get("effect_summary", {}) as Dictionary).duplicate(true)
+	if int(damage_summary.get("raw_damage", -1)) != 8 or int(damage_summary.get("absorbed_by_block", -1)) != 3 or int(damage_summary.get("hp_damage", -1)) != 5:
+		failures.append("damage summary should expose raw damage, absorbed block, and hp damage")
 
 	var block_result := resolver.resolve_face({"effect": "block", "value": 1, "energy_cost": 0}, 3, player.duplicate(true), enemy.duplicate(true), [], {})
 	if int(((block_result.get("player", {}) as Dictionary).get("block", -1))) != 8:
 		failures.append("block should scale from rolled value")
+	if int((((block_result.get("effect_summary", {}) as Dictionary).get("block_gained", -1)))) != 3:
+		failures.append("block summary should expose gained block")
 
 	var heal_result := resolver.resolve_face({"effect": "heal", "value": 15, "energy_cost": 0}, 5, {"hp": 20, "max_hp": 30, "block": 0, "energy": 3}, enemy.duplicate(true), [], {})
 	if int(((heal_result.get("player", {}) as Dictionary).get("hp", -1))) != 30:
