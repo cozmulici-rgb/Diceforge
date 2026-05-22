@@ -22,6 +22,12 @@ func run() -> Array[String]:
 	if int((((block_result.get("effect_summary", {}) as Dictionary).get("block_gained", -1)))) != 3:
 		failures.append("block summary should expose gained block")
 
+	var focus_result := resolver.resolve_face({"effect": "block", "value": 1, "bonus_block": 1, "energy_cost": 0}, 3, player.duplicate(true), enemy.duplicate(true), [], {})
+	if int(((focus_result.get("player", {}) as Dictionary).get("block", -1))) != 9:
+		failures.append("block should add bonus_block on top of rolled value")
+	if int((((focus_result.get("effect_summary", {}) as Dictionary).get("block_gained", -1)))) != 4:
+		failures.append("block summary should include bonus_block in block_gained")
+
 	var heal_result := resolver.resolve_face({"effect": "heal", "value": 15, "energy_cost": 0}, 5, {"hp": 20, "max_hp": 30, "block": 0, "energy": 3}, enemy.duplicate(true), [], {})
 	if int(((heal_result.get("player", {}) as Dictionary).get("hp", -1))) != 30:
 		failures.append("heal should clamp to max hp")
