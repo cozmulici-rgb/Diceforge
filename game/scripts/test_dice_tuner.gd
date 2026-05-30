@@ -24,6 +24,12 @@ func _ready() -> void:
 	_overlay_mesh = overlay_script.new()
 	_overlay_textured  = overlay_script.new()
 	_overlay_textured.use_textured_meshes = true
+	# Polished-gold-on-obsidian metal look matching the reference dice set:
+	# the recolored d{N}_Numbers.png supply gold numerals + engraving filigree,
+	# so push metalness up and roughness down for a wet metallic sheen.
+	_overlay_textured.material_metallic = 0.55
+	_overlay_textured.material_roughness = 0.45
+	_overlay_textured.material_specular = 0.5
 	add_child(_overlay_mesh)
 	add_child(_overlay_textured)
 	_layout_strip(_strip_envelope)

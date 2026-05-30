@@ -271,8 +271,11 @@ func _step_die(entry: Dictionary, delta: float) -> void:
 		anim["settle_t"] += delta
 		var dur := maxf(settle_duration, 0.0001)
 		var t: float = clampf(anim["settle_t"] / dur, 0.0, 1.0)
-		var from_b: Basis = anim["settle_from"] as Basis
-		var to_b: Basis = anim["final_basis"] as Basis
+		# slerp() casts to Quaternion internally and requires orthonormal bases;
+		# accumulated float drift from the spin can denormalize them, so re-
+		# orthonormalize first to avoid "Basis must be normalized" spam.
+		var from_b: Basis = (anim["settle_from"] as Basis).orthonormalized()
+		var to_b: Basis = (anim["final_basis"] as Basis).orthonormalized()
 		node.transform.basis = from_b.slerp(to_b, t)
 		node.position.y = 0.0
 		if t >= 1.0:
