@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Diceforge — Test Roll Scene</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #06060c;
+      overflow: hidden;
+      font-family: 'Georgia', 'Times New Roman', serif;
+      color: #c8a030;
+      user-select: none;
+    }
+
+    canvas { display: block; }
+
+    #hud {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      padding-bottom: 44px;
+    }
+
+    #results {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 20px;
+      min-height: 34px;
+    }
+
+    .result-chip {
+      background: rgba(8, 6, 18, 0.88);
+      border: 1px solid #5a440e;
+      padding: 5px 14px;
+      font-size: 13px;
+      letter-spacing: 0.12em;
+      color: #d4a535;
+      border-radius: 1px;
+    }
+
+    .result-chip span {
+      color: #8a6c20;
+      font-size: 11px;
+      margin-right: 4px;
+    }
+
+    #roll-btn {
+      pointer-events: all;
+      background: linear-gradient(180deg, #1a1608 0%, #0e0b04 100%);
+      border: 1px solid #c8a030;
+      color: #d4a535;
+      font-family: 'Georgia', serif;
+      font-size: 17px;
+      letter-spacing: 0.22em;
+      padding: 14px 52px;
+      cursor: pointer;
+      outline: none;
+      box-shadow:
+        0 0 24px rgba(200,160,48,0.18),
+        inset 0 0 16px rgba(200,160,48,0.06);
+      transition: box-shadow 0.2s, color 0.2s, border-color 0.2s;
+    }
+
+    #roll-btn:hover {
+      color: #f0c850;
+      border-color: #f0c850;
+      box-shadow:
+        0 0 40px rgba(200,160,48,0.35),
+        inset 0 0 20px rgba(200,160,48,0.12);
+    }
+
+    #roll-btn:active { transform: translateY(1px); }
+    #roll-btn:disabled { opacity: 0.4; cursor: default; pointer-events: none; }
+
+    #title {
+      position: fixed;
+      top: 28px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 12px;
+      letter-spacing: 0.35em;
+      color: #5a440e;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    #hint {
+      position: fixed;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      color: #3a3018;
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body>
+  <div id="title">◆  DICEFORGE  ·  TEST ROLL SCENE  ◆</div>
+  <div id="hud">
+    <div id="results"></div>
+    <button id="roll-btn">◇  ROLL ALL DICE  ◇</button>
+  </div>
+  <div id="hint">Drag to orbit  ·  Scroll to zoom</div>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+    }
+  }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+    // ─────────────────────────────────────────────
+    // RENDERER
+    // ─────────────────────────────────────────────
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.15;
+    document.body.prepend(renderer.domElement);
+
+    // ─────────────────────────────────────────────
+    // SCENE
+    // ─────────────────────────────────────────────
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x06060c);
+    scene.fog = new THREE.FogExp2(0x06060c, 0.028);
+
+    // ─────────────────────────────────────────────
+    // CAMERA & CONTROLS
+    // ─────────────────────────────────────────────
+    const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 120);
+    camera.position.set(0, 6, 22);
+    camera.lookAt(0, 1.5, 0);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enablePan = false;
+    controls.minDistance = 10;
+    controls.maxDistance = 36;
+    controls.maxPolarAngle = Math.PI * 0.62;
+    controls.dampingFactor = 0.08;
+    controls.enableDamping = true;
+    controls.target.set(0, 0, 0);
+
+    // ─────────────────────────────────────────────
+    // LIGHTING
+    // ─────────────────────────────────────────────
+    scene.add(new THREE.AmbientLight(0x18182e, 3.5));
+
+    const keyLight = new THREE.DirectionalLight(0xffd07a, 3.5);
+    keyLight.position.set(6, 14, 7);
+    keyLight.castShadow = true;
+    keyLight.shadow.mapSize.set(2048, 2048);
+    keyLight.shadow.camera.near = 0.5;
+    keyLight.shadow.camera.far = 60;
+    keyLight.shadow.camera.left = -20;
+    keyLight.shadow.camera.right = 20;
+    keyLight.shadow.camera.top = 20;
+    keyLight.shadow.camera.bottom = -20;
+    scene.add(keyLight);
+
+    const fillLight = new THREE.DirectionalLight(0x304880, 1.2);
+    fillLight.position.set(-6, 4, -3);
+    scene.add(fillLight);
+
+    const rimLight = new THREE.DirectionalLight(0xc8a030, 1.0);
+    rimLight.position.set(0, 6, -10);
+    scene.add(rimLight);
+
+    // ─────────────────────────────────────────────
+    // GROUND
+    // ─────────────────────────────────────────────
+    const groundMat = new THREE.MeshStandardMaterial({ color: 0x080810, roughness: 1, metalness: 0 });
+    const ground = new THREE.Mesh(new THREE.PlaneGeometry(80, 80), groundMat);
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = -2.2;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    // ─────────────────────────────────────────────
+    // TEXTURE HELPERS
+    // ─────────────────────────────────────────────
+
+    // Draw occult symbols onto a canvas context
+    function drawSymbol(ctx, symbol, x, y, size, color) {
+      ctx.save();
+      ctx.fillStyle = color;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = size * 0.06;
+      ctx.shadowColor = color;
+      ctx.shadowBlur = size * 0.4;
+
+      switch (symbol) {
+        case 'star8': {
+          // 8-pointed star / compass rose
+          const r1 = size * 0.5, r2 = size * 0.22;
+          ctx.beginPath();
+          for (let i = 0; i < 16; i++) {
+            const a = (i / 16) * Math.PI * 2 - Math.PI / 2;
+            const r = i % 2 === 0 ? r1 : r2;
+            i === 0 ? ctx.moveTo(x + Math.cos(a) * r, y + Math.sin(a) * r)
+                    : ctx.lineTo(x + Math.cos(a) * r, y + Math.sin(a) * r);
+          }
+          ctx.closePath();
+          ctx.fill();
+          // Centre dot
+          ctx.beginPath();
+          ctx.arc(x, y, size * 0.07, 0, Math.PI * 2);
+          ctx.fill();
+          break;
+        }
+        case 'eye': {
+          // Almond eye + iris
+          ctx.beginPath();
+          ctx.moveTo(x - size * 0.5, y);
+          ctx.bezierCurveTo(x - size * 0.25, y - size * 0.32, x + size * 0.25, y - size * 0.32, x + size * 0.5, y);
+          ctx.bezierCurveTo(x + size * 0.25, y + size * 0.32, x - size * 0.25, y + size * 0.32, x - size * 0.5, y);
+          ctx.closePath();
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(x, y, size * 0.18, 0, Math.PI * 2);
+          ctx.fill();
+          break;
+        }
+        case 'skull': {
+          // Stylised skull
+          const s = size * 0.38;
+          ctx.beginPath();
+          ctx.arc(x, y - s * 0.1, s, 0, Math.PI * 2);
+          ctx.fill();
+          // Jaw
+          ctx.beginPath();
+          ctx.rect(x - s * 0.55, y + s * 0.45, s * 1.1, s * 0.55);
+          ctx.fill();
+          // Eye sockets (cutouts — draw in background colour)
+          ctx.save();
+          ctx.globalCompositeOperation = 'destination-out';
+          ctx.beginPath();
+          ctx.arc(x - s * 0.3, y, s * 0.2, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(x + s * 0.3, y, s * 0.2, 0, Math.PI * 2);
+          ctx.fill();
+          // Teeth gaps
+          for (let t = -1; t <= 1; t++) {
+            ctx.beginPath();
+            ctx.rect(x + t * s * 0.35 - s * 0.1, y + s * 0.55, s * 0.18, s * 0.38);
+            ctx.fill();
+          }
+          ctx.restore();
+          break;
+        }
+        case 'moon': {
+          // Crescent moon
+          ctx.beginPath();
+          ctx.arc(x, y, size * 0.42, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.save();
+          ctx.globalCompositeOperation = 'destination-out';
+          ctx.beginPath();
+          ctx.arc(x + size * 0.2, y - size * 0.05, size * 0.32, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+          break;
+        }
+        case 'caduceus': {
+          // Simplified staff with serpent
+          const staffH = size * 0.85;
+          ctx.beginPath();
+          ctx.moveTo(x, y - staffH / 2);
+          ctx.lineTo(x, y + staffH / 2);
+          ctx.stroke();
+          // Crossbars
+          ctx.beginPath();
+          ctx.moveTo(x - size * 0.28, y - staffH * 0.3);
+          ctx.lineTo(x + size * 0.28, y - staffH * 0.3);
+          ctx.stroke();
+          // Serpent curves
+          for (let i = 0; i < 3; i++) {
+            const cy = y - staffH * 0.2 + i * staffH * 0.25;
+            ctx.beginPath();
+            ctx.moveTo(x, cy);
+            ctx.bezierCurveTo(x + size * 0.3, cy - size * 0.08,
+                              x + size * 0.3, cy + size * 0.08 + staffH * 0.1,
+                              x, cy + staffH * 0.12);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x, cy);
+            ctx.bezierCurveTo(x - size * 0.3, cy - size * 0.08,
+                              x - size * 0.3, cy + size * 0.08 + staffH * 0.1,
+                              x, cy + staffH * 0.12);
+            ctx.stroke();
+          }
+          // Wings on top
+          ctx.beginPath();
+          ctx.moveTo(x, y - staffH / 2 + size * 0.05);
+          ctx.bezierCurveTo(x - size * 0.45, y - staffH / 2 - size * 0.15,
+                            x - size * 0.1, y - staffH / 2 + size * 0.12, x, y - staffH / 2 + size * 0.28);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.moveTo(x, y - staffH / 2 + size * 0.05);
+          ctx.bezierCurveTo(x + size * 0.45, y - staffH / 2 - size * 0.15,
+                            x + size * 0.1, y - staffH / 2 + size * 0.12, x, y - staffH / 2 + size * 0.28);
+          ctx.fill();
+          break;
+        }
+      }
+      ctx.restore();
+    }
+
+    // ─────────────────────────────────────────────
+    // FACE CANVAS TEXTURE
+    // ─────────────────────────────────────────────
+    function makeFaceTex(number, symbol = null, opts = {}) {
+      const W = 512, H = 512;
+      const canvas = document.createElement('canvas');
+      canvas.width = W; canvas.height = H;
+      const ctx = canvas.getContext('2d');
+
+      // Dark metallic background
+      const bg = ctx.createRadialGradient(W / 2, H * 0.45, 20, W / 2, H / 2, W * 0.72);
+      bg.addColorStop(0, '#28263a');
+      bg.addColorStop(0.6, '#14121e');
+      bg.addColorStop(1, '#08080f');
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, W, H);
+
+      const gold = '#d4a535';
+      const goldDim = '#8a6c22';
+
+      if (symbol) {
+        const sy = opts.symbolAbove ? H * 0.28 : H * 0.5;
+        drawSymbol(ctx, symbol, W / 2, sy, W * 0.28, gold);
+      }
+
+      if (number !== null) {
+        const numY = symbol && opts.symbolAbove ? H * 0.66 : H / 2;
+        ctx.save();
+        ctx.fillStyle = gold;
+        ctx.shadowColor = gold;
+        ctx.shadowBlur = 18;
+        const numStr = number.toString();
+        const fs = numStr.length > 2 ? 160 : (numStr.length > 1 ? 200 : 240);
+        ctx.font = `bold ${fs}px "Times New Roman", Times, serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(numStr, W / 2, numY);
+        // Underline dot for 6 / 9
+        if (number === 6 || number === 9) {
+          ctx.beginPath();
+          ctx.arc(W / 2 + 100, numY + 90, 10, 0, Math.PI * 2);
+          ctx.fillStyle = gold;
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+
+      // Star corner accents (small)
+      ctx.save();
+      ctx.fillStyle = goldDim;
+      ctx.shadowBlur = 0;
+      [[0.14, 0.14], [0.86, 0.14], [0.14, 0.86], [0.86, 0.86]].forEach(([fx, fy]) => {
+        drawSymbol(ctx, 'star8', fx * W, fy * H, W * 0.055, goldDim);
+      });
+      ctx.restore();
+
+      return new THREE.CanvasTexture(canvas);
+    }
+
+    // ─────────────────────────────────────────────
+    // D6 PER-FACE MATERIALS  (skull on 6)
+    // ─────────────────────────────────────────────
+    function makeD6Materials() {
+      // BoxGeometry face order: +X, -X, +Y, -Y, +Z, -Z → values: 2,5,6,1,3,4
+      const layout = [
+        { n: 2, sym: null },
+        { n: 5, sym: null },
+        { n: 6, sym: 'skull', symbolAbove: true },
+        { n: 1, sym: null },
+        { n: 3, sym: null },
+        { n: 4, sym: null },
+      ];
+      return layout.map(({ n, sym, symbolAbove }) =>
+        new THREE.MeshStandardMaterial({
+          map: makeFaceTex(n, sym, { symbolAbove }),
+          roughness: 0.42,
+          metalness: 0.72,
+        })
+      );
+    }
+
+    // Dark metallic body material
+    function bodyMat() {
+      return new THREE.MeshStandardMaterial({
+        color: 0x18181e,
+        roughness: 0.42,
+        metalness: 0.72,
+      });
+    }
+
+    // Gold edge material
+    function edgeMat() {
+      return new THREE.LineBasicMaterial({
+        color: 0xc8a030,
+        transparent: true,
+        opacity: 0.88,
+      });
+    }
+
+    // ─────────────────────────────────────────────
+    // D10 CUSTOM GEOMETRY (pentagonal trapezohedron)
+    // Returns { geo, edgeGeo } — edgeGeo has only the 20 face-boundary edges,
+    // skipping the interior triangle-split diagonals that EdgesGeometry would show.
+    // ─────────────────────────────────────────────
+    function buildD10() {
+      const n = 5;
+      const topY = 1.1, botY = -1.1;
+      const upperY = 0.28, lowerY = -0.28;
+      const R = 0.88;
+
+      const verts = [0, topY, 0]; // 0 = top pole
+      for (let i = 0; i < n; i++) {
+        const a = (2 * Math.PI * i) / n - Math.PI / 2;
+        verts.push(R * Math.cos(a), upperY, R * Math.sin(a)); // 1..5 upper ring
+      }
+      for (let i = 0; i < n; i++) {
+        const a = (2 * Math.PI * (i + 0.5)) / n - Math.PI / 2;
+        verts.push(R * Math.cos(a), lowerY, R * Math.sin(a)); // 6..10 lower ring
+      }
+      verts.push(0, botY, 0); // 11 = bottom pole
+
+      const idx = [];
+      for (let i = 0; i < n; i++) {
+        const u  = 1 + i,           un = 1 + (i + 1) % n;
+        const l  = 6 + i,           ln = 6 + (i + 1) % n;
+        idx.push(0, u, l,  0, l, un);       // upper kite split into 2 triangles
+        idx.push(11, ln, un,  11, un, l);   // lower kite split into 2 triangles
+      }
+
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
+      geo.setIndex(idx);
+      geo.computeVertexNormals();
+
+      // Build face-boundary edge pairs (vertex index pairs), omitting interior splits.
+      // 20 edges total: 5×(top→u[i]) + 5×(bot→l[i]) + 5×(u[i]→l[i]) + 5×(l[i]→u[i+1])
+      const pairs = [];
+      for (let i = 0; i < n; i++) {
+        const u  = 1 + i,  un = 1 + (i + 1) % n;
+        const l  = 6 + i,  ln = 6 + (i + 1) % n;
+        pairs.push(0, u);   // top → upper[i]
+        pairs.push(11, ln); // bot → lower[i+1]
+        pairs.push(u, l);   // upper[i] → lower[i]
+        pairs.push(l, un);  // lower[i] → upper[i+1]  (shared between upper & lower kites)
+      }
+
+      const ev = [];
+      for (let p = 0; p < pairs.length; p += 2) {
+        const a = pairs[p] * 3, b = pairs[p + 1] * 3;
+        ev.push(verts[a], verts[a+1], verts[a+2], verts[b], verts[b+1], verts[b+2]);
+      }
+      const edgeGeo = new THREE.BufferGeometry();
+      edgeGeo.setAttribute('position', new THREE.Float32BufferAttribute(ev, 3));
+
+      return { geo, edgeGeo };
+    }
+
+    // ─────────────────────────────────────────────
+    // SPRITE for roll value label
+    // ─────────────────────────────────────────────
+    function makeValueSprite(text = '') {
+      const W = 192, H = 192;
+      const canvas = document.createElement('canvas');
+      canvas.width = W; canvas.height = H;
+      const tex = new THREE.CanvasTexture(canvas);
+      const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false });
+      const sprite = new THREE.Sprite(mat);
+      sprite.scale.set(1.8, 1.8, 1);
+      sprite.position.y = 2.2;
+      sprite._canvas = canvas;
+      sprite._tex = tex;
+      setSprite(sprite, text);
+      return sprite;
+    }
+
+    function setSprite(sprite, text) {
+      const canvas = sprite._canvas;
+      const W = canvas.width, H = canvas.height;
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, W, H);
+      if (text !== '') {
+        ctx.fillStyle = '#d4a535';
+        ctx.shadowColor = '#d4a535';
+        ctx.shadowBlur = 22;
+        ctx.font = `bold 110px "Times New Roman", Times, serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(text, W / 2, H / 2);
+      }
+      sprite._tex.needsUpdate = true;
+    }
+
+    // ─────────────────────────────────────────────
+    // DIE TYPE DEFINITIONS
+    // ─────────────────────────────────────────────
+    const DICE = [
+      {
+        name: 'd4',  faces: 4,
+        geo: new THREE.TetrahedronGeometry(1.08, 0),
+        symbol: 'moon',
+      },
+      {
+        name: 'd6',  faces: 6,
+        geo: new THREE.BoxGeometry(1.3, 1.3, 1.3),
+        isD6: true,
+      },
+      {
+        name: 'd8',  faces: 8,
+        geo: new THREE.OctahedronGeometry(1.05, 0),
+        symbol: 'eye',
+      },
+      {
+        name: 'd12', faces: 12,
+        geo: new THREE.DodecahedronGeometry(1.0, 0),
+        symbol: 'star8',
+      },
+      {
+        name: 'd10', faces: 10,
+        ...buildD10(),
+        symbol: 'eye',
+      },
+      {
+        name: 'd20', faces: 20,
+        geo: new THREE.IcosahedronGeometry(1.05, 0),
+        symbol: 'caduceus',
+      },
+    ];
+
+    // ─────────────────────────────────────────────
+    // BUILD DIE OBJECTS
+    // ─────────────────────────────────────────────
+    const dieObjects = [];
+    const SPACING = 3.8;
+    const startX = -(DICE.length - 1) * SPACING / 2;
+
+    DICE.forEach((def, i) => {
+      const group = new THREE.Group();
+
+      // Mesh
+      const mat = def.isD6 ? makeD6Materials() : bodyMat();
+      const mesh = new THREE.Mesh(def.geo, mat);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      group.add(mesh);
+
+      // Edge wireframe — use pre-built face-boundary edges when available (e.g. d10)
+      const edgeSource = def.edgeGeo ?? new THREE.EdgesGeometry(def.geo);
+      const wf = new THREE.LineSegments(edgeSource, edgeMat());
+      group.add(wf);
+
+      // Value sprite (hidden at start)
+      const sprite = makeValueSprite('');
+      group.add(sprite);
+
+      group.position.set(startX + i * SPACING, 0, 0);
+      // Random idle rotation seed
+      group.rotation.set(
+        Math.random() * Math.PI * 2,
+        Math.random() * Math.PI * 2,
+        Math.random() * Math.PI * 2
+      );
+
+      scene.add(group);
+
+      dieObjects.push({
+        group, mesh, sprite, def,
+        isRolling: false,
+        value: null,
+        idleSpeed: 0.005 + Math.random() * 0.004,
+      });
+    });
+
+    // ─────────────────────────────────────────────
+    // ROLL LOGIC
+    // ─────────────────────────────────────────────
+    let rollingCount = 0;
+    const btn = document.getElementById('roll-btn');
+    const resultsEl = document.getElementById('results');
+
+    function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+
+    function startRoll(die) {
+      die.isRolling = true;
+      rollingCount++;
+      die.value = null;
+      setSprite(die.sprite, '');
+
+      die.startRot = die.group.rotation.clone();
+      die.targetRot = new THREE.Euler(
+        die.startRot.x + (Math.random() * 5 + 3) * Math.PI,
+        die.startRot.y + (Math.random() * 5 + 3) * Math.PI,
+        die.startRot.z + (Math.random() * 5 + 3) * Math.PI,
+      );
+      die.rollStart = performance.now();
+      die.rollDuration = 1200 + Math.random() * 900;
+      die.finalValue = Math.floor(Math.random() * die.def.faces) + 1;
+    }
+
+    function rollAll() {
+      if (rollingCount > 0) return;
+      resultsEl.innerHTML = '';
+      dieObjects.forEach(d => startRoll(d));
+      btn.disabled = true;
+    }
+
+    btn.addEventListener('click', rollAll);
+
+    function finishRoll(die) {
+      die.isRolling = false;
+      die.value = die.finalValue;
+      rollingCount--;
+      setSprite(die.sprite, die.value.toString());
+      refreshResults();
+      if (rollingCount === 0) btn.disabled = false;
+    }
+
+    function refreshResults() {
+      resultsEl.innerHTML = dieObjects
+        .filter(d => d.value !== null)
+        .map(d => `<div class="result-chip"><span>${d.def.name}</span>${d.value}</div>`)
+        .join('');
+    }
+
+    // ─────────────────────────────────────────────
+    // AMBIENT PARTICLES (tiny gold sparks)
+    // ─────────────────────────────────────────────
+    const PARTICLE_COUNT = 180;
+    const pPositions = new Float32Array(PARTICLE_COUNT * 3);
+    const pSpeeds    = new Float32Array(PARTICLE_COUNT);
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      pPositions[i * 3]     = (Math.random() - 0.5) * 30;
+      pPositions[i * 3 + 1] = (Math.random() - 0.5) * 12;
+      pPositions[i * 3 + 2] = (Math.random() - 0.5) * 14;
+      pSpeeds[i] = 0.004 + Math.random() * 0.008;
+    }
+    const pGeo = new THREE.BufferGeometry();
+    pGeo.setAttribute('position', new THREE.BufferAttribute(pPositions, 3));
+    const pMat = new THREE.PointsMaterial({ color: 0xc8a030, size: 0.06, transparent: true, opacity: 0.55 });
+    scene.add(new THREE.Points(pGeo, pMat));
+
+    // ─────────────────────────────────────────────
+    // ANIMATION LOOP
+    // ─────────────────────────────────────────────
+    function animate() {
+      requestAnimationFrame(animate);
+
+      const now = performance.now();
+
+      // Particles drift upward
+      for (let i = 0; i < PARTICLE_COUNT; i++) {
+        pPositions[i * 3 + 1] += pSpeeds[i];
+        if (pPositions[i * 3 + 1] > 8) pPositions[i * 3 + 1] = -6;
+      }
+      pGeo.attributes.position.needsUpdate = true;
+
+      dieObjects.forEach(die => {
+        if (die.isRolling) {
+          const t = Math.min((now - die.rollStart) / die.rollDuration, 1);
+          const e = easeOutCubic(t);
+
+          die.group.rotation.x = die.startRot.x + (die.targetRot.x - die.startRot.x) * e;
+          die.group.rotation.y = die.startRot.y + (die.targetRot.y - die.startRot.y) * e;
+          die.group.rotation.z = die.startRot.z + (die.targetRot.z - die.startRot.z) * e;
+
+          if (t >= 1) finishRoll(die);
+        } else {
+          // Gentle idle rotation
+          die.group.rotation.y += die.idleSpeed;
+          die.group.rotation.x += die.idleSpeed * 0.3;
+        }
+      });
+
+      controls.update();
+      renderer.render(scene, camera);
+    }
+
+    animate();
+
+    // ─────────────────────────────────────────────
+    // RESIZE
+    // ─────────────────────────────────────────────
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>
