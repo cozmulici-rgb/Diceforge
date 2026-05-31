@@ -1,0 +1,21 @@
+{
+  "_comment": "Per-die map: rolled value -> local mesh face normal (glTF Y-up) that, when aligned to world UP, shows that value. Generated/verified via tools/dice_facemap.py + scripts/_tmp_facecal.gd calibration renders. d6 verified sum-to-7. Dice without an entry fall back to a random landing orientation. To add d4/d10/d12/d20: run the facemap + calibration, read the digit per face, and fill in value->normal here.",
+  "6": {
+    "1": [0.0, 1.0, 0.0],
+    "2": [1.0, 0.0, 0.0],
+    "3": [0.0, 0.0, 1.0],
+    "4": [0.0, 0.0, -1.0],
+    "5": [-1.0, 0.0, 0.0],
+    "6": [0.0, -1.0, 0.0]
+  },
+  "8": {
+    "1": [0.5774, 0.5774, 0.5774],
+    "2": [-0.5774, -0.5774, -0.5774],
+    "3": [0.5774, -0.5774, -0.5774],
+    "4": [-0.5774, 0.5774, 0.5774],
+    "5": [-0.5774, 0.5774, -0.5774],
+    "6": [0.5774, -0.5774, 0.5774],
+    "7": [-0.5774, -0.5774, 0.5774],
+    "8": [0.5774, 0.5774, -0.5774]
+  }
+}

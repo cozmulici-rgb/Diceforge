@@ -30,6 +30,18 @@ func _ready() -> void:
 	_overlay_textured.material_metallic = 0.55
 	_overlay_textured.material_roughness = 0.45
 	_overlay_textured.material_specular = 0.5
+	# Readable framing defaults. The dice meshes are normalized to ~unit
+	# circumradius, so die_visual_scale is roughly the on-screen die radius in
+	# world units. At the current camera (Y≈11.5, pitch −67°, FOV 50) one strip
+	# is 1470×265 px ≈ 20 px/world-unit, so scale 3.5 → a ~7-unit (~140 px) die:
+	# big enough to read the baked numeral, small enough to fit the strip height.
+	# Spacing 8 spreads the four dice across the width without overlap.
+	# NOTE: the SpinBox callbacks below only fire on user change (they connect
+	# after value is set), so these properties must be assigned here to take
+	# effect at startup — the spinbox `val` args are kept in sync for display.
+	for ov in [_overlay_mesh, _overlay_textured]:
+		ov.die_visual_scale = 3.5
+		ov.die_spacing = 8.0
 	add_child(_overlay_mesh)
 	add_child(_overlay_textured)
 	_layout_strip(_strip_envelope)
@@ -140,10 +152,10 @@ func _ready() -> void:
 		_overlay_textured.settle_duration = v)
 
 	var scene_col := _make_section(cols, "Scene")
-	_spin(scene_col, "Die Scale",  1.0,  20.0,  6.0, 0.5,  func(v):
+	_spin(scene_col, "Die Scale",  1.0,  20.0,  3.5, 0.5,  func(v):
 		_overlay_mesh.die_visual_scale = v
 		_overlay_textured.die_visual_scale  = v)
-	_spin(scene_col, "Spacing",    0.5,   8.0,  2.0, 0.1,  func(v):
+	_spin(scene_col, "Spacing",    0.5,  16.0,  8.0, 0.1,  func(v):
 		_overlay_mesh.die_spacing      = v
 		_overlay_textured.die_spacing       = v)
 	_spin(scene_col, "Strip H",   80.0, 800.0, 530.0, 10.0, func(v):
