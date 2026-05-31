@@ -64,6 +64,12 @@ var _viewport: SubViewport
 var _die_entries: Array = []
 var _rng := RandomNumberGenerator.new()
 
+# value -> local face normal table (per die sides), loaded from
+# content/dice/face_up_normals.json. Lets a textured die settle showing the
+# actual rolled value face-up instead of a random face. Dice/values without an
+# entry fall back to a random landing.
+var _face_normals: Dictionary = {}
+
 
 var _pending_count: int = 0
 
@@ -71,9 +77,23 @@ var _pending_count: int = 0
 func _ready() -> void:
 	layer = 10
 	_rng.randomize()
+	_load_face_normals()
 	_build_scene()
 	hide()
 	set_process(true)
+
+
+func _load_face_normals() -> void:
+	_face_normals = {}
+	var path := "res://content/dice/face_up_normals.json"
+	if not FileAccess.file_exists(path):
+		return
+	var f := FileAccess.open(path, FileAccess.READ)
+	if f == null:
+		return
+	var parsed = JSON.parse_string(f.get_as_text())
+	if parsed is Dictionary:
+		_face_normals = parsed
 
 
 func _build_scene() -> void:
@@ -224,10 +244,7 @@ func _kick_die(entry: Dictionary) -> void:
 	# the same rate.
 	var airtime := 2.0 * v0 / maxf(gravity, 0.001)
 	var spin_rate := TAU * spin_rotations * _rng.randf_range(0.7, 1.3) / maxf(airtime, 0.001)
-	var final_euler := _landing_rotation_for_entry(entry)
-	var final_basis := Basis.from_euler(Vector3(
-		deg_to_rad(final_euler.x), deg_to_rad(final_euler.y), deg_to_rad(final_euler.z)
-	))
+	var final_basis := _final_basis_for_entry(entry)
 	anim["vy"] = v0
 	anim["axis"] = axis
 	anim["spin"] = spin_rate
@@ -271,8 +288,11 @@ func _step_die(entry: Dictionary, delta: float) -> void:
 		anim["settle_t"] += delta
 		var dur := maxf(settle_duration, 0.0001)
 		var t: float = clampf(anim["settle_t"] / dur, 0.0, 1.0)
-		var from_b: Basis = anim["settle_from"] as Basis
-		var to_b: Basis = anim["final_basis"] as Basis
+		# slerp() casts to Quaternion internally and requires orthonormal bases;
+		# accumulated float drift from the spin can denormalize them, so re-
+		# orthonormalize first to avoid "Basis must be normalized" spam.
+		var from_b: Basis = (anim["settle_from"] as Basis).orthonormalized()
+		var to_b: Basis = (anim["final_basis"] as Basis).orthonormalized()
 		node.transform.basis = from_b.slerp(to_b, t)
 		node.position.y = 0.0
 		if t >= 1.0:
@@ -406,11 +426,38 @@ func _random_landing_rotation() -> Vector3:
 
 
 func _landing_rotation_for_entry(_entry: Dictionary) -> Vector3:
-	# Landing orientation is intentionally non-deterministic: the visual face
-	# that ends up on top is independent of the gameplay rolled_value. This
-	# matches a real die toss where the resting orientation is random; the
-	# gameplay outcome is shown via the digit label / Decal, not the mesh face.
+	# Fallback landing orientation (legacy path / dice without a face table):
+	# non-deterministic, with the gameplay outcome shown via the digit Decal.
 	return _random_landing_rotation()
+
+
+func _final_basis_for_entry(entry: Dictionary) -> Basis:
+	# Textured dice with a known face table settle showing the ACTUAL rolled
+	# value face-up: rotate the die so that value's face normal points to world
+	# UP (toward the near-top-down camera). Everything else lands randomly.
+	if use_textured_meshes:
+		var sides := _sides_from_body_id(str(entry.get("body_id", "")))
+		var tbl_v = _face_normals.get(str(sides))
+		if tbl_v is Dictionary:
+			var n_v = (tbl_v as Dictionary).get(str(int(entry.get("rolled_value", 1))))
+			if n_v is Array and (n_v as Array).size() == 3:
+				var n := Vector3(float(n_v[0]), float(n_v[1]), float(n_v[2]))
+				return _align_to_up(n)
+	var e := _landing_rotation_for_entry(entry)
+	return Basis.from_euler(Vector3(deg_to_rad(e.x), deg_to_rad(e.y), deg_to_rad(e.z)))
+
+
+func _align_to_up(n: Vector3) -> Basis:
+	# Rotation that brings local direction n onto world UP (+Y).
+	n = n.normalized()
+	var up := Vector3.UP
+	var d := n.dot(up)
+	if d > 0.9999:
+		return Basis()
+	if d < -0.9999:
+		return Basis(Vector3.RIGHT, PI)
+	var axis := n.cross(up).normalized()
+	return Basis(axis, acos(clampf(d, -1.0, 1.0)))
 
 
 func _clear_dice() -> void:
@@ -449,7 +496,22 @@ func _load_visual(sides: int, body_id: String = "") -> Node3D:
 
 
 func _load_visual_textured(sides: int) -> Node3D:
-	# OpenGameArt CC0 dice pack: per-die .dae meshes with UV-mapped numbered
+	# Preferred path: Blender-prepped .glb (tools/dice_assetprep.py). These are
+	# normalized to a uniform size, have a fixed bounding-box-centered origin,
+	# and carry their own embedded gold-on-obsidian PBR material with the numeral
+	# baked into the UVs — so they need NO runtime material override at all.
+	var glb_path := "res://assets/dice/meshes_gltf/d%d.glb" % sides
+	if ResourceLoader.exists(glb_path):
+		var glb := load(glb_path) as PackedScene
+		if glb != null:
+			# use_plain_debug_material strips the texture for raw-shape inspection;
+			# the legacy .dae path still honors it, so keep that behavior here too.
+			var inst := glb.instantiate()
+			if use_plain_debug_material:
+				_apply_textured_material_recursive(inst, _make_textured_material(sides))
+			return inst
+
+	# Legacy fallback: OpenGameArt CC0 .dae meshes with UV-mapped numbered
 	# textures. Numerals are baked into the texture; do NOT use material_override
 	# (which would clobber UVs by replacing the entire material at runtime).
 	# Instead, set surface_0 material so it composites with the mesh's own UVs.
@@ -595,7 +657,13 @@ func refresh_materials() -> void:
 		if use_textured_meshes:
 			var body_id := str(entry.get("body_id", ""))
 			var sides := _sides_from_body_id(body_id)
-			_apply_textured_material_recursive(visual, _make_textured_material(sides))
+			# Blender-prepped .glb dice carry their own embedded PBR material, so
+			# leave it intact — only override when the user wants the plain debug
+			# look or when we fell back to the legacy .dae mesh (which has no
+			# material of its own).
+			var has_glb := ResourceLoader.exists("res://assets/dice/meshes_gltf/d%d.glb" % sides)
+			if use_plain_debug_material or not has_glb:
+				_apply_textured_material_recursive(visual, _make_textured_material(sides))
 		else:
 			_apply_material_recursive(visual, _make_dice_material(str(entry.get("body_id", ""))))
 
